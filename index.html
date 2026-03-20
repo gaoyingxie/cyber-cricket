@@ -642,7 +642,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.65 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.66 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
@@ -789,7 +789,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.65';
+const VERSION = 'v1.66';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.25,1.5,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -835,6 +835,7 @@ const ALL_SKILLS=[
     {id:'thorns',name:'荆棘',staminaCost:0,type:'defense',desc:'【被动★40%】受到攻击时反弹20%伤害',thornsRate:0.4,icon:'🌹',cd:0,passive:true},
     {id:'rage',name:'狂暴',staminaCost:0,type:'attack',desc:'【被动★100%】HP<50%时伤害×1.5',rageRate:0.5,icon:'😈',cd:0,passive:true},
     {id:'karma',name:'善恶有报',staminaCost:0,type:'attack',desc:'【被动★100%】80%双倍伤害/20%治疗敌人',karmaRate:0.8,icon:'⚖️',cd:0,passive:true},
+    {id:'ontology',name:'本体',staminaCost:0,type:'attack',desc:'【被动★100%】HP越低伤害越高，最低50%时伤害×2',ontologyRate:0.5,icon:'🌀',cd:0,passive:true},
 ];
 const ENEMY_NAMES=['机械龙虾','电路龙虾','芯片龙虾','程序龙虾','数据龙虾','比特龙虾','代码龙虾','网络龙虾','云端龙虾','量子龙虾','深渊机甲龙虾','泰坦机械龙虾','风暴电子龙虾','雷霆硅基龙虾','混沌编程龙虾'];
 const AUTO_BATTLE_DELAY = 750;
@@ -1312,6 +1313,16 @@ function doNormalAttack(attacker, defender, isPlayer, isSecondHit) {
             atkDmg*=2;
         }
     }
+    // 本体处理：HP越低伤害越高
+    const ontSkill=attacker.skills.find(s=>s.id==='ontology'&&s.passive);
+    if(ontSkill&&atkDmg>0) {
+        const hpPct=attacker.hp/attacker.maxHp;
+        if(hpPct<0.5) {
+            const ontBoost=1+(0.5-hpPct)*2; // 50%HP时×1，25%HP时×1.5，1%HP时×2
+            atkDmg=Math.floor(atkDmg*ontBoost);
+            addLog('<span class="log-system">🌀 【本体】激活! 伤害×'+ontBoost.toFixed(1)+'</span>');
+        }
+    }
     // 护盾吸收
     if(defender.shields>0) {
         const absorb=Math.min(defender.shields,atkDmg);
@@ -1360,6 +1371,15 @@ function processSkillEffect(skill, attacker, defender, isPlayer) {
             } else {
                 // 80%概率双倍伤害
                 dmg*=2;
+            }
+        }
+        // 本体处理
+        const ontSkill=attacker.skills.find(s=>s.id==='ontology'&&s.passive);
+        if(ontSkill&&dmg>0) {
+            const hpPct=attacker.hp/attacker.maxHp;
+            if(hpPct<0.5) {
+                const ontBoost=1+(0.5-hpPct)*2;
+                dmg=Math.floor(dmg*ontBoost);
             }
         }
         if(skill.drain) {
@@ -1907,7 +1927,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.65 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.66 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
