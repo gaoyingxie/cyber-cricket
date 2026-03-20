@@ -592,7 +592,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.50 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.51 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
@@ -755,8 +755,8 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.50';
-const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
+const VERSION = 'v1.51';
+const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.25,1.5,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
 const EQUIP_NAMES={
@@ -775,12 +775,12 @@ const ALL_SKILLS=[
     {id:'crit',name:'必杀',staminaCost:15,type:'attack',desc:'【主动★100%】造成双倍伤害（必定暴击×2）',minDmg:0,critRate:1,critMult:2,icon:'💥',cd:0},
     {id:'heavy',name:'重击',staminaCost:10,type:'attack',desc:'【主动★100%】造成1.5倍伤害',minDmg:1.5,icon:'💪',cd:0},
     {id:'poison',name:'剧毒',staminaCost:12,type:'attack',desc:'【主动★100%】伤害+每回合损失8%HP',minDmg:0.6,poisonDmg:0.08,icon:'☠️',cd:0},
-    {id:'virus',name:'病毒注入',staminaCost:15,type:'attack',desc:'【主动★100%】伤害+每回合6%HP+降属性',minDmg:0.5,poisonDmg:0.06,reduceStat:0.15,icon:'🦠',cd:0},
+    {id:'virus',name:'病毒注入',staminaCost:13,type:'attack',desc:'【主动★100%】伤害+每回合6%HP+降属性',minDmg:0.5,poisonDmg:0.06,reduceStat:0.15,icon:'🦠',cd:0},
     {id:'hack',name:'数据入侵',staminaCost:12,type:'attack',desc:'【主动★100%】伤害+偷取敌人15%当前HP',minDmg:0.5,drain:0.15,icon:'💻',cd:0},
     {id:'emp',name:'电磁脉冲',staminaCost:10,type:'attack',desc:'【主动★100%】伤害+25%概率眩晕',minDmg:0.8,stunRate:0.25,icon:'⚡',cd:0},
     {id:'shield_break',name:'护盾击破',staminaCost:12,type:'attack',desc:'【主动★100%】无视护盾+1.5倍伤害',minDmg:1.5,ignoreDef:true,icon:'💎',cd:1},
-    {id:'triple',name:'三连击',staminaCost:18,type:'attack',desc:'【主动★100%】连续攻击3次（2、3次伤害×0.5）',minDmg:0.5,times:3,icon:'⚔️',cd:0},
-    {id:'execute',name:'处决',staminaCost:18,type:'attack',desc:'【主动★100%】敌人HP<50%时伤害×2',minDmg:0,critRate:1,critMult:2,icon:'☠️',cd:0,execute:true},
+    {id:'triple',name:'三连击',staminaCost:16,type:'attack',desc:'【主动★100%】连续攻击3次（2、3次伤害×0.5）',minDmg:0.5,times:3,icon:'⚔️',cd:0},
+    {id:'execute',name:'处决',staminaCost:15,type:'attack',desc:'【主动★100%】敌人HP<50%时伤害×2',minDmg:0,critRate:1,critMult:2,icon:'☠️',cd:0,execute:true},
     {id:'drain',name:'灵魂吸取',staminaCost:14,type:'attack',desc:'【主动★100%】伤害+偷取敌人12%最大HP',minDmg:0.7,drain:0.12,icon:'👻',cd:0},
     {id:'bleed',name:'撕裂',staminaCost:11,type:'attack',desc:'【主动★100%】伤害+敌人持续流血3回合',minDmg:0.5,bleedDmg:0.05,icon:'🩸',cd:0},
     // ===== 控制系 =====
@@ -796,8 +796,8 @@ const ALL_SKILLS=[
     // ===== 被动系 =====
     {id:'lifesteal',name:'吸血',staminaCost:0,type:'attack',desc:'【被动★100%】造成伤害的25%转为自己HP',icon:'🩸',cd:0,passive:true,lifesteal:0.25},
     {id:'counter',name:'反击',staminaCost:0,type:'defense',desc:'【被动★35%】受到攻击时35%概率反击',icon:'⚡',cd:0,passive:true,counterRate:0.35},
-    {id:'overclock',name:'超频',staminaCost:0,type:'special',desc:'【被动★100%】速度永久提升80%',speedBoost:true,icon:'🔥',cd:0,passive:true},
-    {id:'resurrect',name:'神佑',staminaCost:0,type:'special',desc:'【被动★25%】死亡时25%概率复活并恢复50%HP',icon:'✨',cd:0,passive:true,resurrectRate:0.25},
+    {id:'overclock',name:'超频',staminaCost:0,type:'special',desc:'【被动★100%】速度永久提升50%',speedBoost:true,icon:'🔥',cd:0,passive:true},
+    {id:'resurrect',name:'神佑',staminaCost:0,type:'special',desc:'【被动★15%】死亡时15%概率复活并恢复50%HP',icon:'✨',cd:0,passive:true,resurrectRate:0.15},
     {id:'armor',name:'护甲',staminaCost:0,type:'defense',desc:'【被动★100%】受到伤害降低15%',armorRate:0.15,icon:'🛎️',cd:0,passive:true},
     {id:'thorns',name:'荆棘',staminaCost:0,type:'defense',desc:'【被动★40%】受到攻击时反弹20%伤害',thornsRate:0.4,icon:'🌹',cd:0,passive:true},
     {id:'vigor',name:'活力',staminaCost:0,type:'special',desc:'【被动★100%】每回合额外恢复10点体力',vigorRegen:10,icon:'⚡',cd:0,passive:true},
@@ -818,10 +818,10 @@ function initState(){
     S={round:1,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:oldSpeed,
         playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false,lobsterMode:oldMode,exported:oldExported,
         player:(()=>{
-            const bhp=Math.floor(100+Math.random()*40);
-            const batk=Math.floor(8+Math.random()*5);
-            const bdef=Math.floor(3+Math.random()*5);
-            const bspd=Math.floor(6+Math.random()*5);
+            const bhp=Math.floor(110+Math.random()*20);
+            const batk=Math.floor(9+Math.random()*3);
+            const bdef=Math.floor(4+Math.random()*3);
+            const bspd=Math.floor(7+Math.random()*3);
             const cnt=Math.random()<0.9?2:3;
             const s=[];while(s.length<cnt){const r=ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)];if(!s.find(x=>x.id===r.id))s.push(Object.assign({},r));}
             return{
@@ -853,7 +853,7 @@ function calcPlayerStats(){
     S.player.maxHp=Math.floor((bhp+equipBonus.hp)*m*hpM);
     S.player.atk=Math.floor((bAtk+equipBonus.atk)*m*atkM);
     S.player.def=Math.floor((bDef+equipBonus.def)*m);
-    const effectiveSpd=S.player.speedBoosted?bSpd*m*2:bSpd*m;
+    const effectiveSpd=S.player.speedBoosted?bSpd*m*1.5:bSpd*m;
     S.player.spd=Math.floor(effectiveSpd);
     if(S.player.hp>S.player.maxHp)S.player.hp=S.player.maxHp;
 }
@@ -861,7 +861,7 @@ function levelUp(){
     while(S.player.exp>=S.player.expToLevel){
         S.player.exp-=S.player.expToLevel;
         S.player.level++;
-        S.player.expToLevel=Math.floor(S.player.expToLevel*1.4);
+        S.player.expToLevel=Math.floor(S.player.expToLevel*1.25);
         calcPlayerStats();
         S.player.hp=S.player.maxHp;
         addLog('<span class="log-player">🎉 升级了! Lv.'+S.player.level+'</span>');
@@ -1118,7 +1118,7 @@ function updateBuffsDisplay(id, entity) {
 }
 
 function updateEvolveButton() {
-    const EVOLVE_LEVELS=[999,3,5,8]; // 各阶段进化所需等级（索引0为占位）
+    const EVOLVE_LEVELS=[999,3,4,6]; // 各阶段进化所需等级（索引0为占位）
     const btn=document.getElementById('btn-evolve');
     if(S.phase>=PHASES.length-1) { btn.disabled=true; btn.textContent='已满级'; return; }
     const requiredLevel=EVOLVE_LEVELS[S.phase+1]||999;
@@ -1756,7 +1756,7 @@ function unequipItem(type) {
 }
 
 function evolve() {
-    const EVOLVE_LEVELS=[999,3,5,8]; // 各阶段进化所需等级
+    const EVOLVE_LEVELS=[999,3,4,6]; // 各阶段进化所需等级
     const requiredLevel=EVOLVE_LEVELS[S.phase+1]||999;
     if(S.player.level<requiredLevel||S.phase>=PHASES.length-1) return;
     // 进化时获得随机技能（第一次进化时）
@@ -1931,7 +1931,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.50 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.51 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
