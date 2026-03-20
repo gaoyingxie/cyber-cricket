@@ -549,7 +549,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.35 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.36 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -691,7 +691,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.35';
+const VERSION = 'v1.36';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -768,9 +768,9 @@ function calcPlayerStats(){
     const hpM=S.player.defReduced?0.9:1,atkM=S.player.defReduced?0.9:1;
     // 装备加成
     const equipBonus={atk:0,def:0,hp:0};
-    if(S.player.equipment.atk){const e=S.player.equipment.atk;equipBonus.atk=Math.floor(EQUIP_BASE_VALUES.atk*EQUIP_QUALITY_MULT[e.quality]*e.level);}
-    if(S.player.equipment.def){const e=S.player.equipment.def;equipBonus.def=Math.floor(EQUIP_BASE_VALUES.def*EQUIP_QUALITY_MULT[e.quality]*e.level);}
-    if(S.player.equipment.hp){const e=S.player.equipment.hp;equipBonus.hp=Math.floor(EQUIP_BASE_VALUES.hp*EQUIP_QUALITY_MULT[e.quality]*e.level);}
+    if(S.player.equipment.atk){const e=S.player.equipment.atk;equipBonus.atk=Math.floor(EQUIP_BASE_VALUES.atk*(EQUIP_QUALITY_MULT[e.quality]||1)*(e.level||1));}
+    if(S.player.equipment.def){const e=S.player.equipment.def;equipBonus.def=Math.floor(EQUIP_BASE_VALUES.def*(EQUIP_QUALITY_MULT[e.quality]||1)*(e.level||1));}
+    if(S.player.equipment.hp){const e=S.player.equipment.hp;equipBonus.hp=Math.floor(EQUIP_BASE_VALUES.hp*(EQUIP_QUALITY_MULT[e.quality]||1)*(e.level||1));}
     S.player.maxHp=Math.floor((bhp+equipBonus.hp)*m*hpM);
     S.player.atk=Math.floor((bAtk+equipBonus.atk)*m*atkM);
     S.player.def=Math.floor((bDef+equipBonus.def)*m);
@@ -1224,7 +1224,7 @@ function doNormalAttack(attacker, defender, isPlayer, isSecondHit) {
         return;
     }
     attacker.stamina-=5;
-    let atkDmg=Math.max(1,Math.floor(attacker.atk*1.0));
+    let atkDmg=Math.max(1,Math.floor((attacker.atk||0)*1.0));
     // 连击第二次伤害减半
     if(isSecondHit) {
         atkDmg=Math.floor(atkDmg*0.5);
@@ -1260,17 +1260,17 @@ function processSkillEffect(skill, attacker, defender, isPlayer) {
     for(let t=0;t<times;t++) {
         let dmg=0;
         if(skill.type==='attack'&&(skill.minDmg||skill.minDmg===0)) {
-            dmg=Math.max(1,Math.floor(attacker.atk*skill.minDmg*critMult));
+            dmg=Math.max(1,Math.floor((attacker.atk||0)*skill.minDmg*critMult));
         }
         if(skill.drain) {
-            const drainAmt=Math.floor(defender.hp*skill.drain);
+            const drainAmt=Math.floor((defender.hp||0)*skill.drain);
             defender.hp-=drainAmt;
-            attacker.hp=Math.min(attacker.maxHp,attacker.hp+drainAmt);
+            attacker.hp=Math.min(attacker.maxHp,(attacker.hp||0)+drainAmt);
             addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 吸取 '+drainAmt+' HP</span>');
         }
         if(skill.lifesteal) {
-            const healAmt=Math.floor(dmg*skill.lifesteal);
-            attacker.hp=Math.min(attacker.maxHp,attacker.hp+healAmt);
+            const healAmt=Math.floor((dmg||0)*skill.lifesteal);
+            attacker.hp=Math.min(attacker.maxHp,(attacker.hp||0)+healAmt);
             addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 吸血 '+healAmt+' HP</span>');
         }
         if(skill.ignoreDef) {
@@ -1680,7 +1680,7 @@ showWelcomeLobster();
 updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.35 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.36 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
