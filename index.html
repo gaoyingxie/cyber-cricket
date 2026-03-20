@@ -586,7 +586,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.53 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.54 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
@@ -730,6 +730,7 @@
         <div class="export-desc">你的龙虾已养成！保存以下代码以便下次导入：</div>
         <textarea class="export-code" id="export-code" readonly></textarea>
         <div class="export-hint">📋 请复制并保存此代码，下次可在"成虾导入"中使用</div>
+        <button class="btn" onclick="copyExportCode()">📋 复制代码</button>
         <button class="btn" onclick="closeExportPanel()">完成</button>
     </div>
     <div class="game-over" id="game-over">
@@ -739,7 +740,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.53';
+const VERSION = 'v1.54';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.25,1.5,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -1223,6 +1224,12 @@ function executeAutoTurn() {
     // 添加平A到队列
     // 普通攻击免费，每个回合必定执行
     S.battleQueue.push({type:'attack',isPlayer:true});
+    
+    // 活力：额外行动一次
+    if(S.player.skills.find(s=>s.id==='vigor'&&s.passive)) {
+        addLog('<span class="log-player">⚡ 【活力】触发! 额外行动!</span>');
+        S.battleQueue.push({type:'attack',isPlayer:true});
+    }
     
     S.isProcessing=true;
     processBattleQueue();
@@ -1843,7 +1850,11 @@ function exportLobster() {
         phase:S.phase,
         skills:S.player.skills,
         equipment:S.player.equipment,
-        inventory:S.player.inventory
+        inventory:S.player.inventory,
+        baseHp:S.player.baseHp,
+        baseAtk:S.player.baseAtk,
+        baseDef:S.player.baseDef,
+        baseSpd:S.player.baseSpd
     };
     return btoa(JSON.stringify(data));
 }
@@ -1864,6 +1875,17 @@ function showExportPanel() {
     document.getElementById('export-panel').classList.add('show');
 }
 
+function copyExportCode() {
+    const code=document.getElementById('export-code').value;
+    navigator.clipboard.writeText(code).then(()=>{
+        addLog('<span class="log-system">📋 成虾代码已复制到剪贴板!</span>');
+    }).catch(()=>{
+        document.getElementById('export-code').select();
+        document.execCommand('copy');
+        addLog('<span class="log-system">📋 成虾代码已复制到剪贴板!</span>');
+    });
+}
+
 function showWelcomeLobster() {
     if(S.player && S.player.skills) {
         document.getElementById('welcome-sprite').textContent=PHASE_SPRITES[0];
@@ -1877,7 +1899,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.53 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.54 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
