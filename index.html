@@ -674,12 +674,12 @@
         <div class="battle-log" id="battle-log"></div>
 
         <div class="btn-row">
-            <button class="btn" id="btn-start" onclick="startBattle()">🚀 开始战斗</button>
+        <div class="btn-row">
+            <button class="btn" id="btn-start" onclick="startBattle()" disabled>🚀 开始战斗</button>
             <button class="btn" id="btn-speed" onclick="toggleSpeed()">⏩ 1倍速</button>
             <button class="btn btn-small btn-warning" id="btn-equip" onclick="openEquipPanel()">🎒 装备</button>
         </div>
-    </div>
-    <div class="evolution-overlay" id="evolution-overlay">
+ <div class="evolution-overlay" id="evolution-overlay">
         <div class="evolution-text" id="evolution-text">🌀 进化中...</div>
     </div>
     <div class="reward-panel" id="reward-panel">
@@ -854,7 +854,7 @@ function initState(){
             const bspd=Math.floor(5+Math.random()*8);
             const cnt=Math.random()<0.9?2:3;
             const s=[];while(s.length<cnt){const r=ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)];if(!s.find(x=>x.id===r.id))s.push(Object.assign({},r));}
-            return{
+            return {
                 name:'你的龙虾',level:1,
                 hp:bhp,maxHp:bhp,atk:batk,def:bdef,spd:bspd,
                 baseHp:bhp,baseAtk:batk,baseDef:bdef,baseSpd:bspd,
