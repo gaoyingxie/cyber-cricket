@@ -327,6 +327,29 @@
         .enemy-option-skills { font-size: 0.8em; color: #00ff88; margin-top: 5px; }
         .player-skill-display { font-size: 0.75em; color: #888; margin-top: 5px; }
         .enemy-skill-display { font-size: 0.75em; color: #888; margin-top: 5px; }
+        .skill-item { cursor: pointer; padding: 2px 6px; border-radius: 4px; background: rgba(0,255,136,0.1); transition: background 0.2s; }
+        .skill-item:hover { background: rgba(0,255,136,0.3); }
+        .skill-popup {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 25px;
+            display: none;
+            z-index: 1001;
+            min-width: 300px;
+            text-align: center;
+        }
+        .skill-popup.show { display: block; }
+        .skill-popup-icon { font-size: 3em; margin-bottom: 10px; }
+        .skill-popup-name { font-size: 1.5em; color: #fff; margin-bottom: 10px; }
+        .skill-popup-type { font-size: 0.9em; color: #888; margin-bottom: 5px; }
+        .skill-popup-cost { font-size: 1em; color: #4488ff; margin-bottom: 10px; }
+        .skill-popup-desc { font-size: 1.1em; color: #00ff88; margin-bottom: 15px; }
+        .skill-popup-effect { font-size: 0.9em; color: #aaa; }
+        .skill-popup-close { margin-top: 15px; font-size: 0.9em; color: #666; }
         .speed-indicator {
             position: absolute;
             bottom: -25px;
@@ -361,7 +384,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.4 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.5 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -378,7 +401,7 @@
                 <span class="stamina-label" style="color:#555;font-size:0.75em">每回合恢复 +15（战斗外+30）</span>
             </div>
         </div>
-        <div class="auto-battle-indicator active" id="auto-indicator">⚡ 自动战斗模式 ⚡</div>
+        <div class="auto-battle-indicator active" id="auto-indicator"></div>
         <div class="arena" id="arena">
             <div class="fighter" id="player-fighter">
                 <div class="fighter-sprite" id="player-sprite">🐛</div>
@@ -410,7 +433,7 @@
 
         <div class="btn-row">
             <button class="btn" id="btn-start" onclick="startBattle()">🚀 开始战斗</button>
-            
+            <button class="btn btn-warning" id="btn-speed" onclick="toggleSpeed()">⏩ 1倍速</button>
             <button class="btn btn-small btn-danger" id="btn-evolve" onclick="evolve()" disabled>🌀 进化 (100金)</button>
         </div>
     </div>
@@ -432,6 +455,15 @@
         <div class="enemy-select-list" id="enemy-select-list"></div>
         <button class="btn" onclick="closeEnemySelect()">返回</button>
     </div>
+    <div class="skill-popup" id="skill-popup" onclick="hideSkillPopup()">
+        <div class="skill-popup-icon" id="skill-popup-icon"></div>
+        <div class="skill-popup-name" id="skill-popup-name"></div>
+        <div class="skill-popup-type" id="skill-popup-type"></div>
+        <div class="skill-popup-cost" id="skill-popup-cost"></div>
+        <div class="skill-popup-desc" id="skill-popup-desc"></div>
+        <div class="skill-popup-effect" id="skill-popup-effect"></div>
+        <div class="skill-popup-close">点击任意处关闭</div>
+    </div>
     <div class="game-over" id="game-over">
         <h2 id="game-over-title">游戏结束</h2>
         <p id="game-over-msg"></p>
@@ -439,7 +471,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.4';
+const VERSION = 'v1.5';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊'},
@@ -464,7 +496,7 @@ const MAX_STAMINA = 100;
 const STAMINA_REGEN_BATTLE = 15;
 const STAMINA_REGEN_IDLE = 30;
 const AUTO_BATTLE_DELAY = 1000;
-let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null};
+let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1};
 
 function initState(){
     S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,turnOrder:null,
@@ -553,9 +585,51 @@ function playResurrectAnimation(element) {
     setTimeout(() => element.classList.remove('resurrect-effect'), 800);
 }
 
+function showSkillPopup(skillId) {
+    const skill=ALL_SKILLS.find(s=>s.id===skillId);
+    if(!skill) return;
+    document.getElementById('skill-popup-icon').textContent=skill.icon;
+    document.getElementById('skill-popup-name').textContent=skill.name;
+    document.getElementById('skill-popup-type').textContent='类型: '+(skill.type==='attack'?'攻击':skill.type==='defense'?'防御':'特殊');
+    document.getElementById('skill-popup-cost').textContent='消耗: '+skill.staminaCost+' 体力';
+    document.getElementById('skill-popup-desc').textContent=skill.desc;
+    let effect='';
+    if(skill.minDmg>0) effect+='伤害倍率'+(skill.minDmg*100).toFixed(0)+'%';
+    if(skill.critRate) effect+=(effect?' | ':'')+'暴击率'+(skill.critRate*100).toFixed(0)+'%'+(skill.critMult?' 倍率'+skill.critMult+'倍':'');
+    if(skill.lifesteal) effect+=(effect?' | ':'')+'吸血'+(skill.lifesteal*100).toFixed(0)+'%';
+    if(skill.poisonDmg) effect+=(effect?' | ':'')+'每回合中毒'+(skill.poisonDmg*100).toFixed(0)+'%';
+    if(skill.stunRate) effect+=(effect?' | ':'')+'眩晕率'+(skill.stunRate*100).toFixed(0)+'%';
+    if(skill.sealRate) effect+=(effect?' | ':'')+'封印率'+(skill.sealRate*100).toFixed(0)+'%';
+    if(skill.shield) effect+=(effect?' | ':'')+'护盾'+skill.shield+'层';
+    if(skill.reduceDmg) effect+=(effect?' | ':'')+'减伤'+(skill.reduceDmg*100).toFixed(0)+'%';
+    if(skill.counterRate) effect+=(effect?' | ':'')+'反击率'+(skill.counterRate*100).toFixed(0)+'%';
+    if(skill.resurrectRate) effect+=(effect?' | ':'')+'复活率'+(skill.resurrectRate*100).toFixed(0)+'%';
+    if(skill.speedBoost) effect+=(effect?' | ':'')+'速度翻倍';
+    if(skill.drain) effect+=(effect?' | ':'')+'吸取'+(skill.drain*100).toFixed(0)+'%HP';
+    if(skill.ignoreDef) effect+=(effect?' | ':'')+'无视防御';
+    if(skill.reduceStat) effect+=(effect?' | ':'')+'属性降低';
+    document.getElementById('skill-popup-effect').textContent=effect||'无特殊效果';
+    document.getElementById('skill-popup').classList.add('show');
+}
+
+function hideSkillPopup() {
+    document.getElementById('skill-popup').classList.remove('show');
+}
+
 function updateAutoIndicator() {
     const indicator=document.getElementById('auto-indicator');
     indicator.classList.add('active');
+}
+
+function toggleSpeed() {
+    S.battleSpeed = S.battleSpeed === 1 ? 2 : 1;
+    const btn = document.getElementById('btn-speed');
+    btn.textContent = S.battleSpeed === 1 ? '⏩ 1倍速' : '⏩ 2倍速';
+    btn.style.opacity = S.battleSpeed === 2 ? '1' : '0.7';
+}
+
+function getBattleDelay() {
+    return AUTO_BATTLE_DELAY / S.battleSpeed;
 }
 
 function addLog(msg) {
@@ -594,7 +668,7 @@ function updatePlayerUI() {
     document.getElementById('player-stats').textContent='攻:'+S.player.atk+' 防:'+S.player.def+' 速:'+S.player.spd;
     const speedPct=Math.min(100,S.player.spd/20*100);
     document.getElementById('player-speed-bar').style.width=speedPct+'%';
-    document.getElementById('player-skills').textContent='技能: '+S.player.skills.map(s=>s.icon+s.name).join(' ');
+    document.getElementById('player-skills').innerHTML='技能: '+S.player.skills.map(s=>'<span class="skill-item" onclick="showSkillPopup(\''+s.id+'\')" title="'+s.desc+'">'+s.icon+'</span>').join(' ');
     updateBuffsDisplay('player-buffs', S.player);
 }
 
@@ -613,7 +687,7 @@ function updateEnemyUI() {
     const speedPct=Math.min(100,S.enemy.spd/20*100);
     document.getElementById('enemy-speed-bar').style.width=speedPct+'%';
     updateBuffsDisplay('enemy-buffs', S.enemy);
-    document.getElementById('enemy-skills').textContent='技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(' ');
+    document.getElementById('enemy-skills').innerHTML='技能: '+S.enemy.skills.map(s=>'<span class="skill-item" onclick="showSkillPopup(\''+s.id+'\')" title="'+s.desc+'">'+s.icon+'</span>').join(' ');
 }
 
 function updateBuffsDisplay(id, entity) {
@@ -695,7 +769,7 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
     addLog('<span class="log-system">⚔️ 第 '+S.round+' 轮战斗开始!</span>');
     addLog('<span class="log-enemy">⚔️ 遇到野生 '+S.enemy.name+' (Lv.'+S.enemy.level+')</span>');
     addLog('<span class="log-system">📋 敌人技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(' ')+'</span>');
-    setTimeout(executeAutoTurn, AUTO_BATTLE_DELAY);
+    setTimeout(executeAutoTurn, getBattleDelay());
 }
 
 function executeAutoTurn() {
@@ -879,7 +953,7 @@ function endTurn() {
         enemyDefeated();
         return;
     }
-    setTimeout(executeAutoTurn, AUTO_BATTLE_DELAY);
+    setTimeout(executeAutoTurn, getBattleDelay());
 }
 
 function enemyDefeated() {
@@ -960,7 +1034,7 @@ function restartGame() {
 // 初始化
 initState();
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.4 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.5 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
