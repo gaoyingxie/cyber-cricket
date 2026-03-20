@@ -549,7 +549,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.36 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.37 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -691,7 +691,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.36';
+const VERSION = 'v1.37';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -1188,12 +1188,16 @@ function executeAutoTurn() {
 function processBattleQueue() {
     if(!S.inBattle || S.battleQueue.length===0) {
         S.isProcessing=false;
+        if(S.enemy) {
+            S.enemy.hp=Math.max(0,S.enemy.hp);
+        }
         S.player.hp=Math.min(S.player.maxHp,S.player.hp);
-        S.enemy.hp=Math.max(0,S.enemy.hp);
         updateUI();
-        if(S.enemy.hp<=0) {
+        if(S.enemy && S.enemy.hp<=0) {
             enemyDefeated();
-        } else {
+        } else if(S.player.hp<=0) {
+            playerDefeated();
+        } else if(S.inBattle) {
             setTimeout(()=>enemyTurn(),getBattleDelay());
         }
         return;
@@ -1327,7 +1331,7 @@ function processSkillEffect(skill, attacker, defender, isPlayer) {
 }
 
 function enemyTurn() {
-    if(!S.inBattle) return;
+    if(!S.inBattle || !S.enemy) return;
     if(S.enemy.hp<=0) {
         enemyDefeated();
         return;
@@ -1379,12 +1383,16 @@ function enemyTurn() {
 
 function processEnemyQueue() {
     if(!S.inBattle || S.battleQueue.length===0) {
-        S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp);
+        if(S.enemy) {
+            S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp);
+        }
         S.player.hp=Math.max(0,S.player.hp);
         updateUI();
         if(S.player.hp<=0) {
             playerDefeated();
-        } else {
+        } else if(S.enemy && S.enemy.hp<=0) {
+            enemyDefeated();
+        } else if(S.inBattle) {
             setTimeout(()=>endTurn(),getBattleDelay());
         }
         return;
@@ -1428,15 +1436,17 @@ function endTurn() {
             if(s.id==='speedBoost'||s.id==='overclock') S.player.speedBoosted=true;
         }
     });
-    S.enemy.lifesteal=0;S.enemy.counterRate=0;S.enemy.resurrectRate=0;S.enemy.speedBoosted=false;
-    S.enemy.skills.forEach(s=>{
-        if(s.passive) {
-            if(s.id==='lifesteal') S.enemy.lifesteal=s.lifesteal;
-            if(s.id==='counter') S.enemy.counterRate=s.counterRate;
-            if(s.id==='resurrect') S.enemy.resurrectRate=s.resurrectRate;
-            if(s.id==='speedBoost'||s.id==='overclock') S.enemy.speedBoosted=true;
-        }
-    });
+    if(S.enemy) {
+        S.enemy.lifesteal=0;S.enemy.counterRate=0;S.enemy.resurrectRate=0;S.enemy.speedBoosted=false;
+        S.enemy.skills.forEach(s=>{
+            if(s.passive) {
+                if(s.id==='lifesteal') S.enemy.lifesteal=s.lifesteal;
+                if(s.id==='counter') S.enemy.counterRate=s.counterRate;
+                if(s.id==='resurrect') S.enemy.resurrectRate=s.resurrectRate;
+                if(s.id==='speedBoost'||s.id==='overclock') S.enemy.speedBoosted=true;
+            }
+        });
+    }
     // 毒伤
     if(S.player.poisonDmg>0) {
         const pDmg=Math.floor(S.player.maxHp*S.player.poisonDmg);
@@ -1444,24 +1454,24 @@ function endTurn() {
         addLog('<span class="log-damage">🔥 【中毒】你的龙虾受到 '+pDmg+' 伤害</span>');
         showDamageNumber(document.getElementById('player-fighter'), pDmg, 'poison');
     }
-    if(S.enemy.poisonDmg>0) {
+    if(S.enemy && S.enemy.poisonDmg>0) {
         const eDmg=Math.floor(S.enemy.maxHp*S.enemy.poisonDmg);
         S.enemy.hp-=eDmg;
         addLog('<span class="log-damage">🔥 【中毒】敌人受到 '+eDmg+' 伤害</span>');
     }
     if(S.player.defReduced&&Math.random()<0.3) S.player.defReduced=false;
-    if(S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
+    if(S.enemy && S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
     S.player.stamina=Math.min(S.player.maxStamina,S.player.stamina+STAMINA_REGEN_BATTLE);
-    S.enemy.stamina=Math.min(S.enemy.maxStamina,S.enemy.stamina+STAMINA_REGEN_BATTLE);
+    if(S.enemy) S.enemy.stamina=Math.min(S.enemy.maxStamina,S.enemy.stamina+STAMINA_REGEN_BATTLE);
     addLog('<span class="log-system">💚 回合结束，双方恢复 '+STAMINA_REGEN_BATTLE+' 体力</span>');
     S.player.buffs=[];
-    S.enemy.buffs=[];
+    if(S.enemy) S.enemy.buffs=[];
     updateUI();
     if(S.player.hp<=0) {
         playerDefeated();
         return;
     }
-    if(S.enemy.hp<=0) {
+    if(S.enemy && S.enemy.hp<=0) {
         enemyDefeated();
         return;
     }
@@ -1555,7 +1565,7 @@ function closeReward() {
     document.getElementById('reward-panel').classList.remove('show');
     document.getElementById('btn-start').disabled=false;
     // 如果背包有装备，提示玩家
-    if(S.player.inventory.length>0) {
+    if(S.player && S.player.inventory && S.player.inventory.length>0) {
         addLog('<span class="log-system">📦 背包有 '+S.player.inventory.length+' 件装备，请点击"装备"穿戴！</span>');
     }
 }
@@ -1680,7 +1690,7 @@ showWelcomeLobster();
 updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.36 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.37 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
