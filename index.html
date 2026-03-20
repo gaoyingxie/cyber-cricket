@@ -1788,6 +1788,7 @@ function selectMode(mode) {
         initState();
         showWelcomeLobster();
         document.getElementById('welcome-panel').classList.add('show');
+        document.getElementById('btn-start').disabled=false;
     } else if(mode==='import') {
         // 成虾导入模式
         S.lobsterMode='import';
@@ -1795,6 +1796,7 @@ function selectMode(mode) {
         document.getElementById('import-panel').classList.add('show');
         document.getElementById('import-code').value='';
         document.getElementById('import-error').style.display='none';
+        document.getElementById('btn-start').disabled=false;
     }
     updateUI();
 }
