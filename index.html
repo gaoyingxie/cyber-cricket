@@ -386,7 +386,24 @@
         .export-hint { color: #ffa500; margin-top: 10px; font-size: 0.95em; }
         .btn-secondary { background: #444; margin-left: 10px; }
         .btn-secondary:hover { background: #555; }
-        .game-over h2 { font-size: 3em; margin-bottom: 20px; }
+        @media (max-width: 600px) {
+            .mode-select-panel { min-width: 90vw; padding: 20px; }
+            .mode-select-title { font-size: 1.4em; margin-bottom: 15px; }
+            .mode-options { flex-direction: column; gap: 10px; }
+            .btn-large { padding: 12px 20px; font-size: 1em; }
+            .mode-desc { font-size: 0.85em; }
+            .import-panel, .export-panel { min-width: 90vw; padding: 15px; }
+            .import-title, .export-title { font-size: 1.2em; }
+            .import-desc, .export-desc { font-size: 0.9em; }
+            .import-code, .export-code { height: 80px; font-size: 0.8em; }
+            .export-hint { font-size: 0.8em; }
+            .reward-panel { min-width: 90vw; padding: 15px; }
+            .reward-title { font-size: 1.2em; }
+            .reward-item { font-size: 0.9em; }
+            .game-over h2 { font-size: 2em; }
+            .game-over p { font-size: 1em; }
+            .evolution-overlay { font-size: 2em; }
+        }
         .game-over.win h2 { color: #00ff88; text-shadow: 0 0 30px #00ff88; }
         .game-over.lose h2 { color: #ff4444; text-shadow: 0 0 30px #ff4444; }
         .game-over p { margin: 10px 0; font-size: 1.2em; }
@@ -422,6 +439,12 @@
             max-height: 80vh;
             overflow-y: auto;
             text-align: center;
+        }
+        @media (max-width: 600px) {
+            .enemy-select-panel { min-width: 90vw; padding: 15px; }
+            .enemy-select-title { font-size: 1.2em; margin-bottom: 10px; }
+            .enemy-option { padding: 10px; font-size: 0.85em; }
+            .enemy-stats-row { font-size: 0.75em; }
         }
         .enemy-select-panel.show { display: block; }
         .enemy-select-title { font-size: 1.5em; color: #ff6644; margin-bottom: 20px; }
@@ -468,6 +491,14 @@
             z-index: 1001;
         }
         .skill-popup-backdrop.show { display: block; }
+        @media (max-width: 600px) {
+            .skill-popup { min-width: 90vw; padding: 15px; }
+            .skill-popup-icon { font-size: 2.5em; }
+            .skill-popup-name { font-size: 1.2em; }
+            .skill-popup-type, .skill-popup-cost, .skill-popup-desc { font-size: 0.85em; }
+            .equip-panel { min-width: 95vw; max-height: 90vh; }
+            .equip-panel-title { font-size: 1.2em; }
+        }
         .equip-panel {
             position: fixed;
             top: 50%; left: 50%;
@@ -576,17 +607,39 @@
         }
         
         @media (max-width: 600px) {
-            .arena { flex-direction: column; gap: 20px; padding: 15px; }
-            .fighter { width: 100%; }
-            .vs { margin: 10px 0; }
-            .skills-grid { grid-template-columns: repeat(2, 1fr); }
+            .container { padding: 10px; }
+            .title { font-size: 1.5em; margin-bottom: 5px; }
+            .version { font-size: 0.8em; margin-bottom: 5px; }
+            .status-bar { flex-wrap: wrap; gap: 10px; padding: 8px; }
+            .stat { font-size: 0.85em; }
+            .stat-label { font-size: 0.7em; }
+            .arena { flex-direction: column; gap: 10px; padding: 10px; }
+            .fighter { padding: 10px; }
+            .fighter-sprite { font-size: 3em; }
+            .fighter-name { font-size: 0.9em; }
+            .fighter-level { font-size: 0.75em; }
+            .hp-bar { height: 10px; }
+            .hp-text { font-size: 0.75em; }
+            .fighter-stats { font-size: 0.75em; }
+            .player-skill-display { font-size: 1em; }
+            .enemy-skill-display { font-size: 1em; }
+            .speed-indicator { font-size: 0.7em; }
+            .speed-bar-container { height: 6px; }
+            .vs { margin: 5px 0; font-size: 1.2em; }
+            .battle-log { max-height: 120px; padding: 8px; font-size: 0.8em; }
+            .btn-row { flex-wrap: wrap; gap: 8px; }
+            .btn { padding: 10px 15px; font-size: 0.9em; }
+            .skill-btn { padding: 6px; font-size: 0.8em; }
+            .skill-btn .skill-name { font-size: 0.85em; }
+            .skill-btn .skill-desc { font-size: 0.7em; }
+            .buff-tag { font-size: 0.7em; padding: 2px 5px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.54 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.57 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
@@ -740,7 +793,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.54';
+const VERSION = 'v1.57';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.25,1.5,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -1890,7 +1943,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.54 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.57 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
