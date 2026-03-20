@@ -426,7 +426,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.11 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.12 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -527,7 +527,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.11';
+const VERSION = 'v1.12';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊',cd:0},
@@ -1252,8 +1252,11 @@ function playerDefeated() {
     document.getElementById('game-over-title').textContent='游戏结束';
     document.getElementById('game-over-msg').textContent='你的龙虾在第 '+S.round+' 轮倒下了...';
     document.getElementById('final-round').textContent=S.round;
-    document.getElementById('game-over').classList.add('show','lose');
+    // 延迟显示结算，让玩家先看战报
     document.getElementById('btn-start').disabled=true;
+    setTimeout(()=>{
+        document.getElementById('game-over').classList.add('show','lose');
+    }, 2000);
 }
 
 function closeReward() {
@@ -1292,7 +1295,7 @@ function closeWelcome() {
 initState();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.11 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.12 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
