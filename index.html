@@ -432,7 +432,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.18 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.19 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -538,31 +538,31 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.18';
+const VERSION = 'v1.19';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
-    {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊',cd:0},
-    {id:'crit',name:'暴击',staminaCost:12,type:'attack',desc:'高概率暴击',minDmg:0,critRate:0.45,critMult:2,icon:'💥',cd:0},
-    {id:'lifesteal',name:'吸血',staminaCost:18,type:'attack',desc:'伤害30%转HP',minDmg:0.8,lifesteal:0.3,icon:'🩸',cd:0,passive:true},
-    {id:'resurrect',name:'神佑',staminaCost:25,type:'special',desc:'死亡30%复活',resurrectRate:0.3,icon:'✨',cd:0,passive:true},
-    {id:'counter',name:'反击',staminaCost:10,type:'defense',desc:'受击时反击',counterRate:0.4,icon:'🛡️',cd:0,passive:true},
-    {id:'poison',name:'剧毒',staminaCost:14,type:'attack',desc:'每回合掉血5%',minDmg:0.5,poisonDmg:0.05,icon:'☠️',cd:0},
-    {id:'deadly',name:'必杀',staminaCost:22,type:'attack',desc:'2.5倍伤害',minDmg:0,critRate:1,critMult:2.5,icon:'⚔️',cd:0},
-    {id:'defend',name:'防御',staminaCost:8,type:'defense',desc:'受伤-50%',reduceDmg:0.5,icon:'🛡️',cd:1},
-    {id:'confuse',name:'混乱',staminaCost:16,type:'special',desc:'敌无法行动',stunRate:0.35,icon:'🌪️',cd:2},
-    {id:'seal',name:'封印',staminaCost:20,type:'special',desc:'封印1回合',sealRate:0.3,icon:'🔮',cd:2},
-    {id:'emp',name:'电磁脉冲',staminaCost:15,type:'special',desc:'伤害+沉默',minDmg:0.7,stunRate:0.25,icon:'⚡',cd:0},
-    {id:'hack',name:'数据入侵',staminaCost:18,type:'attack',desc:'窃取10%HP',minDmg:0.6,drain:0.1,icon:'💻',cd:0},
-    {id:'shield',name:'能量护盾',staminaCost:12,type:'defense',desc:'抵2次攻击',shield:2,icon:'🔰',cd:2},
-    {id:'virus',name:'病毒注入',staminaCost:20,type:'attack',desc:'持续伤害',minDmg:0.4,poisonDmg:0.08,reduceStat:0.1,icon:'🦠',cd:0},
-    {id:'overclock',name:'超频',staminaCost:10,type:'special',desc:'速度翻倍',speedBoost:true,icon:'🔥',cd:2,passive:true},
-    {id:'shield_break',name:'护盾击破',staminaCost:14,type:'attack',desc:'无视防御',minDmg:1.2,ignoreDef:true,icon:'💎',cd:1},
+    {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'【主动】连续攻击2次',minDmg:0.6,times:2,icon:'👊',cd:0},
+    {id:'crit',name:'暴击',staminaCost:12,type:'attack',desc:'【主动】高概率暴击',minDmg:0,critRate:0.45,critMult:2,icon:'💥',cd:0},
+    {id:'lifesteal',name:'吸血',staminaCost:18,type:'attack',desc:'【被动】伤害30%转HP',minDmg:0.8,lifesteal:0.3,icon:'🩸',cd:0,passive:true},
+    {id:'resurrect',name:'神佑',staminaCost:25,type:'special',desc:'【被动】死亡30%复活',resurrectRate:0.3,icon:'✨',cd:0,passive:true},
+    {id:'counter',name:'反击',staminaCost:10,type:'defense',desc:'【被动】受击时反击',counterRate:0.4,icon:'🛡️',cd:0,passive:true},
+    {id:'poison',name:'剧毒',staminaCost:14,type:'attack',desc:'【主动】每回合掉血5%',minDmg:0.5,poisonDmg:0.05,icon:'☠️',cd:0},
+    {id:'deadly',name:'必杀',staminaCost:22,type:'attack',desc:'【主动】2.5倍伤害',minDmg:0,critRate:1,critMult:2.5,icon:'⚔️',cd:0},
+    {id:'defend',name:'防御',staminaCost:8,type:'defense',desc:'【主动】受伤-50%',reduceDmg:0.5,icon:'🛡️',cd:1},
+    {id:'confuse',name:'混乱',staminaCost:16,type:'special',desc:'【主动】敌无法行动',stunRate:0.35,icon:'🌪️',cd:2},
+    {id:'seal',name:'封印',staminaCost:20,type:'special',desc:'【主动】封印1回合',sealRate:0.3,icon:'🔮',cd:2},
+    {id:'emp',name:'电磁脉冲',staminaCost:15,type:'special',desc:'【主动】伤害+沉默',minDmg:0.7,stunRate:0.25,icon:'⚡',cd:0},
+    {id:'hack',name:'数据入侵',staminaCost:18,type:'attack',desc:'【主动】窃取10%HP',minDmg:0.6,drain:0.1,icon:'💻',cd:0},
+    {id:'shield',name:'能量护盾',staminaCost:12,type:'defense',desc:'【主动】抵2次攻击',shield:2,icon:'🔰',cd:2},
+    {id:'virus',name:'病毒注入',staminaCost:20,type:'attack',desc:'【主动】持续伤害',minDmg:0.4,poisonDmg:0.08,reduceStat:0.1,icon:'🦠',cd:0},
+    {id:'overclock',name:'超频',staminaCost:10,type:'special',desc:'【被动】速度翻倍',speedBoost:true,icon:'🔥',cd:2,passive:true},
+    {id:'shield_break',name:'护盾击破',staminaCost:14,type:'attack',desc:'【主动】无视防御',minDmg:1.2,ignoreDef:true,icon:'💎',cd:1},
 ];
 const ENEMY_NAMES=['机械龙虾','电路龙虾','芯片龙虾','程序龙虾','数据龙虾','比特龙虾','代码龙虾','网络龙虾','云端龙虾','量子龙虾','深渊机甲龙虾','泰坦机械龙虾','风暴电子龙虾','雷霆硅基龙虾','混沌编程龙虾'];
 const MAX_STAMINA = 100;
 const STAMINA_REGEN_BATTLE = 15;
 const STAMINA_REGEN_IDLE = 30;
-const AUTO_BATTLE_DELAY = 1500;
+const AUTO_BATTLE_DELAY = 300;
 let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false};
 
 function initState(){
@@ -1343,7 +1343,7 @@ showWelcomeLobster();
 updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.18 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.19 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
