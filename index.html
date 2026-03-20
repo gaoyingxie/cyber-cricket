@@ -43,6 +43,12 @@
         .stat { text-align: center; min-width: 80px; }
         .stat-label { font-size: 0.8em; color: #888; }
         .stat-value { font-size: 1.4em; color: #00ff88; }
+        .stamina-wrap { margin-bottom: 20px; }
+        .stamina-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .stamina-label { font-size: 0.85em; color: #aaa; min-width: 50px; }
+        .stamina-bar { flex: 1; background: #222; border-radius: 8px; height: 14px; overflow: hidden; border: 1px solid #333; }
+        .stamina-fill { height: 100%; background: linear-gradient(90deg, #4488ff, #66aaff); transition: width 0.3s; }
+        .stamina-text { font-size: 0.8em; color: #888; text-align: right; }
         .arena {
             display: flex;
             justify-content: space-between;
@@ -52,7 +58,7 @@
             border-radius: 15px;
             padding: 30px;
             margin-bottom: 20px;
-            min-height: 280px;
+            min-height: 320px;
             position: relative;
             overflow: hidden;
         }
@@ -72,6 +78,15 @@
         .hp-fill.green { background: linear-gradient(90deg, #00ff88, #00cc66); }
         .hp-text { font-size: 0.85em; color: #888; }
         .fighter-stats { font-size: 0.8em; color: #00ff88; margin-top: 5px; }
+        .buffs-display { min-height: 24px; margin-top: 6px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+        .buff-tag { display: inline-block; font-size: 0.7em; padding: 2px 6px; border-radius: 6px; margin: 2px; }
+        .buff-poison { background: rgba(128,255,0,0.15); border: 1px solid #80ff00; color: #80ff00; }
+        .buff-shield { background: rgba(68,136,255,0.15); border: 1px solid #4488ff; color: #4488ff; }
+        .buff-stun { background: rgba(255,200,0,0.15); border: 1px solid #ffc800; color: #ffc800; }
+        .buff-seal { background: rgba(180,80,255,0.15); border: 1px solid #b450ff; color: #b450ff; }
+        .buff-speed { background: rgba(255,100,50,0.15); border: 1px solid #ff6432; color: #ff6432; }
+        .buff-defend { background: rgba(100,180,255,0.15); border: 1px solid #64b4ff; color: #64b4ff; }
+        .buff-counter { background: rgba(255,150,50,0.15); border: 1px solid #ff9632; color: #ff9632; }
         .vs { font-size: 2em; color: #ff4444; text-shadow: 0 0 10px #ff4444; animation: pulse 1s infinite; position: relative; z-index: 1; }
         @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.1); } }
         .skills-section {
@@ -94,6 +109,7 @@
             color: #00ff88;
             font-family: inherit;
             text-align: left;
+            position: relative;
         }
         .skill-btn:hover:not(:disabled) {
             background: linear-gradient(135deg, #2a5a3a, #1a4a2a);
@@ -107,6 +123,7 @@
         .skill-btn.attack { border-color: #ff6644; color: #ff6644; background: linear-gradient(135deg, #3a2a1a, #2a1a0a); }
         .skill-btn.defense { border-color: #4488ff; color: #4488ff; background: linear-gradient(135deg, #1a2a3a, #0a1a2a); }
         .skill-btn.special { border-color: #ff44ff; color: #ff44ff; background: linear-gradient(135deg, #2a1a2a, #1a0a1a); }
+        .skill-btn.no-stamina { opacity: 0.3; border-color: #666 !important; }
         .battle-log {
             background: rgba(0,0,0,0.5);
             border: 1px solid #333;
@@ -124,6 +141,7 @@
         .log-heal { color: #44ff44; }
         .log-crit { color: #ffff00; text-shadow: 0 0 5px #ffff00; }
         .log-system { color: #888; }
+        .log-turn { color: #00ccff; font-weight: bold; }
         .btn {
             background: linear-gradient(135deg, #00aa55, #008844);
             border: none;
@@ -201,12 +219,22 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗蛐蛐 ⚡</h1>
-        <div class="version">v1.0.0 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.0 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
-            <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0</div></div>
+            <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
+        </div>
+        <div class="stamina-wrap">
+            <div class="stamina-row">
+                <span class="stamina-label">⚡ 体力</span>
+                <div class="stamina-bar"><div class="stamina-fill" id="stamina-bar" style="width:100%"></div></div>
+                <span class="stamina-text" id="stamina-text">100/100</span>
+            </div>
+            <div class="stamina-row">
+                <span class="stamina-label" style="color:#555;font-size:0.75em">每回合恢复 +15（战斗外+30）</span>
+            </div>
         </div>
         <div class="arena" id="arena">
             <div class="fighter">
@@ -216,6 +244,7 @@
                 <div class="hp-bar"><div class="hp-fill" id="player-hp-bar"></div></div>
                 <div class="hp-text"><span id="player-hp">100</span> / <span id="player-max-hp">100</span></div>
                 <div class="fighter-stats" id="player-stats">攻:10 防:5 速:8</div>
+                <div class="buffs-display" id="player-buffs"></div>
             </div>
             <div class="vs">VS</div>
             <div class="fighter">
@@ -225,6 +254,7 @@
                 <div class="hp-bar"><div class="hp-fill" id="enemy-hp-bar"></div></div>
                 <div class="hp-text"><span id="enemy-hp">0</span> / <span id="enemy-max-hp">0</span></div>
                 <div class="fighter-stats" id="enemy-stats"></div>
+                <div class="buffs-display" id="enemy-buffs"></div>
                 <div class="enemy-skill-display" id="enemy-skills"></div>
             </div>
         </div>
@@ -258,35 +288,41 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
+const VERSION = 'v1.0';
 const PHASES=['幼虫','成虫','战斗体','究极体'], PHASE_SPRITES=['🐛','🦗','⚡🦗','🔱🦗'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
-    {id:'combo',name:'连击',cost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊'},
-    {id:'crit',name:'暴击',cost:12,type:'attack',desc:'高概率暴击',minDmg:0,critRate:0.45,critMult:2,icon:'💥'},
-    {id:'lifesteal',name:'吸血',cost:18,type:'attack',desc:'伤害30%转HP',minDmg:0.8,lifesteal:0.3,icon:'🩸'},
-    {id:'resurrect',name:'神佑',cost:25,type:'special',desc:'死亡30%复活',resurrectRate:0.3,icon:'✨'},
-    {id:'counter',name:'反击',cost:10,type:'defense',desc:'受击时反击',counterRate:0.4,icon:'🛡️'},
-    {id:'poison',name:'剧毒',cost:14,type:'attack',desc:'每回合掉血5%',minDmg:0.5,poisonDmg:0.05,icon:'☠️'},
-    {id:'deadly',name:'必杀',cost:22,type:'attack',desc:'2.5倍伤害',minDmg:0,critRate:1,critMult:2.5,icon:'⚔️'},
-    {id:'defend',name:'防御',cost:8,type:'defense',desc:'受伤-50%',reduceDmg:0.5,icon:'🛡️'},
-    {id:'confuse',name:'混乱',cost:16,type:'special',desc:'敌无法行动',stunRate:0.35,icon:'🌪️'},
-    {id:'seal',name:'封印',cost:20,type:'special',desc:'封印1回合',sealRate:0.3,icon:'🔮'},
-    {id:'emp',name:'电磁脉冲',cost:15,type:'special',desc:'伤害+沉默',minDmg:0.7,stunRate:0.25,icon:'⚡'},
-    {id:'hack',name:'数据入侵',cost:18,type:'attack',desc:'窃取10%HP',minDmg:0.6,drain:0.1,icon:'💻'},
-    {id:'shield',name:'能量护盾',cost:12,type:'defense',desc:'抵2次攻击',shield:2,icon:'🔰'},
-    {id:'virus',name:'病毒注入',cost:20,type:'attack',desc:'持续伤害',minDmg:0.4,poisonDmg:0.08,reduceStat:0.1,icon:'🦠'},
-    {id:'overclock',name:'超频',cost:10,type:'special',desc:'速度翻倍',speedBoost:2,icon:'🔥'},
-    {id:'shield_break',name:'护盾击破',cost:14,type:'attack',desc:'无视防御',minDmg:1.2,ignoreDef:true,icon:'💎'},
+    {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊'},
+    {id:'crit',name:'暴击',staminaCost:12,type:'attack',desc:'高概率暴击',minDmg:0,critRate:0.45,critMult:2,icon:'💥'},
+    {id:'lifesteal',name:'吸血',staminaCost:18,type:'attack',desc:'伤害30%转HP',minDmg:0.8,lifesteal:0.3,icon:'🩸'},
+    {id:'resurrect',name:'神佑',staminaCost:25,type:'special',desc:'死亡30%复活',resurrectRate:0.3,icon:'✨'},
+    {id:'counter',name:'反击',staminaCost:10,type:'defense',desc:'受击时反击',counterRate:0.4,icon:'🛡️'},
+    {id:'poison',name:'剧毒',staminaCost:14,type:'attack',desc:'每回合掉血5%',minDmg:0.5,poisonDmg:0.05,icon:'☠️'},
+    {id:'deadly',name:'必杀',staminaCost:22,type:'attack',desc:'2.5倍伤害',minDmg:0,critRate:1,critMult:2.5,icon:'⚔️'},
+    {id:'defend',name:'防御',staminaCost:8,type:'defense',desc:'受伤-50%',reduceDmg:0.5,icon:'🛡️'},
+    {id:'confuse',name:'混乱',staminaCost:16,type:'special',desc:'敌无法行动',stunRate:0.35,icon:'🌪️'},
+    {id:'seal',name:'封印',staminaCost:20,type:'special',desc:'封印1回合',sealRate:0.3,icon:'🔮'},
+    {id:'emp',name:'电磁脉冲',staminaCost:15,type:'special',desc:'伤害+沉默',minDmg:0.7,stunRate:0.25,icon:'⚡'},
+    {id:'hack',name:'数据入侵',staminaCost:18,type:'attack',desc:'窃取10%HP',minDmg:0.6,drain:0.1,icon:'💻'},
+    {id:'shield',name:'能量护盾',staminaCost:12,type:'defense',desc:'抵2次攻击',shield:2,icon:'🔰'},
+    {id:'virus',name:'病毒注入',staminaCost:20,type:'attack',desc:'持续伤害',minDmg:0.4,poisonDmg:0.08,reduceStat:0.1,icon:'🦠'},
+    {id:'overclock',name:'超频',staminaCost:10,type:'special',desc:'速度翻倍',speedBoost:true,icon:'🔥'},
+    {id:'shield_break',name:'护盾击破',staminaCost:14,type:'attack',desc:'无视防御',minDmg:1.2,ignoreDef:true,icon:'💎'},
 ];
 const ENEMY_NAMES=['机械蛐蛐','电路蟋蟀','芯片蚂蚱','程序螽斯','数据蝗虫','比特蟋蟀','代码蝈蝈','网络蚂蚱','云端蝗虫','量子螽斯','深渊机甲虫','泰坦机械蝎','风暴电子蚁','雷霆硅基蝉','混沌编程螳螂'];
-let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null};
+const MAX_STAMINA = 100;
+const STAMINA_REGEN_BATTLE = 15;
+const STAMINA_REGEN_IDLE = 30;
+let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null};
 
 function initState(){
-    S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,
+    S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,turnOrder:null,
         player:{
             name:'你的蛐蛐',level:1,exp:0,expToLevel:30,hp:100,maxHp:100,atk:10,def:5,spd:8,
+            stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
             skills:[Object.assign({},ALL_SKILLS[0]),Object.assign({},ALL_SKILLS[1])],
             buffs:[],shields:0,poisonDmg:0,alive:true,resurrectUsed:false,stunned:false,sealed:false,
-            speedBoosted:false,defReduced:false,resurrectRate:0
+            speedBoosted:false,defReduced:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
+            speedBoosted:false
         },enemy:null};
 }
 function cloneSkill(s){return JSON.parse(JSON.stringify(s))}
@@ -298,7 +334,8 @@ function calcPlayerStats(){
     S.player.maxHp=Math.floor(bhp*m*hpM);
     S.player.atk=Math.floor(bAtk*m*atkM);
     S.player.def=Math.floor(bDef*m);
-    S.player.spd=Math.floor(bSpd*m*(S.player.speedBoosted?2:1));
+    const effectiveSpd=S.player.speedBoosted?bSpd*m*2:bSpd*m;
+    S.player.spd=Math.floor(effectiveSpd);
     if(S.player.hp>S.player.maxHp)S.player.hp=S.player.maxHp;
 }
 function levelUp(){
@@ -317,8 +354,10 @@ function generateEnemy(){
         name:ENEMY_NAMES[Math.min(r-1,ENEMY_NAMES.length-1)]||'强化蛐蛐#'+r,
         level:r,hp:Math.floor((60+r*8)*m),maxHp:Math.floor((60+r*8)*m),
         atk:Math.floor((6+r*1.2)*m),def:Math.floor((3+r*0.8)*m),spd:Math.floor((5+r*0.6)*m),
+        stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
         skills:[],buffs:[],shields:0,poisonDmg:0,alive:true,resurrected:false,
-        stunned:false,sealed:false,resurrectRate:0
+        stunned:false,sealed:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
+        speedBoosted:false,defReduced:false
     };
     const cnt=3+Math.min(Math.floor(r/3),4);
     const avail=ALL_SKILLS.filter(x=>x.id!=='resurrect'||Math.random()<0.2);
@@ -328,19 +367,40 @@ function generateEnemy(){
 }
 function startBattle(){
     if(S.inBattle)return;
-    S.inBattle=true;S.turn=0;S.battleResult=null;
+    S.inBattle=true;S.turn=0;S.battleResult=null;S.turnOrder=null;
     S.player.hp=S.player.maxHp;S.player.poisonDmg=0;S.player.shields=0;
     S.player.alive=true;S.player.stunned=false;S.player.sealed=false;
     S.player.resurrectUsed=false;S.player.defReduced=false;S.player.speedBoosted=false;
+    S.player.buffs=[];
     generateEnemy();
     document.getElementById('battle-log').innerHTML='';
     addLog('<span class="log-system">=== 战斗开始! ===</span>');
     addLog('<span class="log-enemy">对手: '+S.enemy.name+' Lv.'+S.enemy.level+'</span>');
+    addLog('<span class="log-system">对手速度: '+S.enemy.spd+' | 你的速度: '+S.player.spd+'</span>');
+    // Speed determines who goes first
+    if(S.player.spd>=S.enemy.spd){
+        S.turnOrder='player';
+        addLog('<span class="log-player">⚡ 你的速度更占优势，先手!</span>');
+    }else{
+        S.turnOrder='enemy';
+        addLog('<span class="log-enemy">⚡ '+S.enemy.name+' 速度更快，先手!</span>');
+    }
     addLog('<span class="log-system">技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(', ')+'</span>');
     updateUI();
     document.getElementById('btn-start').disabled=true;
     document.getElementById('skills-section').style.display='block';
     renderSkills();
+    if(S.turnOrder==='enemy'){
+        setTimeout(()=>enemyTurn(),600);
+    }
+}
+function enemyTurn(){
+    if(!S.inBattle||S.battleResult)return;
+    S.pendingEnemySkill=chooseEnemySkill();
+    if(S.pendingEnemySkill){
+        useSkill(S.pendingEnemySkill.id,false);
+        S.pendingEnemySkill=null;
+    }
 }
 function useSkill(skillId,isPlayer){
     if(!S.inBattle||S.battleResult)return;
@@ -351,16 +411,32 @@ function useSkill(skillId,isPlayer){
     const lClass=isPlayer?'log-player':'log-enemy';
     const skill=(isPlayer?S.player:S.enemy).skills.find(x=>x.id===skillId);
     if(!skill)return;
+    // Stamina check
+    if(isPlayer && user.stamina < skill.staminaCost){
+        addLog('<span class="log-system">⚡ 体力不足! 无法使用 '+skill.icon+skill.name+'</span>');
+        if(S.inBattle && S.enemy && S.enemy.alive){
+            setTimeout(()=>enemyTurn(),600);
+        }
+        return;
+    }
+    if(!isPlayer){
+        user.stamina=Math.max(0,user.stamina-skill.staminaCost);
+    }
     S.turn++;
     addLog('<span class="log-system">--- 第'+S.turn+'回合 ---</span>');
     addLog('<span class="'+lClass+'">'+uName+' 使用了 '+skill.icon+skill.name+'!</span>');
     if(user.sealed){
-        addLog('<span class="log-system">'+uName+' 被封印了!</span>');
+        addLog('<span class="log-system">🔮 '+uName+' 被封印了! 本回合无法行动</span>');
         user.sealed=false;
     }else if(user.stunned){
-        addLog('<span class="log-system">'+uName+' 混乱了!</span>');
+        addLog('<span class="log-system">🌪️ '+uName+' 混乱了! 本回合无法行动</span>');
         user.stunned=false;
     }else{
+        // Spend stamina
+        if(isPlayer){
+            user.stamina-=skill.staminaCost;
+            addLog('<span class="log-system">⚡ 体力 -'+skill.staminaCost+' ('+user.stamina+'/'+user.maxStamina+')</span>');
+        }
         if(skill.minDmg!==undefined){
             let totalDmg=0;
             const times=skill.times||1;
@@ -373,14 +449,17 @@ function useSkill(skillId,isPlayer){
                 }
                 let final=raw;
                 if(!skill.ignoreDef){
-                    final=Math.floor(raw*(1-user.atk/(user.atk+100)));
-                    const defRed=target.def/(target.def+100);
-                    final=Math.floor(final*(1-defRed));
+                    const defRed=target.defReduced?0.5:0;
+                    final=Math.max(1,Math.floor(raw*(1-(target.def/(target.def+100)))*(1-defRed)));
                 }
                 if(target.shields>0){
                     target.shields--;
                     final=Math.floor(final*0.3);
                     addLog('<span class="log-system">🔰 护盾抵挡了部分伤害!</span>');
+                }
+                if(user.reduceDmgRate&&Math.random()<user.reduceDmgRate){
+                    final=Math.floor(final*0.5);
+                    addLog('<span class="log-system">🛡️ 防御姿态减免了伤害!</span>');
                 }
                 if(crit){
                     addLog('<span class="log-crit">💥 暴击! 造成 '+final+' 伤害!</span>');
@@ -409,15 +488,21 @@ function useSkill(skillId,isPlayer){
                 target.defReduced=true;
                 addLog('<span class="log-damage">📉 '+tName+' 属性下降了!</span>');
             }
+            // Counter check
+            if(skill.minDmg>0&&target.counterRate&&Math.random()<target.counterRate){
+                const cntDmg=Math.floor(target.atk*0.5);
+                user.hp=Math.max(0,user.hp-cntDmg);
+                addLog('<span class="log-damage">🛡️ 反击! '+target.name+' 造成 '+cntDmg+' 伤害</span>');
+            }
         }
         if(skill.reduceDmg){
-            userBuffs(user,'defend',skill.reduceDmg);
-            addLog('<span class="log-player">🛡️ 进入防御姿态!</span>');
+            user.reduceDmgRate=skill.reduceDmg;
+            addLog('<span class="'+lClass+'">🛡️ 进入防御姿态!(受伤-50%)</span>');
         }
-        if(skill.counterRate)userBuffs(user,'counter',skill.counterRate);
+        if(skill.counterRate)user.counterRate=skill.counterRate;
         if(skill.shield){
             user.shields=skill.shield;
-            addLog('<span class="'+lClass+'">🔰 展开能量护盾!</span>');
+            addLog('<span class="'+lClass+'">🔰 展开能量护盾!(可挡'+skill.shield+'次)</span>');
         }
         if(skill.speedBoost){
             user.speedBoosted=true;
@@ -434,6 +519,8 @@ function useSkill(skillId,isPlayer){
         if(skill.resurrectRate)user.resurrectRate=skill.resurrectRate;
     }
     user.speedBoosted=false;
+    // Decay temporary buffs
+    user.reduceDmgRate=0;
     if(target.hp<=0){
         if(target.resurrectRate&&!target.resurrectUsed&&Math.random()<target.resurrectRate){
             target.hp=Math.floor(target.maxHp*0.3);
@@ -447,17 +534,18 @@ function useSkill(skillId,isPlayer){
             return;
         }
     }
-    if(S.player.poisonDmg>0){
+    // Poison damage
+    if(S.player.poisonDmg>0&&S.player.alive){
         const pd=Math.floor(S.player.maxHp*S.player.poisonDmg);
         S.player.hp=Math.max(1,S.player.hp-pd);
         addLog('<span class="log-damage">🧪 中毒损失 '+pd+' HP</span>');
     }
-    if(S.enemy&&S.enemy.poisonDmg>0){
+    if(S.enemy&&S.enemy.poisonDmg>0&&S.enemy.alive){
         const ed=Math.floor(S.enemy.maxHp*S.enemy.poisonDmg);
         S.enemy.hp=Math.max(1,S.enemy.hp-ed);
         addLog('<span class="log-damage">🧪 '+S.enemy.name+' 中毒损失 '+ed+' HP</span>');
     }
-    S.player.defReduced=false;
+    // Decay shields
     if(S.player.shields>0)S.player.shields--;
     if(S.enemy&&S.enemy.shields>0)S.enemy.shields--;
     if(S.player.hp<=0){
@@ -473,31 +561,37 @@ function useSkill(skillId,isPlayer){
             return;
         }
     }
+    // Stamina regen at end of each full round (both attacked)
+    if(!S.inBattle)return;
+    // Regenerate stamina for both
+    const regenAmt=STAMINA_REGEN_BATTLE;
+    const actualRegen=Math.min(regenAmt,S.player.maxStamina-S.player.stamina);
+    if(actualRegen>0){
+        S.player.stamina=Math.min(S.player.maxStamina,S.player.stamina+actualRegen);
+        addLog('<span class="log-system">⚡ 体力恢复 +'+actualRegen+'</span>');
+    }
     updateUI();
+    renderSkills();
     if(S.inBattle&&S.enemy&&S.enemy.alive){
-        S.pendingEnemySkill=chooseEnemySkill();
-        setTimeout(()=>{
-            if(S.pendingEnemySkill){
-                useSkill(S.pendingEnemySkill.id,false);
-                S.pendingEnemySkill=null;
-            }
-        },800);
+        // Swap turn order
+        S.turnOrder=S.turnOrder==='player'?'enemy':'player';
+        if(S.turnOrder==='enemy'){
+            setTimeout(()=>enemyTurn(),600);
+        }
     }
 }
-function userBuffs(user,type,value){
-    user.buffs=user.buffs||[];
-    user.buffs.push({type,value,turns:1});
-}
 function chooseEnemySkill(){
-    const avail=S.enemy.skills.filter(s=>{
-        if(s.type==='attack'&&S.player.shields>0&&!s.ignoreDef)return false;
-        return true;
-    });
+    const avail=S.enemy.skills.filter(s=>s.staminaCost<=S.enemy.stamina);
     if(!avail.length)avail=S.enemy.skills;
     if(Math.random()<0.3)return avail[Math.floor(Math.random()*avail.length)];
     let best=avail[0],bestV=0;
     for(const s of avail){
         let v=(s.minDmg||0)+(s.critRate&&s.critMult?s.critRate*(s.critMult-1):0);
+        if(s.stunRate)v+=s.stunRate*2;
+        if(s.sealRate)v+=s.sealRate*2;
+        if(s.poisonDmg)v+=s.poisonDmg*3;
+        if(s.lifesteal)v+=s.lifesteal*2;
+        if(s.drain)v+=s.drain*2;
         if(v>bestV){bestV=v;best=s;}
     }
     return best;
@@ -508,6 +602,10 @@ function endBattle(){
         const goldGain=5+S.round*2;
         S.player.exp+=expGain;
         S.gold+=goldGain;
+        // Bonus stamina restore on win
+        const bonusStamina=Math.floor(S.player.maxStamina*0.3);
+        S.player.stamina=Math.min(S.player.maxStamina,S.player.stamina+bonusStamina);
+        addLog('<span class="log-player">🎉 胜利! 经验+'+expGain+' 金币+'+goldGain+' 体力+'+bonusStamina+'</span>');
         levelUp();
         let newSkill=null;
         if(Math.random()<0.4&&S.enemy&&S.enemy.skills.length>0){
@@ -527,7 +625,6 @@ function endBattle(){
             container.style.display='none';
         }
         document.getElementById('reward-panel').classList.add('show');
-        addLog('<span class="log-player">🎉 胜利! 经验+'+expGain+' 金币+'+goldGain+'</span>');
         if(newSkill)addLog('<span class="log-player">🆕 学会新技能: '+newSkill.icon+newSkill.name+'!</span>');
         S.round++;
     }else{
@@ -544,6 +641,12 @@ function closeReward(){
     document.getElementById('reward-panel').classList.remove('show');
     document.getElementById('btn-start').disabled=false;
     document.getElementById('skills-section').style.display='none';
+    // Idle stamina regen between battles
+    const idleRegen=STAMINA_REGEN_IDLE;
+    const actualRegen=Math.min(idleRegen,S.player.maxStamina-S.player.stamina);
+    if(actualRegen>0){
+        S.player.stamina=Math.min(S.player.maxStamina,S.player.stamina+actualRegen);
+    }
     updateUI();
 }
 function evolve(){
@@ -556,6 +659,7 @@ function evolve(){
         document.getElementById('evolution-overlay').classList.remove('show');
         calcPlayerStats();
         S.player.hp=S.player.maxHp;
+        S.player.stamina=S.player.maxStamina;
         updateUI();
     },2000);
 }
@@ -564,7 +668,11 @@ function restartGame(){
     initState();
     updateUI();
     document.getElementById('battle-log').innerHTML='';
-    addLog('<span class="log-system">=== 新游戏开始! ===</span>');
+    addLog('<span class="log-system">=== 赛博斗蛐蛐 '+VERSION+' ===</span>');
+    addLog('<span class="log-system">用技能打败对手，偷学他们的技能!</span>');
+    addLog('<span class="log-system">积累金币可以进化蛐蛐!</span>');
+    addLog('<span class="log-system">体力不足时无法使用技能，注意管理体力!</span>');
+    updateUI();
 }
 function addLog(html){
     const div=document.createElement('div');
@@ -579,11 +687,28 @@ function renderSkills(){
     grid.innerHTML='';
     for(const s of S.player.skills){
         const btn=document.createElement('button');
-        btn.className='skill-btn '+s.type;
-        btn.innerHTML='<span class="skill-name">'+s.icon+s.name+'</span><span class="skill-cost">消耗: '+s.cost+'</span><span class="skill-desc">'+s.desc+'</span>';
-        btn.onclick=()=>{if(!S.battleResult)useSkill(s.id,true);};
+        const noStamina=S.player.stamina<s.staminaCost;
+        btn.className='skill-btn '+s.type+(noStamina?' no-stamina':'');
+        btn.innerHTML='<span class="skill-name">'+s.icon+s.name+'</span><span class="skill-cost">体力:'+s.staminaCost+'</span><span class="skill-desc">'+s.desc+'</span>';
+        btn.disabled=noStamina||!S.inBattle||S.turnOrder!=='player';
+        btn.onclick=()=>{
+            if(!S.battleResult&&S.turnOrder==='player'){
+                useSkill(s.id,true);
+            }
+        };
         grid.appendChild(btn);
     }
+}
+function getBuffTags(entity,isPlayer){
+    const tags=[];
+    if(entity.poisonDmg>0)tags.push('<span class="buff-tag buff-poison">☠️ 中毒'+Math.round(entity.poisonDmg*100)+'%</span>');
+    if(entity.shields>0)tags.push('<span class="buff-tag buff-shield">🔰 护盾×'+entity.shields+'</span>');
+    if(entity.stunned)tags.push('<span class="buff-tag buff-stun">🌪️ 混乱</span>');
+    if(entity.sealed)tags.push('<span class="buff-tag buff-seal">🔮 封印</span>');
+    if(entity.speedBoosted)tags.push('<span class="buff-tag buff-speed">🔥 超频</span>');
+    if(entity.reduceDmgRate>0)tags.push('<span class="buff-tag buff-defend">🛡️ 防御</span>');
+    if(entity.counterRate>0)tags.push('<span class="buff-tag buff-counter">⚔️ 反击</span>');
+    return tags.join('');
 }
 function updateUI(){
     document.getElementById('round-num').textContent=S.round;
@@ -593,21 +718,28 @@ function updateUI(){
     document.getElementById('level').textContent=S.player.level;
     document.getElementById('player-sprite').textContent=PHASE_SPRITES[S.phase];
     document.getElementById('player-name').textContent='你的蛐蛐 '+PHASES[S.phase];
-    document.getElementById('player-level').textContent='Lv.'+S.player.level;
+    document.getElementById('player-level').textContent='Lv.'+S.player.level+' | 速:'+S.player.spd;
     document.getElementById('player-hp').textContent=Math.max(0,S.player.hp);
     document.getElementById('player-max-hp').textContent=S.player.maxHp;
     document.getElementById('player-hp-bar').style.width=(S.player.hp/S.player.maxHp*100)+'%';
     document.getElementById('player-hp-bar').className='hp-fill'+(S.player.hp>S.player.maxHp*0.5?' green':'');
     document.getElementById('player-stats').textContent='攻:'+S.player.atk+' 防:'+S.player.def+' 速:'+S.player.spd;
+    document.getElementById('player-buffs').innerHTML=getBuffTags(S.player,true);
+    // Stamina bar
+    const stamPct=Math.max(0,S.player.stamina/S.player.maxStamina*100);
+    document.getElementById('stamina-bar').style.width=stamPct+'%';
+    document.getElementById('stamina-bar').style.background=stamPct>50?'linear-gradient(90deg, #4488ff, #66aaff)':stamPct>25?'linear-gradient(90deg, #ffaa00, #ffcc44)':'linear-gradient(90deg, #ff4444, #ff6666)';
+    document.getElementById('stamina-text').textContent=S.player.stamina+'/'+S.player.maxStamina;
     if(S.enemy){
         document.getElementById('enemy-sprite').textContent='🤖';
         document.getElementById('enemy-name').textContent=S.enemy.name;
-        document.getElementById('enemy-level').textContent='Lv.'+S.enemy.level;
+        document.getElementById('enemy-level').textContent='Lv.'+S.enemy.level+' | 速:'+S.enemy.spd;
         document.getElementById('enemy-hp').textContent=Math.max(0,S.enemy.hp);
         document.getElementById('enemy-max-hp').textContent=S.enemy.maxHp;
         document.getElementById('enemy-hp-bar').style.width=(S.enemy.hp/S.enemy.maxHp*100)+'%';
         document.getElementById('enemy-stats').textContent='攻:'+S.enemy.atk+' 防:'+S.enemy.def+' 速:'+S.enemy.spd;
-        document.getElementById('enemy-skills').textContent='技能: '+(S.enemy.skills||[]).map(s=>s.icon+s.name).join(', ');
+        document.getElementById('enemy-buffs').innerHTML=getBuffTags(S.enemy,false);
+        document.getElementById('enemy-skills').textContent='技能: '+(S.enemy.skills||[]).map(s=>s.icon+s.name+'('+s.staminaCost+')').join(', ');
     }
     const evolveBtn=document.getElementById('btn-evolve');
     evolveBtn.disabled=S.gold<100||S.phase>=3;
@@ -616,9 +748,10 @@ function updateUI(){
     if(S.inBattle)renderSkills();
 }
 initState();
-addLog('<span class="log-system">=== 赛博斗蛐蛐 v1.0.0 ===</span>');
+addLog('<span class="log-system">=== 赛博斗蛐蛐 '+VERSION+' ===</span>');
 addLog('<span class="log-system">用技能打败对手，偷学他们的技能!</span>');
 addLog('<span class="log-system">积累金币可以进化蛐蛐!</span>');
+addLog('<span class="log-system">体力不足时无法使用技能，注意管理体力!</span>');
 updateUI();
 </script>
 </body>
