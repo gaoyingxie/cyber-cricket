@@ -455,7 +455,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.25 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.26 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -561,7 +561,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.25';
+const VERSION = 'v1.26';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:0,type:'attack',desc:'【被动】普通攻击概率触发额外一次攻击（伤害减半，可与必杀叠加）',icon:'👊',cd:0,passive:true,comboRate:0.3},
@@ -875,6 +875,13 @@ function closeEnemySelect() {
 
 function selectEnemy(name,level,hp,atk,def,spd,skills) {
     closeEnemySelect();
+    // 玩家血量和体力回满
+    S.player.hp=S.player.maxHp;
+    S.player.stamina=S.player.maxStamina;
+    S.player.poisonDmg=0;
+    S.player.shields=0;
+    S.player.stunned=false;
+    S.player.sealed=false;
     S.enemy={
         name:name,level:level,hp:hp,maxHp:hp,
         atk:atk,def:def,spd:spd,
@@ -1453,7 +1460,7 @@ showWelcomeLobster();
 updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.25 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.26 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
