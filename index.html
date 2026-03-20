@@ -549,7 +549,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.32 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.33 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -691,7 +691,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.32';
+const VERSION = 'v1.33';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -768,9 +768,9 @@ function calcPlayerStats(){
     const hpM=S.player.defReduced?0.9:1,atkM=S.player.defReduced?0.9:1;
     // 装备加成
     const equipBonus={atk:0,def:0,hp:0};
-    if(S.player.equipment.atk){const e=S.player.equipment.atk;equipBonus.atk=Math.floor(EQUIP_BASE_VALUES.atk*e.qualityMult*e.level);}
-    if(S.player.equipment.def){const e=S.player.equipment.def;equipBonus.def=Math.floor(EQUIP_BASE_VALUES.def*e.qualityMult*e.level);}
-    if(S.player.equipment.hp){const e=S.player.equipment.hp;equipBonus.hp=Math.floor(EQUIP_BASE_VALUES.hp*e.qualityMult*e.level);}
+    if(S.player.equipment.atk){const e=S.player.equipment.atk;equipBonus.atk=Math.floor(EQUIP_BASE_VALUES.atk*EQUIP_QUALITY_MULT[e.quality]*e.level);}
+    if(S.player.equipment.def){const e=S.player.equipment.def;equipBonus.def=Math.floor(EQUIP_BASE_VALUES.def*EQUIP_QUALITY_MULT[e.quality]*e.level);}
+    if(S.player.equipment.hp){const e=S.player.equipment.hp;equipBonus.hp=Math.floor(EQUIP_BASE_VALUES.hp*EQUIP_QUALITY_MULT[e.quality]*e.level);}
     S.player.maxHp=Math.floor((bhp+equipBonus.hp)*m*hpM);
     S.player.atk=Math.floor((bAtk+equipBonus.atk)*m*atkM);
     S.player.def=Math.floor((bDef+equipBonus.def)*m);
@@ -1540,6 +1540,10 @@ function playerDefeated() {
 function closeReward() {
     document.getElementById('reward-panel').classList.remove('show');
     document.getElementById('btn-start').disabled=false;
+    // 如果背包有装备，提示玩家
+    if(S.player.inventory.length>0) {
+        addLog('<span class="log-system">📦 背包有 '+S.player.inventory.length+' 件装备，请点击"装备"穿戴！</span>');
+    }
 }
 
 function openEquipPanel() {
@@ -1662,7 +1666,7 @@ showWelcomeLobster();
 updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.32 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.33 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
