@@ -549,7 +549,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.34 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.35 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -691,7 +691,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.34';
+const VERSION = 'v1.35';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -986,7 +986,21 @@ function updatePlayerUI() {
 }
 
 function updateEnemyUI() {
-    if(!S.enemy) return;
+    if(!S.enemy) {
+        // 清空敌人显示
+        document.getElementById('enemy-sprite').textContent='🦀';
+        document.getElementById('enemy-sprite').className='enemy-sprite';
+        document.getElementById('enemy-name').textContent='???';
+        document.getElementById('enemy-level').textContent='';
+        document.getElementById('enemy-hp-bar').style.width='0%';
+        document.getElementById('enemy-hp').textContent='0';
+        document.getElementById('enemy-max-hp').textContent='0';
+        document.getElementById('enemy-stats').textContent='攻:0 防:0 速:0';
+        document.getElementById('enemy-speed-bar').style.width='0%';
+        document.getElementById('enemy-buffs').innerHTML='';
+        document.getElementById('enemy-skills').innerHTML='';
+        return;
+    }
     document.getElementById('enemy-sprite').textContent='🦀';
     document.getElementById('enemy-sprite').className='enemy-sprite';
     document.getElementById('enemy-name').textContent=S.enemy.name;
@@ -1666,7 +1680,7 @@ showWelcomeLobster();
 updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.34 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.35 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
