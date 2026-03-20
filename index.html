@@ -592,7 +592,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.48 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.49 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
@@ -755,7 +755,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.48';
+const VERSION = 'v1.49';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -781,7 +781,7 @@ const ALL_SKILLS=[
     {id:'shield_break',name:'护盾击破',staminaCost:12,type:'attack',desc:'【主动★100%】无视护盾+1.5倍伤害',minDmg:1.5,ignoreDef:true,icon:'💎',cd:1},
     {id:'triple',name:'三连击',staminaCost:18,type:'attack',desc:'【主动★100%】连续攻击3次（2、3次伤害×0.5）',minDmg:0.5,times:3,icon:'⚔️',cd:0},
     {id:'execute',name:'处决',staminaCost:18,type:'attack',desc:'【主动★100%】敌人HP<50%时伤害×2',minDmg:0,critRate:1,critMult:2,icon:'☠️',cd:0,execute:true},
-    {id:'drain',name:'灵魂吸取',staminaCost:14,type:'attack',desc:'【主动★100%】伤害+偷取敌人20%最大HP',minDmg:0.7,drain:0.2,icon:'👻',cd:0},
+    {id:'drain',name:'灵魂吸取',staminaCost:14,type:'attack',desc:'【主动★100%】伤害+偷取敌人12%最大HP',minDmg:0.7,drain:0.12,icon:'👻',cd:0},
     {id:'bleed',name:'撕裂',staminaCost:11,type:'attack',desc:'【主动★100%】伤害+敌人持续流血3回合',minDmg:0.5,bleedDmg:0.05,icon:'🩸',cd:0},
     // ===== 控制系 =====
     {id:'confuse',name:'混乱',staminaCost:14,type:'special',desc:'【主动★35%】使敌人无法行动1回合',stunRate:0.35,icon:'🌪️',cd:2},
@@ -1931,7 +1931,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.48 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.49 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
