@@ -43,12 +43,7 @@
         .stat { text-align: center; min-width: 80px; }
         .stat-label { font-size: 0.8em; color: #888; }
         .stat-value { font-size: 1.4em; color: #00ff88; }
-        .stamina-wrap { margin-bottom: 20px; }
-        .stamina-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .stamina-label { font-size: 0.85em; color: #aaa; min-width: 50px; }
-        .stamina-bar { flex: 1; background: #222; border-radius: 8px; height: 14px; overflow: hidden; border: 1px solid #333; }
-        .stamina-fill { height: 100%; background: linear-gradient(90deg, #4488ff, #66aaff); transition: width 0.3s; }
-        .stamina-text { font-size: 0.8em; color: #888; text-align: right; }
+
         .arena {
             display: flex;
             justify-content: space-between;
@@ -242,7 +237,6 @@
         .skill-btn.attack { border-color: #ff6644; color: #ff6644; background: linear-gradient(135deg, #3a2a1a, #2a1a0a); }
         .skill-btn.defense { border-color: #4488ff; color: #4488ff; background: linear-gradient(135deg, #1a2a3a, #0a1a2a); }
         .skill-btn.special { border-color: #ff44ff; color: #ff44ff; background: linear-gradient(135deg, #2a1a2a, #1a0a1a); }
-        .skill-btn.no-stamina { opacity: 0.3; border-color: #666 !important; }
         .battle-log {
             background: rgba(0,0,0,0.5);
             border: 1px solid #333;
@@ -592,21 +586,11 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.52 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.53 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
-        </div>
-        <div class="stamina-wrap">
-            <div class="stamina-row">
-                <span class="stamina-label">⚡ 体力</span>
-                <div class="stamina-bar"><div class="stamina-fill" id="stamina-bar" style="width:100%"></div></div>
-                <span class="stamina-text" id="stamina-text">100/100</span>
-            </div>
-            <div class="stamina-row">
-                <span class="stamina-label" style="color:#555;font-size:0.75em">每回合恢复 +20</span>
-            </div>
         </div>
         <div class="auto-battle-indicator active" id="auto-indicator"></div>
         <div class="arena" id="arena">
@@ -755,7 +739,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.52';
+const VERSION = 'v1.53';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.25,1.5,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -800,14 +784,11 @@ const ALL_SKILLS=[
     {id:'resurrect',name:'神佑',staminaCost:0,type:'special',desc:'【被动★15%】死亡时15%概率复活并恢复50%HP',icon:'✨',cd:0,passive:true,resurrectRate:0.15},
     {id:'armor',name:'护甲',staminaCost:0,type:'defense',desc:'【被动★100%】受到伤害降低15%',armorRate:0.15,icon:'🛎️',cd:0,passive:true},
     {id:'thorns',name:'荆棘',staminaCost:0,type:'defense',desc:'【被动★40%】受到攻击时反弹20%伤害',thornsRate:0.4,icon:'🌹',cd:0,passive:true},
-    {id:'vigor',name:'活力',staminaCost:0,type:'special',desc:'【被动★100%】每回合额外恢复10点体力',vigorRegen:10,icon:'⚡',cd:0,passive:true},
+    {id:'vigor',name:'活力',staminaCost:0,type:'special',desc:'【被动★100%】每回合多行动一次',vigorExtraTurn:true,icon:'⚡',cd:0,passive:true},
     {id:'rage',name:'狂暴',staminaCost:0,type:'attack',desc:'【被动★100%】HP<50%时伤害×1.5',rageRate:0.5,icon:'😈',cd:0,passive:true},
     {id:'karma',name:'善恶有报',staminaCost:0,type:'attack',desc:'【被动★100%】80%双倍伤害/20%治疗敌人',karmaRate:0.8,icon:'⚖️',cd:0,passive:true},
 ];
 const ENEMY_NAMES=['机械龙虾','电路龙虾','芯片龙虾','程序龙虾','数据龙虾','比特龙虾','代码龙虾','网络龙虾','云端龙虾','量子龙虾','深渊机甲龙虾','泰坦机械龙虾','风暴电子龙虾','雷霆硅基龙虾','混沌编程龙虾'];
-const MAX_STAMINA = 100;
-const STAMINA_REGEN_BATTLE = 20;
-const STAMINA_REGEN_IDLE = 30;
 const AUTO_BATTLE_DELAY = 750;
 let S={round:1,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false,lobsterMode:null,exported:false};
 
@@ -828,7 +809,6 @@ function initState(){
                 name:'你的龙虾',level:1,exp:0,expToLevel:30,
                 hp:bhp,maxHp:bhp,atk:batk,def:bdef,spd:bspd,
                 baseHp:bhp,baseAtk:batk,baseDef:bdef,baseSpd:bspd,
-                stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
                 skills:s,
                 buffs:[],shields:0,poisonDmg:0,alive:true,resurrectUsed:false,stunned:false,sealed:false,
                 speedBoosted:false,defReduced:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,lifesteal:0,
@@ -876,7 +856,6 @@ function generateEnemy(){
         name:ENEMY_NAMES[Math.min(r-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+r,
         level:r,hp:Math.floor((100+r*15)*m),maxHp:Math.floor((100+r*15)*m),
         atk:Math.floor((7+r*1.3)*m),def:Math.floor((3+r*0.8)*m),spd:Math.floor((5+r*0.6)*m),
-        stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
         skills:[],buffs:[],shields:0,poisonDmg:0,alive:true,resurrected:false,
         stunned:false,sealed:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
         speedBoosted:false,defReduced:false
@@ -941,7 +920,7 @@ function showSkillPopup(skillId) {
     document.getElementById('skill-popup-icon').textContent=skill.icon;
     document.getElementById('skill-popup-name').textContent=skill.name;
     document.getElementById('skill-popup-type').textContent='类型: '+(skill.type==='attack'?'攻击':skill.type==='defense'?'防御':'特殊');
-    document.getElementById('skill-popup-cost').textContent='消耗: '+skill.staminaCost+' 体力';
+    document.getElementById('skill-popup-cost').textContent='冷却: '+(skill.cd||0)+'回合';
     document.getElementById('skill-popup-desc').textContent=skill.desc;
     let effect='';
     if(skill.minDmg>0) effect+='伤害倍率'+(skill.minDmg*100).toFixed(0)+'%';
@@ -1028,8 +1007,6 @@ function updateUI() {
     document.getElementById('exp').textContent=S.player.exp+'/'+S.player.expToLevel;
     document.getElementById('phase').textContent=PHASES[S.phase];
     document.getElementById('level').textContent=S.player.level;
-    document.getElementById('stamina-bar').style.width=(S.player.stamina/S.player.maxStamina*100)+'%';
-    document.getElementById('stamina-text').textContent=Math.floor(S.player.stamina)+'/'+S.player.maxStamina;
     updatePlayerUI();
     updateEnemyUI();
     updateEvolveButton();
@@ -1163,9 +1140,8 @@ function closeEnemySelect() {
 
 function selectEnemy(name,level,hp,atk,def,spd,skills) {
     closeEnemySelect();
-    // 玩家血量和体力回满
+    // 玩家血量回满
     S.player.hp=S.player.maxHp;
-    S.player.stamina=S.player.maxStamina;
     S.player.poisonDmg=0;
     S.player.shields=0;
     S.player.stunned=false;
@@ -1173,7 +1149,6 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
     S.enemy={
         name:name,level:level,hp:hp,maxHp:hp,
         atk:atk,def:def,spd:spd,
-        stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
         skills:skills.map(s=>cloneSkill(s)),
         buffs:[],shields:0,poisonDmg:0,alive:true,resurrected:false,
         stunned:false,sealed:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
@@ -1204,8 +1179,6 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
     S.inBattle=true;
     S.phase=1;
     S.turn=0;
-    S.player.stamina=Math.min(S.player.maxStamina,S.player.stamina+STAMINA_REGEN_BATTLE);
-    S.enemy.stamina=Math.min(S.enemy.maxStamina,S.enemy.stamina+STAMINA_REGEN_BATTLE);
     document.getElementById('btn-start').disabled=true;
     updateUI();
     addLog('<span class="log-system">⚔️ 第 '+S.round+' 轮战斗开始!</span>');
@@ -1236,10 +1209,10 @@ function executeAutoTurn() {
         if(s.passive) return false;
         const cd=S.playerCooldowns[s.id]||0;
         if(cd>0) return false;
-        return S.player.stamina>=s.staminaCost;
+        return true;
     });
     
-    // 构建行动队列（普通攻击必定执行，无需检查体力）
+    // 构建行动队列
     S.battleQueue=[];
     
     // 添加技能到队列
@@ -1279,13 +1252,12 @@ function processBattleQueue() {
     if(action.type==='skill') {
         const skill=action.skill;
         if(skill.cd>0) S.playerCooldowns[skill.id]=skill.cd;
-        S.player.stamina-=skill.staminaCost;
         addLog('<span class="log-player">🎯 '+S.player.name+' 使用 【'+skill.icon+skill.name+'】</span>');
         processSkillEffect(skill,S.player,S.enemy,true);
         updateUI();
         setTimeout(processBattleQueue,delay);
     } else if(action.type==='attack') {
-        // 普通攻击（只消耗体力，无特殊效果）
+        // 普通攻击
         doNormalAttack(S.player,S.enemy,true,false);
         updateUI();
         setTimeout(processBattleQueue,delay);
@@ -1447,12 +1419,12 @@ function enemyTurn() {
         setTimeout(()=>endTurn(),getBattleDelay());
         return;
     }
-    // 收集可用技能
+    // 收集可用技能（只检查CD）
     const availSkills=S.enemy.skills.filter(s=>{
         if(s.passive) return false;
         const cd=S.enemyCooldowns[s.id]||0;
         if(cd>0) return false;
-        return S.enemy.stamina>=s.staminaCost;
+        return true;
     });
     
     // 构建敌人行动队列（普通攻击必定执行）
@@ -1493,7 +1465,6 @@ function processEnemyQueue() {
     if(action.type==='skill') {
         const skill=action.skill;
         if(skill.cd>0) S.enemyCooldowns[skill.id]=skill.cd;
-        S.enemy.stamina-=skill.staminaCost;
         addLog('<span class="log-enemy">🎯 '+S.enemy.name+' 使用 【'+skill.icon+skill.name+'】</span>');
         processSkillEffect(skill,S.enemy,S.player,false);
         updateUI();
@@ -1550,9 +1521,6 @@ function endTurn() {
     }
     if(S.player.defReduced&&Math.random()<0.3) S.player.defReduced=false;
     if(S.enemy && S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
-    S.player.stamina=Math.min(S.player.maxStamina,S.player.stamina+STAMINA_REGEN_BATTLE);
-    if(S.enemy) S.enemy.stamina=Math.min(S.enemy.maxStamina,S.enemy.stamina+STAMINA_REGEN_BATTLE);
-    addLog('<span class="log-system">💚 回合结束，双方恢复 '+STAMINA_REGEN_BATTLE+' 体力</span>');
     S.player.buffs=[];
     if(S.enemy) S.enemy.buffs=[];
     updateUI();
@@ -1848,7 +1816,6 @@ function importLobster(code) {
             def:data.def||5,
             spd:data.spd||8,
             baseHp:baseHp,baseAtk:baseAtk,baseDef:baseDef,baseSpd:baseSpd,
-            stamina:100,maxStamina:100,
             skills:data.skills.map(s=>cloneSkill(s)),
             buffs:[],shields:0,poisonDmg:0,alive:true,
             resurrected:false,stunned:false,sealed:false,
@@ -1910,7 +1877,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.52 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.53 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
