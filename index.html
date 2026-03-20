@@ -661,7 +661,7 @@
             </div>
             <div class="vs">VS</div>
             <div class="fighter" id="enemy-fighter">
-                <div class="fighter-sprite" id="enemy-sprite">🦀</div>
+                <div class="fighter-sprite enemy-sprite" id="enemy-sprite">🦞</div>
                 <div class="fighter-name" id="enemy-name">???</div>
                 <div class="fighter-level" id="enemy-level"></div>
                 <div class="hp-bar"><div class="hp-fill" id="enemy-hp-bar"></div></div>
@@ -1095,7 +1095,7 @@ function updatePlayerUI() {
 function updateEnemyUI() {
     if(!S.enemy) {
         // 清空敌人显示
-        document.getElementById('enemy-sprite').textContent='🦀';
+        document.getElementById('enemy-sprite').textContent='🦞';
         document.getElementById('enemy-sprite').className='enemy-sprite';
         document.getElementById('enemy-name').textContent='???';
         document.getElementById('enemy-level').textContent='';
@@ -1108,7 +1108,7 @@ function updateEnemyUI() {
         document.getElementById('enemy-skills').innerHTML='';
         return;
     }
-    document.getElementById('enemy-sprite').textContent='🦀';
+    document.getElementById('enemy-sprite').textContent='🦞';
     document.getElementById('enemy-sprite').className='enemy-sprite';
     document.getElementById('enemy-name').textContent=S.enemy.name;
     document.getElementById('enemy-level').textContent='Lv.'+S.enemy.level;
