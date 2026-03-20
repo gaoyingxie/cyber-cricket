@@ -70,7 +70,29 @@
             pointer-events: none;
         }
         .fighter { text-align: center; width: 45%; position: relative; z-index: 1; transition: transform 0.2s; }
-        .fighter-sprite { font-size: 80px; margin-bottom: 10px; transition: all 0.3s; position: relative; }
+        .fighter-sprite { font-size: 80px; margin-bottom: 10px; transition: all 0.3s; position: relative; animation: lobsterFloat 3s ease-in-out infinite; transform-origin: center bottom; }
+        @keyframes lobsterFloat { 0%,100%{transform:translateY(0) rotate(0deg)} 25%{transform:translateY(-8px) rotate(2deg)} 75%{transform:translateY(-4px) rotate(-2deg)} }
+        @keyframes lobsterAttack { 0%{transform:translateX(0)} 30%{transform:translateX(30px) scale(1.1)} 60%{transform:translateX(15px)} 100%{transform:translateX(0)} }
+        @keyframes lobsterHit { 0%{transform:translateX(0);filter:brightness(1)} 20%{transform:translateX(-10px);filter:brightness(2)} 40%{transform:translateX(5px)} 60%{transform:translateX(-5px);filter:brightness(1.5)} 100%{transform:translateX(0);filter:brightness(1)} }
+        @keyframes lobsterVictory { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-15px) scale(1.1)} }
+        @keyframes lobsterDeath { 0%{transform:rotate(0) scale(1);opacity:1} 50%{transform:rotate(180deg) scale(0.5);opacity:0.5} 100%{transform:rotate(360deg) scale(0);opacity:0} }
+        @keyframes lobsterGlow { 0%,100%{filter:drop-shadow(0 0 10px currentColor)} 50%{filter:drop-shadow(0 0 25px currentColor)} }
+        @keyframes lobsterCritical { 0%{transform:scale(1);filter:brightness(1)} 50%{transform:scale(1.3);filter:brightness(1.5) hue-rotate(20deg)} 100%{transform:scale(1);filter:brightness(1)} }
+        .lobster-phase-0 { color: #ff6b6b; text-shadow: 0 0 15px #ff6b6b; }
+        .lobster-phase-1 { color: #ffa500; text-shadow: 0 0 20px #ffa500; animation: lobsterFloat 2.5s ease-in-out infinite, lobsterGlow 2s ease-in-out infinite; }
+        .lobster-phase-2 { color: #00ff88; text-shadow: 0 0 25px #00ff88; animation: lobsterFloat 2s ease-in-out infinite, lobsterGlow 1.5s ease-in-out infinite; }
+        .lobster-phase-3 { color: #00ffff; text-shadow: 0 0 30px #00ffff, 0 0 60px #0088ff; animation: lobsterFloat 1.5s ease-in-out infinite, lobsterGlow 1s ease-in-out infinite; }
+        .enemy-sprite { font-size: 80px; margin-bottom: 10px; transition: all 0.3s; position: relative; animation: enemyIdle 2s ease-in-out infinite, enemyGlow 1.5s ease-in-out infinite; color: #ff4444; text-shadow: 0 0 20px #ff4444; }
+        @keyframes enemyIdle { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-5px) scale(1.02)} }
+        @keyframes enemyGlow { 0%,100%{filter:drop-shadow(0 0 15px #ff4444)} 50%{filter:drop-shadow(0 0 30px #ff4444)} }
+        @keyframes enemyAttack { 0%{transform:translateX(0)} 30%{transform:translateX(-30px) scale(1.1)} 60%{transform:translateX(-15px)} 100%{transform:translateX(0)} }
+        .enemy-attacking-left { animation: enemyAttack 0.4s ease-out !important; }
+        .attacking-right { animation: lobsterAttack 0.4s ease-out !important; }
+        .attacking-left { animation: lobsterAttack 0.4s ease-out !important; transform: scaleX(-1); }
+        .hit-flash { animation: lobsterHit 0.4s ease-out !important; }
+        .crit-effect { animation: lobsterCritical 0.6s ease-out !important; }
+        .victory-effect { animation: lobsterVictory 0.8s ease-in-out infinite !important; }
+        .death-effect { animation: lobsterDeath 1s ease-out forwards !important; }
         .fighter-name { font-size: 1.2em; color: #fff; margin-bottom: 5px; }
         .fighter-level { font-size: 0.9em; color: #aaa; margin-bottom: 10px; }
         .hp-bar { background: #333; border-radius: 10px; height: 20px; overflow: hidden; margin-bottom: 5px; }
@@ -291,12 +313,13 @@
         .welcome-content { text-align: left; margin-bottom: 15px; }
         .welcome-content p { margin: 8px 0; font-size: 1.1em; color: #fff; }
         .welcome-content strong { color: #ff6644; }
-        .lobster-reveal { background: rgba(0,255,136,0.1); border: 1px solid #00ff88; border-radius: 10px; padding: 15px; margin: 15px 0; text-align: center; }
-        .lobster-reveal-title { font-size: 1.1em; color: #00ff88; margin-bottom: 10px; }
-        .lobster-reveal-sprite { font-size: 4em; margin: 10px 0; animation: lobsterPulse 2s infinite; }
-        @keyframes lobsterPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
-        .lobster-reveal-name { font-size: 1.2em; color: #fff; margin-bottom: 8px; }
-        .lobster-reveal-skills { font-size: 0.95em; color: #aaa; }
+        .lobster-reveal { background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,136,255,0.1)); border: 2px solid #00ff88; border-radius: 15px; padding: 20px; margin: 15px 0; text-align: center; box-shadow: 0 0 30px rgba(0,255,136,0.3); }
+        .lobster-reveal-title { font-size: 1.2em; color: #00ff88; margin-bottom: 15px; text-shadow: 0 0 10px #00ff88; }
+        .lobster-reveal-sprite { font-size: 5em; margin: 15px 0; animation: revealFloat 2s ease-in-out infinite, revealGlow 1.5s ease-in-out infinite; }
+        @keyframes revealFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-10px) scale(1.05)} }
+        @keyframes revealGlow { 0%,100%{filter:drop-shadow(0 0 20px #00ff88)} 50%{filter:drop-shadow(0 0 40px #00ff88)} }
+        .lobster-reveal-name { font-size: 1.3em; color: #fff; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .lobster-reveal-skills { font-size: 1em; color: #aaa; }
         .game-over h2 { font-size: 3em; margin-bottom: 20px; }
         .game-over.win h2 { color: #00ff88; text-shadow: 0 0 30px #00ff88; }
         .game-over.lose h2 { color: #ff4444; text-shadow: 0 0 30px #ff4444; }
@@ -432,7 +455,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.22 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.23 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -465,7 +488,7 @@
             </div>
             <div class="vs">VS</div>
             <div class="fighter" id="enemy-fighter">
-                <div class="fighter-sprite" id="enemy-sprite">🤖</div>
+                <div class="fighter-sprite" id="enemy-sprite">🦀</div>
                 <div class="fighter-name" id="enemy-name">???</div>
                 <div class="fighter-level" id="enemy-level"></div>
                 <div class="hp-bar"><div class="hp-fill" id="enemy-hp-bar"></div></div>
@@ -538,7 +561,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.22';
+const VERSION = 'v1.23';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:0,type:'attack',desc:'【被动】普通攻击概率触发额外一次攻击（伤害减半，可与必杀叠加）',icon:'👊',cd:0,passive:true,comboRate:0.3},
@@ -632,7 +655,7 @@ function showDamageNumber(element, value, type) {
 function playAttackAnimation(attackerId, targetId, isCrit) {
     const attacker = document.getElementById(attackerId);
     const target = document.getElementById(targetId);
-    const animClass = attackerId === 'player-fighter' ? 'attacking-right' : 'attacking-left';
+    const animClass = attackerId === 'player-fighter' ? 'attacking-right' : 'enemy-attacking-left';
     
     attacker.classList.add(animClass);
     setTimeout(() => {
@@ -755,7 +778,9 @@ function updateUI() {
 }
 
 function updatePlayerUI() {
-    document.getElementById('player-sprite').textContent=PHASE_SPRITES[S.phase];
+    const sprite=document.getElementById('player-sprite');
+    sprite.textContent=PHASE_SPRITES[S.phase];
+    sprite.className='fighter-sprite lobster-phase-'+S.phase;
     document.getElementById('player-name').textContent=S.player.name;
     document.getElementById('player-level').textContent='Lv.'+S.player.level;
     const hpPct=S.player.hp/S.player.maxHp*100;
@@ -773,7 +798,8 @@ function updatePlayerUI() {
 
 function updateEnemyUI() {
     if(!S.enemy) return;
-    document.getElementById('enemy-sprite').textContent='🤖';
+    document.getElementById('enemy-sprite').textContent='🦀';
+    document.getElementById('enemy-sprite').className='enemy-sprite';
     document.getElementById('enemy-name').textContent=S.enemy.name;
     document.getElementById('enemy-level').textContent='Lv.'+S.enemy.level;
     const hpPct=S.enemy.hp/S.enemy.maxHp*100;
@@ -834,7 +860,7 @@ function showEnemySelect() {
         const skills=[...avail].sort(()=>Math.random()-0.5).slice(0,Math.min(cnt,avail.length,6));
         const div=document.createElement('div');
         div.className='enemy-option';
-        div.innerHTML='<div class="enemy-option-name">🤖 '+nameOpt+' (Lv.'+Math.floor(r)+')</div>'+
+        div.innerHTML='<div class="enemy-option-name">🦀 '+nameOpt+' (Lv.'+Math.floor(r)+')</div>'+
             '<div class="enemy-option-stats">生命:'+hp+' 攻:'+atk+' 防:'+def+' 速:'+spd+'</div>'+
             '<div class="enemy-option-skills">技能: '+skills.map(s=>s.icon+s.name).join(' ')+'</div>';
         div.onclick=()=>selectEnemy(nameOpt,Math.floor(r),hp,atk,def,spd,skills);
@@ -1413,6 +1439,7 @@ function closeWelcome() {
 function showWelcomeLobster() {
     if(S.player && S.player.skills) {
         document.getElementById('welcome-sprite').textContent=PHASE_SPRITES[0];
+        document.getElementById('welcome-sprite').className='lobster-reveal-sprite lobster-phase-0';
         document.getElementById('welcome-skills').textContent='技能: '+S.player.skills.map(s=>s.icon+s.name).join(' ');
     }
 }
@@ -1423,7 +1450,7 @@ showWelcomeLobster();
 updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.22 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.23 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
