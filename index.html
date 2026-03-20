@@ -549,7 +549,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.31 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.32 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -691,7 +691,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.31';
+const VERSION = 'v1.32';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -749,6 +749,7 @@ let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:nul
 function initState(){
     const oldSpeed=S.battleSpeed||1;
     S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:oldSpeed,
+        playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false,
         player:{
             name:'你的龙虾',level:1,exp:0,expToLevel:30,hp:120,maxHp:120,atk:10,def:5,spd:8,
             stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
@@ -1661,7 +1662,7 @@ showWelcomeLobster();
 updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.31 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.32 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
