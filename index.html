@@ -642,9 +642,8 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.64 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.65 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
-            <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
         </div>
@@ -685,7 +684,6 @@
     </div>
     <div class="reward-panel" id="reward-panel">
         <div class="reward-title">🎉 战斗胜利!</div>
-        <div class="reward-item">经验 +<span id="reward-exp">0</span></div>
         <div class="reward-skill" id="reward-skill-container" style="display:none">
             <div>偷学到技能:</div>
             <div id="reward-skill-name"></div>
@@ -758,7 +756,7 @@
             <p>⚔️ 每次<strong>战胜</strong>可偷取对手<strong>1个技能</strong></p>
             <p>🌀 Lv.3时<strong>自动进化</strong>龙虾属性</p>
             <p>📦 战斗<strong>掉落装备</strong>，可穿戴提升战力</p>
-            <p>⬆️ 战胜敌人获得<strong>经验</strong>，敌人越强经验越多</p>
+
         </div>
         <div class="lobster-reveal">
             <div class="lobster-reveal-title">🎰 这是你的随机初始小龙虾!</div>
@@ -791,7 +789,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.64';
+const VERSION = 'v1.65';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.25,1.5,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -856,7 +854,7 @@ function initState(){
             const cnt=Math.random()<0.9?2:3;
             const s=[];while(s.length<cnt){const r=ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)];if(!s.find(x=>x.id===r.id))s.push(Object.assign({},r));}
             return{
-                name:'你的龙虾',level:1,exp:0,expToLevel:30,
+                name:'你的龙虾',level:1,
                 hp:bhp,maxHp:bhp,atk:batk,def:bdef,spd:bspd,
                 baseHp:bhp,baseAtk:batk,baseDef:bdef,baseSpd:bspd,
                 skills:s,
@@ -886,35 +884,6 @@ function calcPlayerStats(){
     const effectiveSpd=S.player.speedBoosted?bSpd*m*1.5:bSpd*m;
     S.player.spd=Math.floor(effectiveSpd);
     if(S.player.hp>S.player.maxHp)S.player.hp=S.player.maxHp;
-}
-function levelUp(){
-    while(S.player.exp>=S.player.expToLevel){
-        S.player.exp-=S.player.expToLevel;
-        S.player.level++;
-        S.player.expToLevel=Math.floor(S.player.expToLevel*1.25);
-        calcPlayerStats();
-        S.player.hp=S.player.maxHp;
-        addLog('<span class="log-player">🎉 升级了! Lv.'+S.player.level+'</span>');
-        // Lv.3自动进化
-        if(S.player.level===3 && S.phase===0) {
-            S.phase=1;
-            calcPlayerStats();
-            S.player.hp=S.player.maxHp;
-            document.getElementById('evolution-text').textContent='🌀 '+PHASES[S.phase]+'!';
-            document.getElementById('evolution-overlay').classList.add('show');
-            setTimeout(()=>{
-                document.getElementById('evolution-overlay').classList.remove('show');
-            }, 2000);
-            addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'! 获得随机技能!</span>');
-            // 进化时获得随机技能
-            const avail=ALL_SKILLS.filter(s=>!S.player.skills.find(p=>p.id===s.id));
-            if(avail.length>0) {
-                const newSkill=cloneSkill(avail[Math.floor(Math.random()*avail.length)]);
-                S.player.skills.push(newSkill);
-                addLog('<span class="log-player">🌟 进化奖励: 获得 【'+newSkill.icon+newSkill.name+'】!</span>');
-            }
-        }
-    }
 }
 function generateEnemy(){
     const r=S.round;
@@ -1598,12 +1567,30 @@ function endTurn() {
 function enemyDefeated() {
     S.inBattle=false;
     S.battleResult='win';
-    // 经验奖励 = 基础(10) + 敌人等级*5 + 额外难度加成
-    const enemyLevel=S.enemy?S.enemy.level:1;
-    const expGain=10+Math.floor(enemyLevel*5)+Math.floor(S.round*2);
-    S.player.exp+=expGain;
-    levelUp();
-    addLog('<span class="log-system">🎉 胜利! 获得 '+expGain+' 经验</span>');
+    // 战胜敌人直接升级
+    S.player.level++;
+    calcPlayerStats();
+    S.player.hp=S.player.maxHp;
+    addLog('<span class="log-system">🎉 胜利! 升级到 Lv.'+S.player.level+'!</span>');
+    // Lv.3自动进化
+    if(S.player.level===3 && S.phase===0) {
+        S.phase=1;
+        calcPlayerStats();
+        S.player.hp=S.player.maxHp;
+        document.getElementById('evolution-text').textContent='🌀 '+PHASES[S.phase]+'!';
+        document.getElementById('evolution-overlay').classList.add('show');
+        setTimeout(()=>{
+            document.getElementById('evolution-overlay').classList.remove('show');
+        }, 2000);
+        addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'! 获得随机技能!</span>');
+        // 进化时获得随机技能
+        const avail=ALL_SKILLS.filter(s=>!S.player.skills.find(p=>p.id===s.id));
+        if(avail.length>0) {
+            const newSkill=cloneSkill(avail[Math.floor(Math.random()*avail.length)]);
+            S.player.skills.push(newSkill);
+            addLog('<span class="log-player">🌟 进化奖励: 获得 【'+newSkill.icon+newSkill.name+'】!</span>');
+        }
+    }
     if(S.enemy && S.enemy.skills.length>0) {
         const enemySkillIdx=Math.floor(Math.random()*S.enemy.skills.length);
         const newSkill=cloneSkill(S.enemy.skills[enemySkillIdx]);
@@ -1628,7 +1615,6 @@ function enemyDefeated() {
     } else {
         document.getElementById('reward-equip-container').style.display='none';
     }
-    document.getElementById('reward-exp').textContent=expGain;
     document.getElementById('reward-panel').classList.add('show');
     document.getElementById('btn-start').disabled=false;
     S.round++;
@@ -1840,9 +1826,7 @@ function importLobster(code) {
         // 重建玩家数据
         return {
             name:data.name||'导入龙虾',
-            level:data.level,
-            exp:data.exp||0,
-            expToLevel:data.expToLevel||30,
+            level:data.level||1,
             hp:data.hp||data.maxHp||100,
             maxHp:data.maxHp||100,
             atk:data.atk||10,
@@ -1866,8 +1850,6 @@ function exportLobster() {
     const data={
         name:S.player.name,
         level:S.player.level,
-        exp:S.player.exp,
-        expToLevel:S.player.expToLevel,
         hp:S.player.hp,
         maxHp:S.player.maxHp,
         atk:S.player.atk,
@@ -1925,7 +1907,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.64 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.65 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
