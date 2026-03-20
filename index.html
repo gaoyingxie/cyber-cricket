@@ -426,7 +426,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.9 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.10 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -475,7 +475,7 @@
 
         <div class="btn-row">
             <button class="btn" id="btn-start" onclick="startBattle()">🚀 开始战斗</button>
-            <button class="btn btn-warning" id="btn-speed" onclick="toggleSpeed()">⏩ 1倍速</button>
+            <button class="btn" id="btn-speed" onclick="toggleSpeed()">⏩ 1倍速</button>
             <button class="btn btn-small btn-danger" id="btn-evolve" onclick="evolve()" disabled>🌀 进化 (100金)</button>
         </div>
     </div>
@@ -527,7 +527,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.9';
+const VERSION = 'v1.10';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊'},
@@ -703,7 +703,11 @@ function toggleSpeed() {
     S.battleSpeed = S.battleSpeed === 1 ? 2 : 1;
     const btn = document.getElementById('btn-speed');
     btn.textContent = S.battleSpeed === 1 ? '⏩ 1倍速' : '⏩ 2倍速';
-    btn.style.opacity = S.battleSpeed === 2 ? '1' : '0.7';
+    if(S.battleSpeed === 2) {
+        btn.classList.add('btn-warning');
+    } else {
+        btn.classList.remove('btn-warning');
+    }
 }
 
 function getBattleDelay() {
@@ -1120,7 +1124,7 @@ function closeWelcome() {
 initState();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.9 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.10 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
