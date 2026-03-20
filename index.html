@@ -329,7 +329,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗蛐蛐 ⚡</h1>
-        <div class="version">v1.1 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.2 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -401,7 +401,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.1';
+const VERSION = 'v1.2';
 const PHASES=['幼虫','成虫','战斗体','究极体'], PHASE_SPRITES=['🐛','🦗','⚡🦗','🔱🦗'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊'},
@@ -879,7 +879,7 @@ function restartGame() {
 // 初始化
 initState();
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗蛐蛐 v1.1 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗蛐蛐 v1.2 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
