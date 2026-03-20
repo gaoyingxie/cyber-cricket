@@ -432,7 +432,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.14 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.15 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -538,7 +538,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.14';
+const VERSION = 'v1.15';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊',cd:0},
@@ -562,7 +562,7 @@ const ENEMY_NAMES=['机械龙虾','电路龙虾','芯片龙虾','程序龙虾','
 const MAX_STAMINA = 100;
 const STAMINA_REGEN_BATTLE = 15;
 const STAMINA_REGEN_IDLE = 30;
-const AUTO_BATTLE_DELAY = 1000;
+const AUTO_BATTLE_DELAY = 3000;
 let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false};
 
 function initState(){
@@ -602,7 +602,7 @@ function generateEnemy(){
     const r=S.round,m=1+(r-1)*0.15;
     const e={
         name:ENEMY_NAMES[Math.min(r-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+r,
-        level:r,hp:Math.floor((60+r*8)*m),maxHp:Math.floor((60+r*8)*m),
+        level:r,hp:Math.floor((80+r*10)*m),maxHp:Math.floor((80+r*10)*m),
         atk:Math.floor((6+r*1.2)*m),def:Math.floor((3+r*0.8)*m),spd:Math.floor((5+r*0.6)*m),
         stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
         skills:[],buffs:[],shields:0,poisonDmg:0,alive:true,resurrected:false,
@@ -819,7 +819,7 @@ function showEnemySelect() {
     for(let i=0;i<3;i++) {
         const r=S.round+(i*0.5),m=1+(r-1)*0.15;
         const nameOpt=ENEMY_NAMES[Math.min(Math.floor(r)-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+Math.floor(r);
-        const hp=Math.floor((60+r*8)*m);
+        const hp=Math.floor((80+r*10)*m);
         const atk=Math.floor((6+r*1.2)*m);
         const def=Math.floor((3+r*0.8)*m);
         const spd=Math.floor((5+r*0.6)*m);
@@ -1336,7 +1336,7 @@ initState();
 showWelcomeLobster();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.14 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.15 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
