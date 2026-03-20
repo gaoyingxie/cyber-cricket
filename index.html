@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>赛博斗蛐蛐</title>
+    <title>赛博斗龙虾</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -360,8 +360,8 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="title">⚡ 赛博斗蛐蛐 ⚡</h1>
-        <div class="version">v1.3 | 第 <span id="round-num">1</span> 轮</div>
+        <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
+        <div class="version">v1.4 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -382,7 +382,7 @@
         <div class="arena" id="arena">
             <div class="fighter" id="player-fighter">
                 <div class="fighter-sprite" id="player-sprite">🐛</div>
-                <div class="fighter-name" id="player-name">你的蛐蛐</div>
+                <div class="fighter-name" id="player-name">你的龙虾</div>
                 <div class="fighter-level" id="player-level">Lv.1</div>
                 <div class="hp-bar"><div class="hp-fill" id="player-hp-bar"></div></div>
                 <div class="hp-text"><span id="player-hp">100</span> / <span id="player-max-hp">100</span></div>
@@ -439,8 +439,8 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.3';
-const PHASES=['幼虫','成虫','战斗体','究极体'], PHASE_SPRITES=['🐛','🦗','⚡🦗','🔱🦗'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
+const VERSION = 'v1.4';
+const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊'},
     {id:'crit',name:'暴击',staminaCost:12,type:'attack',desc:'高概率暴击',minDmg:0,critRate:0.45,critMult:2,icon:'💥'},
@@ -459,7 +459,7 @@ const ALL_SKILLS=[
     {id:'overclock',name:'超频',staminaCost:10,type:'special',desc:'速度翻倍',speedBoost:true,icon:'🔥'},
     {id:'shield_break',name:'护盾击破',staminaCost:14,type:'attack',desc:'无视防御',minDmg:1.2,ignoreDef:true,icon:'💎'},
 ];
-const ENEMY_NAMES=['机械蛐蛐','电路蟋蟀','芯片蚂蚱','程序螽斯','数据蝗虫','比特蟋蟀','代码蝈蝈','网络蚂蚱','云端蝗虫','量子螽斯','深渊机甲虫','泰坦机械蝎','风暴电子蚁','雷霆硅基蝉','混沌编程螳螂'];
+const ENEMY_NAMES=['机械龙虾','电路龙虾','芯片龙虾','程序龙虾','数据龙虾','比特龙虾','代码龙虾','网络龙虾','云端龙虾','量子龙虾','深渊机甲龙虾','泰坦机械龙虾','风暴电子龙虾','雷霆硅基龙虾','混沌编程龙虾'];
 const MAX_STAMINA = 100;
 const STAMINA_REGEN_BATTLE = 15;
 const STAMINA_REGEN_IDLE = 30;
@@ -469,7 +469,7 @@ let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:nul
 function initState(){
     S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,turnOrder:null,
         player:{
-            name:'你的蛐蛐',level:1,exp:0,expToLevel:30,hp:100,maxHp:100,atk:10,def:5,spd:8,
+            name:'你的龙虾',level:1,exp:0,expToLevel:30,hp:100,maxHp:100,atk:10,def:5,spd:8,
             stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
             skills:[Object.assign({},ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)]),Object.assign({},ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)])],
             buffs:[],shields:0,poisonDmg:0,alive:true,resurrectUsed:false,stunned:false,sealed:false,
@@ -502,7 +502,7 @@ function levelUp(){
 function generateEnemy(){
     const r=S.round,m=1+(r-1)*0.15;
     const e={
-        name:ENEMY_NAMES[Math.min(r-1,ENEMY_NAMES.length-1)]||'强化蛐蛐#'+r,
+        name:ENEMY_NAMES[Math.min(r-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+r,
         level:r,hp:Math.floor((60+r*8)*m),maxHp:Math.floor((60+r*8)*m),
         atk:Math.floor((6+r*1.2)*m),def:Math.floor((3+r*0.8)*m),spd:Math.floor((5+r*0.6)*m),
         stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
@@ -651,7 +651,7 @@ function showEnemySelect() {
     list.innerHTML='';
     for(let i=0;i<3;i++) {
         const r=S.round+(i*0.5),m=1+(r-1)*0.15;
-        const nameOpt=ENEMY_NAMES[Math.min(Math.floor(r)-1,ENEMY_NAMES.length-1)]||'强化蛐蛐#'+Math.floor(r);
+        const nameOpt=ENEMY_NAMES[Math.min(Math.floor(r)-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+Math.floor(r);
         const hp=Math.floor((60+r*8)*m);
         const atk=Math.floor((6+r*1.2)*m);
         const def=Math.floor((3+r*0.8)*m);
@@ -923,7 +923,7 @@ function playerDefeated() {
     S.battleResult='lose';
     addLog('<span class="log-system">💀 败北...</span>');
     document.getElementById('game-over-title').textContent='游戏结束';
-    document.getElementById('game-over-msg').textContent='你的蛐蛐在第 '+S.round+' 轮倒下了...';
+    document.getElementById('game-over-msg').textContent='你的龙虾在第 '+S.round+' 轮倒下了...';
     document.getElementById('final-round').textContent=S.round;
     document.getElementById('game-over').classList.add('show','lose');
     document.getElementById('btn-start').disabled=true;
@@ -960,7 +960,7 @@ function restartGame() {
 // 初始化
 initState();
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗蛐蛐 v1.3 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.4 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
