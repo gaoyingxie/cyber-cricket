@@ -1157,7 +1157,7 @@ function showEnemySelect() {
         div.innerHTML='<div class="enemy-option-name">🦞 '+nameOpt+' (Lv.'+Math.floor(r)+')</div>'+
             '<div class="enemy-option-stats">生命:'+hp+' 攻:'+atk+' 防:'+def+' 速:'+spd+'</div>'+
             '<div class="enemy-option-skills">技能: '+skills.map(s=>s.icon+s.name).join(' ')+'</div>';
-        div.onclick=()=>selectEnemy(nameOpt,Math.floor(r),hp,atk,def,spd,skills);
+        div.onclick=()=>{console.log('Enemy selected:', nameOpt); selectEnemy(nameOpt,Math.floor(r),hp,atk,def,spd,skills);};
         list.appendChild(div);
     }
     document.getElementById('enemy-select-panel').classList.add('show');
