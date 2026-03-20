@@ -432,7 +432,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.16 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.17 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -538,7 +538,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.16';
+const VERSION = 'v1.17';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊',cd:0},
@@ -562,7 +562,7 @@ const ENEMY_NAMES=['机械龙虾','电路龙虾','芯片龙虾','程序龙虾','
 const MAX_STAMINA = 100;
 const STAMINA_REGEN_BATTLE = 15;
 const STAMINA_REGEN_IDLE = 30;
-const AUTO_BATTLE_DELAY = 4000;
+const AUTO_BATTLE_DELAY = 2500;
 let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false};
 
 function initState(){
@@ -712,11 +712,16 @@ function updateAutoIndicator() {
 
 function toggleSpeed() {
     S.battleSpeed = S.battleSpeed === 1 ? 2 : 1;
+    updateSpeedButton();
+}
+
+function updateSpeedButton() {
     const btn = document.getElementById('btn-speed');
-    btn.textContent = S.battleSpeed === 1 ? '⏩ 1倍速' : '⏩ 2倍速';
     if(S.battleSpeed === 2) {
+        btn.textContent = '⏩ 2倍速';
         btn.classList.add('btn-warning');
     } else {
+        btn.textContent = '⏩ 1倍速';
         btn.classList.remove('btn-warning');
     }
 }
@@ -1334,9 +1339,10 @@ function showWelcomeLobster() {
 // 初始化
 initState();
 showWelcomeLobster();
+updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.16 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.17 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
