@@ -606,7 +606,7 @@
             transition: width 0.3s;
         }
         
-        @media (max-width: 600px) {
+        @media (max-width: 600px) and (orientation: portrait) {
             .container { padding: 10px; }
             .title { font-size: 1.5em; margin-bottom: 5px; }
             .version { font-size: 0.8em; margin-bottom: 5px; }
@@ -634,12 +634,41 @@
             .skill-btn .skill-desc { font-size: 0.7em; }
             .buff-tag { font-size: 0.7em; padding: 2px 5px; }
         }
+        /* 横屏时和电脑一样的横向布局 */
+        @media (max-width: 900px) and (orientation: landscape) {
+            .container { padding: 5px 10px; max-width: 100%; }
+            .title { font-size: 1.2em; margin: 0; }
+            .version { font-size: 0.7em; margin: 0; }
+            .status-bar { padding: 5px 10px; gap: 15px; }
+            .stat { font-size: 0.8em; }
+            .stat-label { font-size: 0.7em; }
+            .arena { flex-direction: row; gap: 10px; padding: 5px; }
+            .fighter { padding: 5px; flex: 1; }
+            .fighter-sprite { font-size: 2.5em; margin-bottom: 3px; }
+            .fighter-name { font-size: 0.8em; }
+            .fighter-level { font-size: 0.7em; }
+            .hp-bar { height: 8px; margin: 3px 0; }
+            .hp-text { font-size: 0.7em; }
+            .fighter-stats { font-size: 0.7em; }
+            .player-skill-display { font-size: 0.9em; margin-top: 3px; }
+            .enemy-skill-display { font-size: 0.9em; margin-top: 3px; }
+            .speed-indicator { font-size: 0.65em; }
+            .speed-bar-container { height: 5px; }
+            .vs { margin: 0 5px; font-size: 1em; align-self: center; }
+            .battle-log { max-height: 100px; padding: 5px; font-size: 0.75em; margin: 5px 0; }
+            .btn-row { gap: 5px; padding: 5px 0; }
+            .btn { padding: 8px 12px; font-size: 0.85em; }
+            .skill-btn { padding: 4px; font-size: 0.75em; }
+            .skill-btn .skill-name { font-size: 0.85em; }
+            .skill-btn .skill-desc { display: none; }
+            .buff-tag { font-size: 0.65em; padding: 1px 3px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.57 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.59 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
@@ -793,7 +822,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.57';
+const VERSION = 'v1.59';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.25,1.5,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -1943,7 +1972,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.57 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.59 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
