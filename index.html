@@ -294,12 +294,393 @@
             50% { box-shadow: 0 0 25px rgba(255,102,0,0.8); }
         }
         
+        .evolution-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+        .evolution-overlay.show { display: flex; }
+        .evolution-text { font-size: 2em; color: #00ff88; text-shadow: 0 0 30px #00ff88; animation: evolveText 2s; }
+        @keyframes evolveText { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        .game-over {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+        .game-over.show { display: flex; }
+        .welcome-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 1000;
+            min-width: 380px;
+            text-align: center;
+        }
+        .welcome-panel.show { display: block; }
+        .welcome-title { font-size: 1.8em; color: #00ff88; margin-bottom: 20px; text-shadow: 0 0 20px #00ff88; }
+        .welcome-content { text-align: left; margin-bottom: 15px; }
+        .welcome-content p { margin: 8px 0; font-size: 1.1em; color: #fff; }
+        .welcome-content strong { color: #ff6644; }
+        .lobster-reveal { background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,136,255,0.1)); border: 2px solid #00ff88; border-radius: 15px; padding: 20px; margin: 15px 0; text-align: center; box-shadow: 0 0 30px rgba(0,255,136,0.3); }
+        .lobster-reveal-title { font-size: 1.2em; color: #00ff88; margin-bottom: 15px; text-shadow: 0 0 10px #00ff88; }
+        .lobster-reveal-sprite { font-size: 5em; margin: 15px 0; animation: revealFloat 2s ease-in-out infinite, revealGlow 1.5s ease-in-out infinite; }
+        @keyframes revealFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-10px) scale(1.05)} }
+        @keyframes revealGlow { 0%,100%{filter:drop-shadow(0 0 20px #00ff88)} 50%{filter:drop-shadow(0 0 40px #00ff88)} }
+        .lobster-reveal-name { font-size: 1.3em; color: #fff; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .lobster-reveal-skills { font-size: 1em; color: #aaa; }
+        .mode-select-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            z-index: 1001;
+            min-width: 400px;
+            text-align: center;
+            flex-direction: column;
+        }
+        .mode-select-title { font-size: 1.8em; color: #00ff88; margin-bottom: 25px; text-shadow: 0 0 20px #00ff88; }
+        .mode-options { display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; }
+        .btn-large { padding: 15px 30px; font-size: 1.2em; }
+        .mode-desc { color: #aaa; font-size: 1em; margin-top: 15px; }
+        .import-panel, .export-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 1001;
+            min-width: 450px;
+            text-align: center;
+        }
+        .import-panel.show, .export-panel.show { display: block; }
+        .import-title, .export-title { font-size: 1.6em; color: #00ff88; margin-bottom: 15px; text-shadow: 0 0 15px #00ff88; }
+        .import-desc, .export-desc { color: #aaa; margin-bottom: 15px; font-size: 1.1em; }
+        .import-code, .export-code {
+            width: 100%; height: 120px; background: #0a0a1e; border: 1px solid #444;
+            color: #00ff88; font-size: 0.9em; padding: 10px; border-radius: 8px;
+            resize: none; font-family: monospace;
+        }
+        .export-code { color: #ffff00; }
+        .export-hint { color: #ffa500; margin-top: 10px; font-size: 0.95em; }
+        .btn-secondary { background: #444; margin-left: 10px; }
+        .btn-secondary:hover { background: #555; }
+        @media (max-width: 600px) {
+            .mode-select-panel { min-width: 90vw; padding: 20px; }
+            .mode-select-title { font-size: 1.4em; margin-bottom: 15px; }
+            .mode-options { flex-direction: column; gap: 10px; }
+            .btn-large { padding: 12px 20px; font-size: 1em; }
+            .mode-desc { font-size: 0.85em; }
+            .import-panel, .export-panel { min-width: 90vw; padding: 15px; }
+            .import-title, .export-title { font-size: 1.2em; }
+            .import-desc, .export-desc { font-size: 0.9em; }
+            .import-code, .export-code { height: 80px; font-size: 0.8em; }
+            .export-hint { font-size: 0.8em; }
+            .reward-panel { min-width: 90vw; padding: 15px; }
+            .reward-title { font-size: 1.2em; }
+            .reward-item { font-size: 0.9em; }
+            .game-over h2 { font-size: 2em; }
+            .game-over p { font-size: 1em; }
+            .evolution-overlay { font-size: 2em; }
+        }
+        .game-over.win h2 { color: #00ff88; text-shadow: 0 0 30px #00ff88; }
+        .game-over.lose h2 { color: #ff4444; text-shadow: 0 0 30px #ff4444; }
+        .game-over p { margin: 10px 0; font-size: 1.2em; }
+        .reward-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 999;
+            min-width: 350px;
+            text-align: center;
+        }
+        .reward-panel.show { display: block; }
+        .reward-title { font-size: 1.5em; color: #00ff88; margin-bottom: 20px; }
+        .reward-item { margin: 10px 0; font-size: 1.1em; }
+        .reward-skill { background: rgba(255,68,255,0.2); border: 1px solid #ff44ff; border-radius: 8px; padding: 10px; margin: 10px 0; color: #ff44ff; }
+        .reward-equip { background: rgba(255,165,0,0.2); border: 1px solid #ffa500; border-radius: 8px; padding: 10px; margin: 10px 0; color: #ffa500; }
+        .enemy-select-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #ff6644;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 999;
+            min-width: 450px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            .enemy-select-panel { min-width: 90vw; padding: 15px; }
+            .enemy-select-title { font-size: 1.2em; margin-bottom: 10px; }
+            .enemy-option { padding: 10px; font-size: 0.85em; }
+            .enemy-stats-row { font-size: 0.75em; }
+        }
+        .enemy-select-panel.show { display: block; }
+        .enemy-select-title { font-size: 1.5em; color: #ff6644; margin-bottom: 20px; }
+        .enemy-select-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .enemy-option {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .enemy-option:hover { background: rgba(255,102,68,0.2); border-color: #ff6644; }
+        .enemy-option-name { font-size: 1.1em; color: #fff; margin-bottom: 5px; }
+        .enemy-option-stats { font-size: 0.85em; color: #888; }
+        .enemy-option-skills { font-size: 0.8em; color: #00ff88; margin-top: 5px; }
+        .player-skill-display { font-size: 1.2em; color: #00ff88; margin-top: 5px; text-shadow: 0 0 5px #00ff88; }
+        .enemy-skill-display { font-size: 1.2em; color: #ff6666; margin-top: 5px; text-shadow: 0 0 5px #ff6666; }
+        .skill-item { cursor: pointer; padding: 2px 6px; border-radius: 4px; background: rgba(0,255,136,0.1); transition: background 0.2s; position: relative; display: inline-block; }
+        .skill-item:hover { background: rgba(0,255,136,0.3); }
+        .skill-item.on-cd { opacity: 0.5; }
+        .skill-item.on-cd::after { content: attr(data-cd); position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 1.2em; font-weight: bold; color: #ff4444; text-shadow: 0 0 5px #000; }
+        .skill-item.passive-skill { background: rgba(255,255,0,0.1); border: 1px dashed #ffff00; }
+        .skill-popup {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 25px;
+            display: none;
+            z-index: 1002;
+            min-width: 300px;
+            text-align: center;
+        }
+        .skill-popup.show { display: block; }
+        .skill-popup-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1001;
+        }
+        .skill-popup-backdrop.show { display: block; }
+        @media (max-width: 600px) {
+            .skill-popup { min-width: 90vw; padding: 15px; }
+            .skill-popup-icon { font-size: 2.5em; }
+            .skill-popup-name { font-size: 1.2em; }
+            .skill-popup-type, .skill-popup-cost, .skill-popup-desc { font-size: 0.85em; }
+            .equip-panel { min-width: 95vw; max-height: 90vh; }
+            .equip-panel-title { font-size: 1.2em; }
+        }
+        .equip-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #ffa500;
+            border-radius: 15px;
+            padding: 25px;
+            display: none;
+            z-index: 1004;
+            min-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: center;
+        }
+        .equip-panel.show { display: block; }
+        .equip-panel-title { font-size: 1.5em; color: #ffa500; margin-bottom: 20px; text-shadow: 0 0 10px #ffa500; }
+        .equip-current { margin-bottom: 20px; }
+        .equip-slot-title { font-size: 1em; color: #888; margin-bottom: 10px; }
+        .equip-slots { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .equip-slot {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 10px 15px;
+            min-width: 90px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .equip-slot:hover { border-color: #ffa500; background: rgba(255,165,0,0.1); }
+        .equip-slot-icon { font-size: 1.5em; margin-bottom: 5px; }
+        .equip-slot-label { font-size: 0.8em; color: #888; }
+        .equip-slot-item { font-size: 0.85em; color: #fff; margin-top: 5px; min-height: 24px; }
+        .equip-slot-item.equipped { color: #ffa500; }
+        .equip-inventory { text-align: left; }
+        .equip-inv-title { font-size: 1em; color: #888; margin-bottom: 10px; }
+        .equip-inv-list { max-height: 200px; overflow-y: auto; }
+        .equip-inv-item {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .equip-inv-item:hover { border-color: #ffa500; background: rgba(255,165,0,0.1); }
+        .equip-inv-item-name { font-size: 0.9em; color: #fff; }
+        .equip-inv-item-btn { font-size: 0.8em; color: #00ff88; background: none; border: 1px solid #00ff88; border-radius: 5px; padding: 3px 8px; cursor: pointer; }
+        .equip-inv-item-btn:hover { background: rgba(0,255,136,0.2); }
+        .equip-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1003;
+        }
+        .equip-backdrop.show { display: block; }
+        .skill-tooltip {
+            position: absolute;
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 0.85em;
+            color: #fff;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 1003;
+            display: none;
+        }
+        .skill-tooltip.show { display: block; }
+        .skill-tooltip-name { color: #00ff88; font-weight: bold; margin-bottom: 5px; }
+        .skill-tooltip-desc { color: #aaa; }
+        .skill-popup-icon { font-size: 3em; margin-bottom: 10px; }
+        .skill-popup-name { font-size: 1.5em; color: #fff; margin-bottom: 10px; }
+        .skill-popup-type { font-size: 0.9em; color: #888; margin-bottom: 5px; }
+        .skill-popup-cost { font-size: 1em; color: #4488ff; margin-bottom: 10px; }
+        .skill-popup-desc { font-size: 1.1em; color: #00ff88; margin-bottom: 15px; }
+        .skill-popup-effect { font-size: 0.9em; color: #aaa; }
+        .skill-popup-close { margin-top: 15px; font-size: 0.9em; color: #666; }
+        
+        @media (max-width: 600px) and (orientation: portrait) {
+            .container { padding: 10px; }
+            .title { font-size: 1.5em; margin-bottom: 5px; }
+            .version { font-size: 0.8em; margin-bottom: 5px; }
+            .status-bar { flex-wrap: wrap; gap: 10px; padding: 8px; }
+            .stat { font-size: 0.85em; }
+            .stat-label { font-size: 0.7em; }
+            .arena { flex-direction: column; gap: 10px; padding: 10px; }
+            .fighter { padding: 10px; }
+            .fighter-sprite { font-size: 3em; }
+            .fighter-name { font-size: 0.9em; }
+            .fighter-level { font-size: 0.75em; }
+            .hp-bar { height: 10px; }
+            .hp-text { font-size: 0.75em; }
+            .fighter-stats { font-size: 0.75em; }
+            .player-skill-display { font-size: 1em; }
+            .enemy-skill-display { font-size: 1em; }
+            .vs { margin: 5px 0; font-size: 1.2em; }
+            .battle-log { max-height: 120px; padding: 8px; font-size: 0.8em; }
+            .btn-row { flex-wrap: wrap; gap: 8px; }
+            .btn { padding: 10px 15px; font-size: 0.9em; }
+            .skill-btn { padding: 6px; font-size: 0.8em; }
+            .skill-btn .skill-name { font-size: 0.85em; }
+            .skill-btn .skill-desc { font-size: 0.7em; }
+            .buff-tag { font-size: 0.7em; padding: 2px 5px; }
+        }
+        /* 横屏时和电脑一样的横向布局 */
+        @media (max-width: 600px) and (orientation: landscape) {
+            .container { padding: 5px 10px; max-width: 100%; }
+            .title { font-size: 1.2em; margin: 0; }
+            .version { font-size: 0.7em; margin: 0; }
+            .status-bar { padding: 5px 10px; gap: 15px; }
+            .stat { font-size: 0.8em; }
+            .stat-label { font-size: 0.7em; }
+            .arena { flex-direction: row; gap: 10px; padding: 5px; }
+            .fighter { padding: 5px; flex: 1; }
+            .fighter-sprite { font-size: 2.5em; margin-bottom: 3px; }
+            .fighter-name { font-size: 0.8em; }
+            .fighter-level { font-size: 0.7em; }
+            .hp-bar { height: 8px; margin: 3px 0; }
+            .hp-text { font-size: 0.7em; }
+            .fighter-stats { font-size: 0.7em; }
+            .player-skill-display { font-size: 0.9em; margin-top: 3px; }
+            .enemy-skill-display { font-size: 0.9em; margin-top: 3px; }
+            .vs { margin: 0 5px; font-size: 1em; align-self: center; }
+            .battle-log { max-height: 100px; padding: 5px; font-size: 0.75em; margin: 5px 0; }
+            .btn-row { gap: 5px; padding: 5px 0; }
+            .btn { padding: 8px 12px; font-size: 0.85em; }
+            .skill-btn { padding: 4px; font-size: 0.75em; }
+            .skill-btn .skill-name { font-size: 0.85em; }
+            .skill-btn .skill-desc { display: none; }
+            .buff-tag { font-size: 0.65em; padding: 1px 3px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
+        <div class="version">v1.68 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="status-bar">
+            <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
+            <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
+        </div>
+        <div class="auto-battle-indicator active" id="auto-indicator"></div>
+        <div class="arena" id="arena">
+            <div class="fighter" id="player-fighter">
+                <div class="fighter-sprite" id="player-sprite">🐛</div>
+                <div class="fighter-name" id="player-name">你的龙虾</div>
+                <div class="fighter-level" id="player-level">Lv.1</div>
+                <div class="hp-bar"><div class="hp-fill" id="player-hp-bar"></div></div>
+                <div class="hp-text"><span id="player-hp">100</span> / <span id="player-max-hp">100</span></div>
+                <div class="fighter-stats" id="player-stats">攻:10 防:5 速:8</div>
+                <div class="player-skill-display" id="player-skills"></div>
+                <div class="buffs-display" id="player-buffs"></div>
+            </div>
+            <div class="vs">VS</div>
+            <div class="fighter" id="enemy-fighter">
+                <div class="fighter-sprite enemy-sprite" id="enemy-sprite">🦞</div>
+                <div class="fighter-name" id="enemy-name">???</div>
+                <div class="fighter-level" id="enemy-level"></div>
+                <div class="hp-bar"><div class="hp-fill" id="enemy-hp-bar"></div></div>
+                <div class="hp-text"><span id="enemy-hp">0</span> / <span id="enemy-max-hp">0</span></div>
+                <div class="fighter-stats" id="enemy-stats"></div>
+                <div class="buffs-display" id="enemy-buffs"></div>
+                <div class="enemy-skill-display" id="enemy-skills"></div>
+            </div>
+        </div>
+        <div class="battle-log" id="battle-log"></div>
+
         <div class="btn-row">
             <button class="btn" id="btn-start" onclick="startBattle()">🚀 开始战斗</button>
             <button class="btn" id="btn-speed" onclick="toggleSpeed()">⏩ 1倍速</button>
             <button class="btn btn-small btn-warning" id="btn-equip" onclick="openEquipPanel()">🎒 装备</button>
         </div>
     </div>
+    <div class="evolution-overlay" id="evolution-overlay">
+        <div class="evolution-text" id="evolution-text">🌀 进化中...</div>
     </div>
     <div class="reward-panel" id="reward-panel">
         <div class="reward-title">🎉 战斗胜利!</div>
@@ -373,8 +754,8 @@
         <div class="welcome-content">
             <p>⏱️ 游戏共 <strong>5轮</strong> 战斗</p>
             <p>⚔️ 每次<strong>战胜</strong>可偷取对手<strong>1个技能</strong></p>
+            <p>🌀 Lv.3时<strong>自动进化</strong>龙虾属性</p>
             <p>📦 战斗<strong>掉落装备</strong>，可穿戴提升战力</p>
-            <p>⬆️ 每次升级有<strong>50%概率</strong>领悟新技能</p>
 
         </div>
         <div class="lobster-reveal">
@@ -408,8 +789,8 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.74';
-const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'], PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
+const VERSION = 'v1.68';
+const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.25,1.5,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
 const EQUIP_NAMES={
@@ -424,37 +805,37 @@ const EQUIP_BASE_VALUES={atk:3,def:2,hp:20};
 const DROP_CHANCE=0.4;
 const ALL_SKILLS=[
     // ===== 攻击系 =====
-    {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'【主动】连续攻击2次（第2次伤害×0.5）',minDmg:0.5,times:2,icon:'👊',cd:0},
-    {id:'crit',name:'必杀',staminaCost:15,type:'attack',desc:'【主动】造成双倍伤害（必定暴击×2）',minDmg:0,critRate:1,critMult:2,icon:'💥',cd:0},
-    {id:'heavy',name:'重击',staminaCost:10,type:'attack',desc:'【主动】造成1.5倍伤害',minDmg:1.5,icon:'💪',cd:0},
-    {id:'poison',name:'剧毒',staminaCost:12,type:'attack',desc:'【主动】伤害+每回合损失8%HP',minDmg:0.6,poisonDmg:0.08,icon:'☠️',cd:0},
-    {id:'virus',name:'病毒注入',staminaCost:13,type:'attack',desc:'【主动】伤害+每回合6%HP+降属性',minDmg:0.5,poisonDmg:0.06,reduceStat:0.15,icon:'🦠',cd:0},
-    {id:'hack',name:'数据入侵',staminaCost:12,type:'attack',desc:'【主动】伤害+偷取敌人15%当前HP',minDmg:0.5,drain:0.15,icon:'💻',cd:0},
-    {id:'emp',name:'电磁脉冲',staminaCost:10,type:'attack',desc:'【主动】伤害+25%概率眩晕',minDmg:0.8,stunRate:0.25,icon:'⚡',cd:0},
-    {id:'shield_break',name:'护盾击破',staminaCost:12,type:'attack',desc:'【主动】无视护盾+1.5倍伤害',minDmg:1.5,ignoreDef:true,icon:'💎',cd:1},
-    {id:'triple',name:'三连击',staminaCost:16,type:'attack',desc:'【主动】连续攻击3次（2、3次伤害×0.5）',minDmg:0.5,times:3,icon:'⚔️',cd:0},
-    {id:'execute',name:'处决',staminaCost:15,type:'attack',desc:'【主动】敌人HP<50%时伤害×2',minDmg:0,critRate:1,critMult:2,icon:'☠️',cd:0,execute:true},
-    {id:'drain',name:'灵魂吸取',staminaCost:14,type:'attack',desc:'【主动】伤害+偷取敌人12%最大HP',minDmg:0.7,drain:0.12,icon:'👻',cd:0},
-    {id:'bleed',name:'撕裂',staminaCost:11,type:'attack',desc:'【主动】伤害+敌人持续流血3回合',minDmg:0.5,bleedDmg:0.05,icon:'🩸',cd:0},
+    {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'【主动★100%】连续攻击2次（第2次伤害×0.5）',minDmg:0.5,times:2,icon:'👊',cd:0},
+    {id:'crit',name:'必杀',staminaCost:15,type:'attack',desc:'【主动★100%】造成双倍伤害（必定暴击×2）',minDmg:0,critRate:1,critMult:2,icon:'💥',cd:0},
+    {id:'heavy',name:'重击',staminaCost:10,type:'attack',desc:'【主动★100%】造成1.5倍伤害',minDmg:1.5,icon:'💪',cd:0},
+    {id:'poison',name:'剧毒',staminaCost:12,type:'attack',desc:'【主动★100%】伤害+每回合损失8%HP',minDmg:0.6,poisonDmg:0.08,icon:'☠️',cd:0},
+    {id:'virus',name:'病毒注入',staminaCost:13,type:'attack',desc:'【主动★100%】伤害+每回合6%HP+降属性',minDmg:0.5,poisonDmg:0.06,reduceStat:0.15,icon:'🦠',cd:0},
+    {id:'hack',name:'数据入侵',staminaCost:12,type:'attack',desc:'【主动★100%】伤害+偷取敌人15%当前HP',minDmg:0.5,drain:0.15,icon:'💻',cd:0},
+    {id:'emp',name:'电磁脉冲',staminaCost:10,type:'attack',desc:'【主动★100%】伤害+25%概率眩晕',minDmg:0.8,stunRate:0.25,icon:'⚡',cd:0},
+    {id:'shield_break',name:'护盾击破',staminaCost:12,type:'attack',desc:'【主动★100%】无视护盾+1.5倍伤害',minDmg:1.5,ignoreDef:true,icon:'💎',cd:1},
+    {id:'triple',name:'三连击',staminaCost:16,type:'attack',desc:'【主动★100%】连续攻击3次（2、3次伤害×0.5）',minDmg:0.5,times:3,icon:'⚔️',cd:0},
+    {id:'execute',name:'处决',staminaCost:15,type:'attack',desc:'【主动★100%】敌人HP<50%时伤害×2',minDmg:0,critRate:1,critMult:2,icon:'☠️',cd:0,execute:true},
+    {id:'drain',name:'灵魂吸取',staminaCost:14,type:'attack',desc:'【主动★100%】伤害+偷取敌人12%最大HP',minDmg:0.7,drain:0.12,icon:'👻',cd:0},
+    {id:'bleed',name:'撕裂',staminaCost:11,type:'attack',desc:'【主动★100%】伤害+敌人持续流血3回合',minDmg:0.5,bleedDmg:0.05,icon:'🩸',cd:0},
     // ===== 控制系 =====
     {id:'confuse',name:'混乱',staminaCost:14,type:'special',desc:'【主动★35%】使敌人无法行动1回合',stunRate:0.35,icon:'🌪️',cd:2},
     {id:'seal',name:'封印',staminaCost:16,type:'special',desc:'【主动★30%】封印敌人1回合无法使用技能',sealRate:0.3,icon:'🔮',cd:2},
     {id:'freeze',name:'冰冻',staminaCost:18,type:'special',desc:'【主动★40%】冻结敌人1回合',stunRate:0.4,icon:'❄️',cd:2},
     {id:'silence',name:'沉默',staminaCost:12,type:'special',desc:'【主动★50%】敌人下回合无法使用主动技能',silenceRate:0.5,icon:'🔇',cd:2},
     // ===== 防御系 =====
-    {id:'defend',name:'防御',staminaCost:8,type:'defense',desc:'【主动】本回合受伤降低60%',reduceDmg:0.6,icon:'🛡️',cd:1},
-    {id:'shield',name:'能量护盾',staminaCost:10,type:'defense',desc:'【主动】获得可抵消3次攻击的护盾',shield:3,icon:'🔰',cd:2},
-    {id:'heal',name:'自我修复',staminaCost:15,type:'defense',desc:'【主动】恢复自身25%最大HP',healRate:0.25,icon:'💚',cd:2},
+    {id:'defend',name:'防御',staminaCost:8,type:'defense',desc:'【主动★100%】本回合受伤降低60%',reduceDmg:0.6,icon:'🛡️',cd:1},
+    {id:'shield',name:'能量护盾',staminaCost:10,type:'defense',desc:'【主动★100%】获得可抵消3次攻击的护盾',shield:3,icon:'🔰',cd:2},
+    {id:'heal',name:'自我修复',staminaCost:15,type:'defense',desc:'【主动★100%】恢复自身25%最大HP',healRate:0.25,icon:'💚',cd:2},
     {id:'mirror',name:'镜反',staminaCost:12,type:'defense',desc:'【主动★30%】下回合受到攻击时反弹50%伤害',mirrorRate:0.3,icon:'🪞',cd:2},
     // ===== 被动系 =====
-    {id:'lifesteal',name:'吸血',staminaCost:0,type:'attack',desc:'【被动】造成伤害的25%转为自己HP',icon:'🩸',cd:0,passive:true,lifesteal:0.25},
+    {id:'lifesteal',name:'吸血',staminaCost:0,type:'attack',desc:'【被动★100%】造成伤害的25%转为自己HP',icon:'🩸',cd:0,passive:true,lifesteal:0.25},
     {id:'counter',name:'反击',staminaCost:0,type:'defense',desc:'【被动★35%】受到攻击时35%概率反击',icon:'⚡',cd:0,passive:true,counterRate:0.35},
     {id:'resurrect',name:'神佑',staminaCost:0,type:'special',desc:'【被动★15%】死亡时15%概率复活并恢复50%HP',icon:'✨',cd:0,passive:true,resurrectRate:0.15},
-    {id:'armor',name:'护甲',staminaCost:0,type:'defense',desc:'【被动】受到伤害降低15%',armorRate:0.15,icon:'🛎️',cd:0,passive:true},
+    {id:'armor',name:'护甲',staminaCost:0,type:'defense',desc:'【被动★100%】受到伤害降低15%',armorRate:0.15,icon:'🛎️',cd:0,passive:true},
     {id:'thorns',name:'荆棘',staminaCost:0,type:'defense',desc:'【被动★40%】受到攻击时反弹20%伤害',thornsRate:0.4,icon:'🌹',cd:0,passive:true},
-    {id:'rage',name:'狂暴',staminaCost:0,type:'attack',desc:'【被动】HP<50%时伤害×1.5',rageRate:0.5,icon:'😈',cd:0,passive:true},
-    {id:'karma',name:'善恶有报',staminaCost:0,type:'attack',desc:'【被动】80%双倍伤害/20%治疗敌人',karmaRate:0.8,icon:'⚖️',cd:0,passive:true},
-    {id:'anger',name:'愤怒',staminaCost:0,type:'attack',desc:'【被动】HP越低伤害越高，最低50%时伤害×2',angerRate:0.5,icon:'😤',cd:0,passive:true},
+    {id:'rage',name:'狂暴',staminaCost:0,type:'attack',desc:'【被动★100%】HP<50%时伤害×1.5',rageRate:0.5,icon:'😈',cd:0,passive:true},
+    {id:'karma',name:'善恶有报',staminaCost:0,type:'attack',desc:'【被动★100%】80%双倍伤害/20%治疗敌人',karmaRate:0.8,icon:'⚖️',cd:0,passive:true},
+    {id:'anger',name:'愤怒',staminaCost:0,type:'attack',desc:'【被动★100%】HP越低伤害越高，最低50%时伤害×2',angerRate:0.5,icon:'😤',cd:0,passive:true},
 ];
 const ENEMY_NAMES=['机械龙虾','电路龙虾','芯片龙虾','程序龙虾','数据龙虾','比特龙虾','代码龙虾','网络龙虾','云端龙虾','量子龙虾','深渊机甲龙虾','泰坦机械龙虾','风暴电子龙虾','雷霆硅基龙虾','混沌编程龙虾'];
 const AUTO_BATTLE_DELAY = 750;
@@ -662,6 +1043,7 @@ function addLog(msg) {
 function updateUI() {
     if(!S.player) return;
     document.getElementById('round-num').textContent=S.round;
+    document.getElementById('exp').textContent=S.player.exp+'/'+S.player.expToLevel;
     document.getElementById('phase').textContent=PHASES[S.phase];
     document.getElementById('level').textContent=S.player.level;
     updatePlayerUI();
@@ -746,6 +1128,9 @@ function updateBuffsDisplay(id, entity) {
     }
 }
 
+function updateEvolveButton() {
+    // 进化现在是Lv.3自动进化，不再需要按钮
+}
 
 function startBattle() {
     if(S.inBattle) return;
@@ -1203,32 +1588,32 @@ function enemyDefeated() {
     S.battleResult='win';
     // 战胜敌人直接升级
     S.player.level++;
-    const oldPhase=S.phase;
-    if(S.player.level<PHASES.length) {
-        S.phase=S.player.level-1;
-    }
     calcPlayerStats();
     S.player.hp=S.player.maxHp;
-    addLog('<span class="log-system">🎉 胜利! 升级到 '+PHASES[S.phase]+'!</span>');
-    // 50%概率领悟随机技能
-    if(Math.random()<0.5) {
+    addLog('<span class="log-system">🎉 胜利! 升级到 Lv.'+S.player.level+'!</span>');
+    // Lv.3自动进化
+    if(S.player.level===3 && S.phase===0) {
+        S.phase=1;
+        calcPlayerStats();
+        S.player.hp=S.player.maxHp;
+        document.getElementById('evolution-text').textContent='🌀 '+PHASES[S.phase]+'!';
+        document.getElementById('evolution-overlay').classList.add('show');
+        setTimeout(()=>{
+            document.getElementById('evolution-overlay').classList.remove('show');
+        }, 2000);
+        addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'! 获得随机技能!</span>');
+        // 进化时获得随机技能
         const avail=ALL_SKILLS.filter(s=>!S.player.skills.find(p=>p.id===s.id));
         if(avail.length>0) {
             const newSkill=cloneSkill(avail[Math.floor(Math.random()*avail.length)]);
             S.player.skills.push(newSkill);
-            addLog('<span class="log-player">🌟 升级领悟: 获得 【'+newSkill.icon+newSkill.name+'】!</span>');
+            addLog('<span class="log-player">🌟 进化奖励: 获得 【'+newSkill.icon+newSkill.name+'】!</span>');
         }
     }
     if(S.enemy && S.enemy.skills.length>0) {
-        // 必定偷取敌人第一个玩家没有的技能
-        let newSkill=null;
-        for(const s of S.enemy.skills) {
-            if(!S.player.skills.find(p=>p.id===s.id)) {
-                newSkill=cloneSkill(s);
-                break;
-            }
-        }
-        if(newSkill) {
+        const enemySkillIdx=Math.floor(Math.random()*S.enemy.skills.length);
+        const newSkill=cloneSkill(S.enemy.skills[enemySkillIdx]);
+        if(!S.player.skills.find(s=>s.id===newSkill.id)) {
             S.player.skills.push(newSkill);
             addLog('<span class="log-player">🌟 偷学到新技能: '+newSkill.icon+newSkill.name+'</span>');
             document.getElementById('reward-skill-name').textContent=newSkill.icon+newSkill.name;
@@ -1541,7 +1926,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.74 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.68 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
