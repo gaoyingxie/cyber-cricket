@@ -408,7 +408,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.6 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.7 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -499,7 +499,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.6';
+const VERSION = 'v1.7';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊'},
@@ -1015,13 +1015,16 @@ function enemyDefeated() {
     S.gold+=goldGain;
     levelUp();
     addLog('<span class="log-system">🎉 胜利! 获得 '+expGain+' 经验, '+goldGain+' 金币</span>');
-    if(Math.random()<0.15&&S.player.skills.length<6) {
-        const newSkill=cloneSkill(ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)]);
+    if(S.player.skills.length<6 && S.enemy && S.enemy.skills.length>0) {
+        const enemySkillIdx=Math.floor(Math.random()*S.enemy.skills.length);
+        const newSkill=cloneSkill(S.enemy.skills[enemySkillIdx]);
         if(!S.player.skills.find(s=>s.id===newSkill.id)) {
             S.player.skills.push(newSkill);
             addLog('<span class="log-player">🌟 偷学到新技能: '+newSkill.icon+newSkill.name+'</span>');
             document.getElementById('reward-skill-name').textContent=newSkill.icon+newSkill.name;
             document.getElementById('reward-skill-container').style.display='block';
+        } else {
+            document.getElementById('reward-skill-container').style.display='none';
         }
     } else {
         document.getElementById('reward-skill-container').style.display='none';
@@ -1084,7 +1087,7 @@ function restartGame() {
 // 初始化
 initState();
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.6 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.7 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
