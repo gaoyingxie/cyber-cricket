@@ -592,7 +592,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.51 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.52 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
@@ -755,7 +755,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.51';
+const VERSION = 'v1.52';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.25,1.5,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -821,7 +821,7 @@ function initState(){
             const bhp=Math.floor(110+Math.random()*20);
             const batk=Math.floor(9+Math.random()*3);
             const bdef=Math.floor(4+Math.random()*3);
-            const bspd=Math.floor(7+Math.random()*3);
+            const bspd=Math.floor(5+Math.random()*8);
             const cnt=Math.random()<0.9?2:3;
             const s=[];while(s.length<cnt){const r=ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)];if(!s.find(x=>x.id===r.id))s.push(Object.assign({},r));}
             return{
@@ -1239,14 +1239,7 @@ function executeAutoTurn() {
         return S.player.stamina>=s.staminaCost;
     });
     
-    if(availSkills.length===0 && S.player.stamina<5) {
-        addLog('<span class="log-player">⚡ 体力不足，跳过回合</span>');
-        updateUI();
-        setTimeout(()=>enemyTurn(),getBattleDelay());
-        return;
-    }
-    
-    // 构建行动队列
+    // 构建行动队列（普通攻击必定执行，无需检查体力）
     S.battleQueue=[];
     
     // 添加技能到队列
@@ -1255,9 +1248,8 @@ function executeAutoTurn() {
     });
     
     // 添加平A到队列
-    if(S.player.stamina>=5) {
-        S.battleQueue.push({type:'attack',isPlayer:true});
-    }
+    // 普通攻击免费，每个回合必定执行
+    S.battleQueue.push({type:'attack',isPlayer:true});
     
     S.isProcessing=true;
     processBattleQueue();
@@ -1301,11 +1293,6 @@ function processBattleQueue() {
 }
 
 function doNormalAttack(attacker, defender, isPlayer, isSecondHit) {
-    if(attacker.stamina<5) {
-        addLog('<span class="log-'+(isPlayer?'player':'enemy')+'">⚡ 体力不足，无法攻击</span>');
-        return;
-    }
-    attacker.stamina-=5;
     let atkDmg=Math.max(1,Math.floor((attacker.atk||0)*1.0));
     // 连击第二次伤害减半
     if(isSecondHit) {
@@ -1468,14 +1455,7 @@ function enemyTurn() {
         return S.enemy.stamina>=s.staminaCost;
     });
     
-    if(availSkills.length===0 && S.enemy.stamina<5) {
-        addLog('<span class="log-enemy">⚡ 敌人体力不足，跳过回合</span>');
-        updateUI();
-        setTimeout(()=>endTurn(),getBattleDelay());
-        return;
-    }
-    
-    // 构建敌人行动队列
+    // 构建敌人行动队列（普通攻击必定执行）
     S.battleQueue=[];
     
     // 添加技能到队列
@@ -1484,9 +1464,8 @@ function enemyTurn() {
     });
     
     // 添加平A到队列
-    if(S.enemy.stamina>=5) {
-        S.battleQueue.push({type:'attack',isPlayer:false});
-    }
+    // 普通攻击免费，每个回合必定执行
+    S.battleQueue.push({type:'attack',isPlayer:false});
     
     processEnemyQueue();
 }
@@ -1931,7 +1910,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.51 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.52 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
