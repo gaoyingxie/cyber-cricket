@@ -294,6 +294,38 @@
         .reward-title { font-size: 1.5em; color: #00ff88; margin-bottom: 20px; }
         .reward-item { margin: 10px 0; font-size: 1.1em; }
         .reward-skill { background: rgba(255,68,255,0.2); border: 1px solid #ff44ff; border-radius: 8px; padding: 10px; margin: 10px 0; color: #ff44ff; }
+        .enemy-select-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #ff6644;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 999;
+            min-width: 450px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: center;
+        }
+        .enemy-select-panel.show { display: block; }
+        .enemy-select-title { font-size: 1.5em; color: #ff6644; margin-bottom: 20px; }
+        .enemy-select-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .enemy-option {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .enemy-option:hover { background: rgba(255,102,68,0.2); border-color: #ff6644; }
+        .enemy-option-name { font-size: 1.1em; color: #fff; margin-bottom: 5px; }
+        .enemy-option-stats { font-size: 0.85em; color: #888; }
+        .enemy-option-skills { font-size: 0.8em; color: #00ff88; margin-top: 5px; }
+        .player-skill-display { font-size: 0.75em; color: #888; margin-top: 5px; }
         .enemy-skill-display { font-size: 0.75em; color: #888; margin-top: 5px; }
         .speed-indicator {
             position: absolute;
@@ -329,7 +361,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗蛐蛐 ⚡</h1>
-        <div class="version">v1.2 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.3 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -355,6 +387,7 @@
                 <div class="hp-bar"><div class="hp-fill" id="player-hp-bar"></div></div>
                 <div class="hp-text"><span id="player-hp">100</span> / <span id="player-max-hp">100</span></div>
                 <div class="fighter-stats" id="player-stats">攻:10 防:5 速:8</div>
+                <div class="player-skill-display" id="player-skills"></div>
                 <div class="buffs-display" id="player-buffs"></div>
                 <div class="speed-indicator">速度</div>
                 <div class="speed-bar-container"><div class="speed-bar-fill" id="player-speed-bar" style="width:50%"></div></div>
@@ -394,6 +427,11 @@
         </div>
         <button class="btn" onclick="closeReward()">继续</button>
     </div>
+    <div class="enemy-select-panel" id="enemy-select-panel">
+        <div class="enemy-select-title">🎯 选择对手</div>
+        <div class="enemy-select-list" id="enemy-select-list"></div>
+        <button class="btn" onclick="closeEnemySelect()">返回</button>
+    </div>
     <div class="game-over" id="game-over">
         <h2 id="game-over-title">游戏结束</h2>
         <p id="game-over-msg"></p>
@@ -401,7 +439,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.2';
+const VERSION = 'v1.3';
 const PHASES=['幼虫','成虫','战斗体','究极体'], PHASE_SPRITES=['🐛','🦗','⚡🦗','🔱🦗'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊'},
@@ -433,7 +471,7 @@ function initState(){
         player:{
             name:'你的蛐蛐',level:1,exp:0,expToLevel:30,hp:100,maxHp:100,atk:10,def:5,spd:8,
             stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
-            skills:[Object.assign({},ALL_SKILLS[0]),Object.assign({},ALL_SKILLS[1])],
+            skills:[Object.assign({},ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)]),Object.assign({},ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)])],
             buffs:[],shields:0,poisonDmg:0,alive:true,resurrectUsed:false,stunned:false,sealed:false,
             speedBoosted:false,defReduced:false,resurrectRate:0,counterRate:0,reduceDmgRate:0
         },enemy:null};
@@ -556,6 +594,7 @@ function updatePlayerUI() {
     document.getElementById('player-stats').textContent='攻:'+S.player.atk+' 防:'+S.player.def+' 速:'+S.player.spd;
     const speedPct=Math.min(100,S.player.spd/20*100);
     document.getElementById('player-speed-bar').style.width=speedPct+'%';
+    document.getElementById('player-skills').textContent='技能: '+S.player.skills.map(s=>s.icon+s.name).join(' ');
     updateBuffsDisplay('player-buffs', S.player);
 }
 
@@ -574,7 +613,7 @@ function updateEnemyUI() {
     const speedPct=Math.min(100,S.enemy.spd/20*100);
     document.getElementById('enemy-speed-bar').style.width=speedPct+'%';
     updateBuffsDisplay('enemy-buffs', S.enemy);
-    document.getElementById('enemy-skills').textContent='技能: '+S.enemy.skills.map(s=>s.icon).join(' ');
+    document.getElementById('enemy-skills').textContent='技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(' ');
 }
 
 function updateBuffsDisplay(id, entity) {
@@ -604,8 +643,48 @@ function updateEvolveButton() {
 
 function startBattle() {
     if(S.inBattle) return;
-    addLog('<span class="log-system">⚔️ 第 '+S.round+' 轮战斗开始!</span>');
-    generateEnemy();
+    showEnemySelect();
+}
+
+function showEnemySelect() {
+    const list=document.getElementById('enemy-select-list');
+    list.innerHTML='';
+    for(let i=0;i<3;i++) {
+        const r=S.round+(i*0.5),m=1+(r-1)*0.15;
+        const nameOpt=ENEMY_NAMES[Math.min(Math.floor(r)-1,ENEMY_NAMES.length-1)]||'强化蛐蛐#'+Math.floor(r);
+        const hp=Math.floor((60+r*8)*m);
+        const atk=Math.floor((6+r*1.2)*m);
+        const def=Math.floor((3+r*0.8)*m);
+        const spd=Math.floor((5+r*0.6)*m);
+        const cnt=3+Math.min(Math.floor(r/3),4);
+        const avail=ALL_SKILLS.filter(x=>x.id!=='resurrect'||Math.random()<0.2);
+        const skills=[...avail].sort(()=>Math.random()-0.5).slice(0,Math.min(cnt,avail.length,6));
+        const div=document.createElement('div');
+        div.className='enemy-option';
+        div.innerHTML='<div class="enemy-option-name">🤖 '+nameOpt+' (Lv.'+Math.floor(r)+')</div>'+
+            '<div class="enemy-option-stats">生命:'+hp+' 攻:'+atk+' 防:'+def+' 速:'+spd+'</div>'+
+            '<div class="enemy-option-skills">技能: '+skills.map(s=>s.icon+s.name).join(' ')+'</div>';
+        div.onclick=()=>selectEnemy(nameOpt,Math.floor(r),hp,atk,def,spd,skills);
+        list.appendChild(div);
+    }
+    document.getElementById('enemy-select-panel').classList.add('show');
+}
+
+function closeEnemySelect() {
+    document.getElementById('enemy-select-panel').classList.remove('show');
+}
+
+function selectEnemy(name,level,hp,atk,def,spd,skills) {
+    closeEnemySelect();
+    S.enemy={
+        name:name,level:level,hp:hp,maxHp:hp,
+        atk:atk,def:def,spd:spd,
+        stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
+        skills:skills.map(s=>cloneSkill(s)),
+        buffs:[],shields:0,poisonDmg:0,alive:true,resurrected:false,
+        stunned:false,sealed:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
+        speedBoosted:false,defReduced:false
+    };
     S.inBattle=true;
     S.phase=1;
     S.turn=0;
@@ -613,7 +692,9 @@ function startBattle() {
     S.enemy.stamina=Math.min(S.enemy.maxStamina,S.enemy.stamina+STAMINA_REGEN_BATTLE);
     document.getElementById('btn-start').disabled=true;
     updateUI();
+    addLog('<span class="log-system">⚔️ 第 '+S.round+' 轮战斗开始!</span>');
     addLog('<span class="log-enemy">⚔️ 遇到野生 '+S.enemy.name+' (Lv.'+S.enemy.level+')</span>');
+    addLog('<span class="log-system">📋 敌人技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(' ')+'</span>');
     setTimeout(executeAutoTurn, AUTO_BATTLE_DELAY);
 }
 
@@ -879,7 +960,7 @@ function restartGame() {
 // 初始化
 initState();
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗蛐蛐 v1.2 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗蛐蛐 v1.3 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
