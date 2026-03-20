@@ -349,6 +349,49 @@
         @keyframes revealGlow { 0%,100%{filter:drop-shadow(0 0 20px #00ff88)} 50%{filter:drop-shadow(0 0 40px #00ff88)} }
         .lobster-reveal-name { font-size: 1.3em; color: #fff; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
         .lobster-reveal-skills { font-size: 1em; color: #aaa; }
+        .mode-select-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            z-index: 1001;
+            min-width: 400px;
+            text-align: center;
+            flex-direction: column;
+        }
+        .mode-select-title { font-size: 1.8em; color: #00ff88; margin-bottom: 25px; text-shadow: 0 0 20px #00ff88; }
+        .mode-options { display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; }
+        .btn-large { padding: 15px 30px; font-size: 1.2em; }
+        .mode-desc { color: #aaa; font-size: 1em; margin-top: 15px; }
+        .import-panel, .export-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 1001;
+            min-width: 450px;
+            text-align: center;
+        }
+        .import-panel.show, .export-panel.show { display: block; }
+        .import-title, .export-title { font-size: 1.6em; color: #00ff88; margin-bottom: 15px; text-shadow: 0 0 15px #00ff88; }
+        .import-desc, .export-desc { color: #aaa; margin-bottom: 15px; font-size: 1.1em; }
+        .import-code, .export-code {
+            width: 100%; height: 120px; background: #0a0a1e; border: 1px solid #444;
+            color: #00ff88; font-size: 0.9em; padding: 10px; border-radius: 8px;
+            resize: none; font-family: monospace;
+        }
+        .export-code { color: #ffff00; }
+        .export-hint { color: #ffa500; margin-top: 10px; font-size: 0.95em; }
+        .btn-secondary { background: #444; margin-left: 10px; }
+        .btn-secondary:hover { background: #555; }
         .game-over h2 { font-size: 3em; margin-bottom: 20px; }
         .game-over.win h2 { color: #00ff88; text-shadow: 0 0 30px #00ff88; }
         .game-over.lose h2 { color: #ff4444; text-shadow: 0 0 30px #ff4444; }
@@ -549,7 +592,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.38 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.39 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
@@ -665,6 +708,14 @@
         <div class="skill-tooltip-name" id="skill-tooltip-name"></div>
         <div class="skill-tooltip-desc" id="skill-tooltip-desc"></div>
     </div>
+    <div class="mode-select-panel" id="mode-select-panel">
+        <div class="mode-select-title">🎮 选择游戏模式</div>
+        <div class="mode-options">
+            <button class="btn btn-large" onclick="selectMode('raise')">🌱 养虾模式</button>
+            <button class="btn btn-large" onclick="selectMode('import')">🦐 成虾导入</button>
+        </div>
+        <div class="mode-desc" id="mode-desc">选择游戏模式开始</div>
+    </div>
     <div class="welcome-panel" id="welcome-panel">
         <div class="welcome-title">🎮 欢迎来到赛博斗龙虾!</div>
         <div class="welcome-content">
@@ -682,6 +733,21 @@
         </div>
         <button class="btn" onclick="closeWelcome()">开始游戏!</button>
     </div>
+    <div class="import-panel" id="import-panel">
+        <div class="import-title">🦐 导入成虾</div>
+        <div class="import-desc">粘贴之前保存的龙虾序列化代码：</div>
+        <textarea class="import-code" id="import-code" placeholder="在此粘贴龙虾代码..."></textarea>
+        <div class="import-error" id="import-error" style="display:none;color:#ff4444;margin:10px 0;"></div>
+        <button class="btn" onclick="confirmImport()">确认导入</button>
+        <button class="btn btn-secondary" onclick="closeImportPanel()">返回</button>
+    </div>
+    <div class="export-panel" id="export-panel">
+        <div class="export-title">🎉 养虾成功!</div>
+        <div class="export-desc">你的龙虾已养成！保存以下代码以便下次导入：</div>
+        <textarea class="export-code" id="export-code" readonly></textarea>
+        <div class="export-hint">📋 请复制并保存此代码，下次可在"成虾导入"中使用</div>
+        <button class="btn" onclick="closeExportPanel()">完成</button>
+    </div>
     <div class="game-over" id="game-over">
         <h2 id="game-over-title">游戏结束</h2>
         <p id="game-over-msg"></p>
@@ -689,7 +755,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.38';
+const VERSION = 'v1.39';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -742,12 +808,14 @@ const MAX_STAMINA = 100;
 const STAMINA_REGEN_BATTLE = 20;
 const STAMINA_REGEN_IDLE = 30;
 const AUTO_BATTLE_DELAY = 1500;
-let S={round:1,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false};
+let S={round:1,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false,lobsterMode:null,exported:false};
 
 function initState(){
     const oldSpeed=S.battleSpeed||1;
+    const oldMode=S.lobsterMode;
+    const oldExported=S.exported||false;
     S={round:1,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:oldSpeed,
-        playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false,
+        playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false,lobsterMode:oldMode,exported:oldExported,
         player:{
             name:'你的龙虾',level:1,exp:0,expToLevel:30,hp:120,maxHp:120,atk:10,def:5,spd:8,
             stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
@@ -1514,6 +1582,14 @@ function enemyDefeated() {
     document.getElementById('reward-panel').classList.add('show');
     document.getElementById('btn-start').disabled=false;
     S.round++;
+    // 养虾模式完成5轮后显示导出面板
+    if(S.lobsterMode==='raise' && S.round>5 && !S.exported) {
+        S.exported=true; // 防止重复显示
+        setTimeout(()=>{
+            document.getElementById('reward-panel').classList.remove('show');
+            showExportPanel();
+        }, 500);
+    }
     updateUI();
 }
 
@@ -1667,6 +1743,123 @@ function closeWelcome() {
     document.getElementById('btn-start').disabled=false;
 }
 
+function selectMode(mode) {
+    document.getElementById('mode-select-panel').style.display='none';
+    if(mode==='raise') {
+        // 养虾模式
+        S.lobsterMode='raise';
+        initState();
+        showWelcomeLobster();
+        document.getElementById('welcome-panel').classList.add('show');
+    } else if(mode==='import') {
+        // 成虾导入模式
+        S.lobsterMode='import';
+        initState();
+        document.getElementById('import-panel').classList.add('show');
+        document.getElementById('import-code').value='';
+        document.getElementById('import-error').style.display='none';
+    }
+    updateUI();
+}
+
+function confirmImport() {
+    const code=document.getElementById('import-code').value.trim();
+    const errorEl=document.getElementById('import-error');
+    if(!code) {
+        errorEl.textContent='请输入龙虾代码';
+        errorEl.style.display='block';
+        return;
+    }
+    const imported=importLobster(code);
+    if(imported) {
+        document.getElementById('import-panel').classList.remove('show');
+        S.inBattle=false;
+        S.round=1;
+        S.turn=0;
+        S.phase=imported.phase||0;
+        S.player=imported;
+        S.playerCooldowns={};
+        S.enemyCooldowns={};
+        S.battleQueue=[];
+        S.isProcessing=false;
+        calcPlayerStats();
+        updateUI();
+        addLog('<span class="log-system">🦐 成虾导入成功! Lv.'+S.player.level+' '+PHASES[S.phase]+'</span>');
+        document.getElementById('btn-start').disabled=false;
+    } else {
+        errorEl.textContent='无效的龙虾代码，请检查后重试';
+        errorEl.style.display='block';
+    }
+}
+
+function importLobster(code) {
+    try {
+        const decoded=atob(code);
+        const data=JSON.parse(decoded);
+        // 验证必要字段
+        if(!data.skills || !data.level || data.phase===undefined) {
+            return null;
+        }
+        // 重建玩家数据
+        return {
+            name:data.name||'导入龙虾',
+            level:data.level,
+            exp:data.exp||0,
+            expToLevel:data.expToLevel||30,
+            hp:data.hp||data.maxHp||100,
+            maxHp:data.maxHp||100,
+            atk:data.atk||10,
+            def:data.def||5,
+            spd:data.spd||8,
+            stamina:100,maxStamina:100,
+            skills:data.skills.map(s=>cloneSkill(s)),
+            buffs:[],shields:0,poisonDmg:0,alive:true,
+            resurrected:false,stunned:false,sealed:false,
+            speedBoosted:false,defReduced:false,
+            resurrectRate:0,counterRate:0,reduceDmgRate:0,lifesteal:0,
+            equipment:data.equipment||{atk:null,def:null,hp:null},
+            inventory:data.inventory||[]
+        };
+    } catch(e) {
+        return null;
+    }
+}
+
+function exportLobster() {
+    const data={
+        name:S.player.name,
+        level:S.player.level,
+        exp:S.player.exp,
+        expToLevel:S.player.expToLevel,
+        hp:S.player.hp,
+        maxHp:S.player.maxHp,
+        atk:S.player.atk,
+        def:S.player.def,
+        spd:S.player.spd,
+        phase:S.phase,
+        skills:S.player.skills,
+        equipment:S.player.equipment,
+        inventory:S.player.inventory
+    };
+    return btoa(JSON.stringify(data));
+}
+
+function closeImportPanel() {
+    document.getElementById('import-panel').classList.remove('show');
+    document.getElementById('mode-select-panel').style.display='flex';
+}
+
+function closeExportPanel() {
+    document.getElementById('export-panel').classList.remove('show');
+    document.getElementById('btn-start').disabled=false;
+}
+
+function showExportPanel() {
+    const code=exportLobster();
+    document.getElementById('export-code').value=code;
+    document.getElementById('export-panel').classList.add('show');
+}
+
 function showWelcomeLobster() {
     if(S.player && S.player.skills) {
         document.getElementById('welcome-sprite').textContent=PHASE_SPRITES[0];
@@ -1677,12 +1870,11 @@ function showWelcomeLobster() {
 
 // 初始化
 initState();
-showWelcomeLobster();
 updateSpeedButton();
-document.getElementById('welcome-panel').classList.add('show');
+document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.38 准备就绪!</span>');
-addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.39 准备就绪!</span>');
+addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
 </html>
