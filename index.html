@@ -273,6 +273,24 @@
             flex-direction: column;
         }
         .game-over.show { display: flex; }
+        .welcome-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 1000;
+            min-width: 380px;
+            text-align: center;
+        }
+        .welcome-panel.show { display: block; }
+        .welcome-title { font-size: 1.8em; color: #00ff88; margin-bottom: 20px; text-shadow: 0 0 20px #00ff88; }
+        .welcome-content { text-align: left; margin-bottom: 25px; }
+        .welcome-content p { margin: 12px 0; font-size: 1.1em; color: #fff; }
+        .welcome-content strong { color: #ff6644; }
         .game-over h2 { font-size: 3em; margin-bottom: 20px; }
         .game-over.win h2 { color: #00ff88; text-shadow: 0 0 30px #00ff88; }
         .game-over.lose h2 { color: #ff4444; text-shadow: 0 0 30px #ff4444; }
@@ -408,7 +426,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.8 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.9 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -492,6 +510,16 @@
         <div class="skill-tooltip-name" id="skill-tooltip-name"></div>
         <div class="skill-tooltip-desc" id="skill-tooltip-desc"></div>
     </div>
+    <div class="welcome-panel" id="welcome-panel">
+        <div class="welcome-title">🎮 欢迎来到赛博斗龙虾!</div>
+        <div class="welcome-content">
+            <p>⏱️ 游戏共 <strong>5轮</strong> 战斗</p>
+            <p>⚔️ 每次<strong>战胜</strong>可偷取对手<strong>1个技能</strong></p>
+            <p>🌀 消耗金币可<strong>进化</strong>龙虾属性</p>
+            <p>🎯 选择强力对手，组建你的最强技能组合!</p>
+        </div>
+        <button class="btn" onclick="closeWelcome()">开始游戏!</button>
+    </div>
     <div class="game-over" id="game-over">
         <h2 id="game-over-title">游戏结束</h2>
         <p id="game-over-msg"></p>
@@ -499,7 +527,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.8';
+const VERSION = 'v1.9';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊'},
@@ -1084,10 +1112,15 @@ function restartGame() {
     document.getElementById('btn-start').disabled=false;
 }
 
+function closeWelcome() {
+    document.getElementById('welcome-panel').classList.remove('show');
+}
+
 // 初始化
 initState();
+document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.8 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.9 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
