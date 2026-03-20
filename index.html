@@ -426,7 +426,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.10 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.11 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -527,32 +527,32 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.10';
+const VERSION = 'v1.11';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
-    {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊'},
-    {id:'crit',name:'暴击',staminaCost:12,type:'attack',desc:'高概率暴击',minDmg:0,critRate:0.45,critMult:2,icon:'💥'},
-    {id:'lifesteal',name:'吸血',staminaCost:18,type:'attack',desc:'伤害30%转HP',minDmg:0.8,lifesteal:0.3,icon:'🩸'},
-    {id:'resurrect',name:'神佑',staminaCost:25,type:'special',desc:'死亡30%复活',resurrectRate:0.3,icon:'✨'},
-    {id:'counter',name:'反击',staminaCost:10,type:'defense',desc:'受击时反击',counterRate:0.4,icon:'🛡️'},
-    {id:'poison',name:'剧毒',staminaCost:14,type:'attack',desc:'每回合掉血5%',minDmg:0.5,poisonDmg:0.05,icon:'☠️'},
-    {id:'deadly',name:'必杀',staminaCost:22,type:'attack',desc:'2.5倍伤害',minDmg:0,critRate:1,critMult:2.5,icon:'⚔️'},
-    {id:'defend',name:'防御',staminaCost:8,type:'defense',desc:'受伤-50%',reduceDmg:0.5,icon:'🛡️'},
-    {id:'confuse',name:'混乱',staminaCost:16,type:'special',desc:'敌无法行动',stunRate:0.35,icon:'🌪️'},
-    {id:'seal',name:'封印',staminaCost:20,type:'special',desc:'封印1回合',sealRate:0.3,icon:'🔮'},
-    {id:'emp',name:'电磁脉冲',staminaCost:15,type:'special',desc:'伤害+沉默',minDmg:0.7,stunRate:0.25,icon:'⚡'},
-    {id:'hack',name:'数据入侵',staminaCost:18,type:'attack',desc:'窃取10%HP',minDmg:0.6,drain:0.1,icon:'💻'},
-    {id:'shield',name:'能量护盾',staminaCost:12,type:'defense',desc:'抵2次攻击',shield:2,icon:'🔰'},
-    {id:'virus',name:'病毒注入',staminaCost:20,type:'attack',desc:'持续伤害',minDmg:0.4,poisonDmg:0.08,reduceStat:0.1,icon:'🦠'},
-    {id:'overclock',name:'超频',staminaCost:10,type:'special',desc:'速度翻倍',speedBoost:true,icon:'🔥'},
-    {id:'shield_break',name:'护盾击破',staminaCost:14,type:'attack',desc:'无视防御',minDmg:1.2,ignoreDef:true,icon:'💎'},
+    {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊',cd:0},
+    {id:'crit',name:'暴击',staminaCost:12,type:'attack',desc:'高概率暴击',minDmg:0,critRate:0.45,critMult:2,icon:'💥',cd:0},
+    {id:'lifesteal',name:'吸血',staminaCost:18,type:'attack',desc:'伤害30%转HP',minDmg:0.8,lifesteal:0.3,icon:'🩸',cd:0,passive:true},
+    {id:'resurrect',name:'神佑',staminaCost:25,type:'special',desc:'死亡30%复活',resurrectRate:0.3,icon:'✨',cd:0,passive:true},
+    {id:'counter',name:'反击',staminaCost:10,type:'defense',desc:'受击时反击',counterRate:0.4,icon:'🛡️',cd:0,passive:true},
+    {id:'poison',name:'剧毒',staminaCost:14,type:'attack',desc:'每回合掉血5%',minDmg:0.5,poisonDmg:0.05,icon:'☠️',cd:0},
+    {id:'deadly',name:'必杀',staminaCost:22,type:'attack',desc:'2.5倍伤害',minDmg:0,critRate:1,critMult:2.5,icon:'⚔️',cd:0},
+    {id:'defend',name:'防御',staminaCost:8,type:'defense',desc:'受伤-50%',reduceDmg:0.5,icon:'🛡️',cd:1},
+    {id:'confuse',name:'混乱',staminaCost:16,type:'special',desc:'敌无法行动',stunRate:0.35,icon:'🌪️',cd:2},
+    {id:'seal',name:'封印',staminaCost:20,type:'special',desc:'封印1回合',sealRate:0.3,icon:'🔮',cd:2},
+    {id:'emp',name:'电磁脉冲',staminaCost:15,type:'special',desc:'伤害+沉默',minDmg:0.7,stunRate:0.25,icon:'⚡',cd:0},
+    {id:'hack',name:'数据入侵',staminaCost:18,type:'attack',desc:'窃取10%HP',minDmg:0.6,drain:0.1,icon:'💻',cd:0},
+    {id:'shield',name:'能量护盾',staminaCost:12,type:'defense',desc:'抵2次攻击',shield:2,icon:'🔰',cd:2},
+    {id:'virus',name:'病毒注入',staminaCost:20,type:'attack',desc:'持续伤害',minDmg:0.4,poisonDmg:0.08,reduceStat:0.1,icon:'🦠',cd:0},
+    {id:'overclock',name:'超频',staminaCost:10,type:'special',desc:'速度翻倍',speedBoost:true,icon:'🔥',cd:2,passive:true},
+    {id:'shield_break',name:'护盾击破',staminaCost:14,type:'attack',desc:'无视防御',minDmg:1.2,ignoreDef:true,icon:'💎',cd:1},
 ];
 const ENEMY_NAMES=['机械龙虾','电路龙虾','芯片龙虾','程序龙虾','数据龙虾','比特龙虾','代码龙虾','网络龙虾','云端龙虾','量子龙虾','深渊机甲龙虾','泰坦机械龙虾','风暴电子龙虾','雷霆硅基龙虾','混沌编程龙虾'];
 const MAX_STAMINA = 100;
 const STAMINA_REGEN_BATTLE = 15;
 const STAMINA_REGEN_IDLE = 30;
 const AUTO_BATTLE_DELAY = 1000;
-let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1};
+let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{}};
 
 function initState(){
     S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,turnOrder:null,
@@ -561,7 +561,7 @@ function initState(){
             stamina:MAX_STAMINA,maxStamina:MAX_STAMINA,
             skills:[Object.assign({},ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)]),Object.assign({},ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)])],
             buffs:[],shields:0,poisonDmg:0,alive:true,resurrectUsed:false,stunned:false,sealed:false,
-            speedBoosted:false,defReduced:false,resurrectRate:0,counterRate:0,reduceDmgRate:0
+            speedBoosted:false,defReduced:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,lifesteal:0
         },enemy:null};
 }
 function cloneSkill(s){return JSON.parse(JSON.stringify(s))}
@@ -839,8 +839,30 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
         skills:skills.map(s=>cloneSkill(s)),
         buffs:[],shields:0,poisonDmg:0,alive:true,resurrected:false,
         stunned:false,sealed:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
-        speedBoosted:false,defReduced:false
+        speedBoosted:false,defReduced:false,lifesteal:0
     };
+    // 刷新敌人被动
+    S.enemy.skills.forEach(s=>{
+        if(s.passive) {
+            if(s.id==='lifesteal') S.enemy.lifesteal=s.lifesteal;
+            if(s.id==='counter') S.enemy.counterRate=s.counterRate;
+            if(s.id==='resurrect') S.enemy.resurrectRate=s.resurrectRate;
+            if(s.id==='speedBoost'||s.id==='overclock') S.enemy.speedBoosted=true;
+        }
+    });
+    // 重置玩家CD
+    S.playerCooldowns={};
+    S.enemyCooldowns={};
+    // 刷新玩家被动
+    S.player.lifesteal=0;S.player.counterRate=0;S.player.resurrectRate=0;
+    S.player.skills.forEach(s=>{
+        if(s.passive) {
+            if(s.id==='lifesteal') S.player.lifesteal=s.lifesteal;
+            if(s.id==='counter') S.player.counterRate=s.counterRate;
+            if(s.id==='resurrect') S.player.resurrectRate=s.resurrectRate;
+            if(s.id==='speedBoost'||s.id==='overclock') S.player.speedBoosted=true;
+        }
+    });
     S.inBattle=true;
     S.phase=1;
     S.turn=0;
@@ -868,15 +890,80 @@ function executeAutoTurn() {
         enemyTurn();
         return;
     }
-    const availSkills=S.player.skills.filter(s=>S.player.stamina>=s.staminaCost);
-    if(availSkills.length===0) {
+    // 收集可用技能（排除被动、排除CD中的）
+    const availSkills=S.player.skills.filter(s=>{
+        if(s.passive) return false;
+        const cd=S.playerCooldowns[s.id]||0;
+        if(cd>0) return false;
+        return S.player.stamina>=s.staminaCost;
+    });
+    
+    if(availSkills.length===0 && S.player.stamina<5) {
         addLog('<span class="log-player">⚡ 体力不足，跳过回合</span>');
         enemyTurn();
         return;
     }
-    const skillIdx=Math.floor(Math.random()*availSkills.length);
-    const actualIdx=S.player.skills.indexOf(availSkills[skillIdx]);
-    useSkill(actualIdx);
+    
+    // 按CD分组：先放无CD的，再放有CD的
+    const noCdSkills=availSkills.filter(s=>s.cd===0);
+    const cdSkills=availSkills.filter(s=>s.cd>0);
+    
+    S.turn=0;
+    let totalDmg=0;
+    
+    // 放所有无CD技能
+    noCdSkills.forEach(skill=>{
+        S.player.stamina-=skill.staminaCost;
+        addLog('<span class="log-player">▶️ '+S.player.name+' 使用 '+skill.icon+skill.name+'</span>');
+        const dmg=processSkillEffect(skill,S.player,S.enemy,true);
+        totalDmg+=dmg;
+    });
+    
+    // 放CD技能
+    cdSkills.forEach(skill=>{
+        S.player.stamina-=skill.staminaCost;
+        S.playerCooldowns[skill.id]=skill.cd;
+        addLog('<span class="log-player">▶️ '+S.player.name+' 使用 '+skill.icon+skill.name+'</span>');
+        const dmg=processSkillEffect(skill,S.player,S.enemy,true);
+        totalDmg+=dmg;
+    });
+    
+    // 平A（消耗5体力，可触发连击、暴击、吸血）
+    if(S.player.stamina>=5) {
+        S.player.stamina-=5;
+        addLog('<span class="log-player">▶️ '+S.player.name+' 普通攻击</span>');
+        const atkDmg=Math.max(1,Math.floor(S.player.atk*0.8));
+        let finalDmg=atkDmg;
+        const isCrit=Math.random()<0.2;
+        if(isCrit) finalDmg*=2;
+        // 护盾吸收
+        if(S.enemy.shields>0) {
+            const absorb=Math.min(S.enemy.shields,finalDmg);
+            S.enemy.shields-=absorb;
+            finalDmg-=absorb;
+            addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
+        }
+        S.enemy.hp-=finalDmg;
+        totalDmg+=finalDmg;
+        showDamageNumber(document.getElementById('enemy-fighter'),finalDmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
+        playAttackAnimation('player-fighter','enemy-fighter',isCrit);
+        // 吸血被动
+        if(S.player.lifesteal>0) {
+            const heal=Math.floor(totalDmg*S.player.lifesteal);
+            S.player.hp=Math.min(S.player.maxHp,S.player.hp+heal);
+            addLog('<span class="log-heal">💉 吸血 '+heal+' HP</span>');
+        }
+    }
+    
+    S.player.hp=Math.min(S.player.maxHp,S.player.hp);
+    S.enemy.hp=Math.max(0,S.enemy.hp);
+    updateUI();
+    
+    if(S.enemy.hp<=0) {
+        enemyDefeated();
+        return;
+    }
+    setTimeout(()=>enemyTurn(),getBattleDelay());
 }
 
 function useSkill(idx) {
@@ -969,6 +1056,7 @@ function processSkillEffect(skill, attacker, defender, isPlayer) {
     else playAttackAnimation('enemy-fighter','player-fighter',isCrit);
     attacker.hp=Math.min(attacker.maxHp,attacker.hp);
     defender.hp=Math.max(0,defender.hp);
+    return totalDmg;
 }
 
 function enemyTurn() {
@@ -989,26 +1077,106 @@ function enemyTurn() {
         endTurn();
         return;
     }
-    const availSkills=S.enemy.skills.filter(s=>S.enemy.stamina>=s.staminaCost);
-    if(availSkills.length===0) {
+    // 收集可用技能
+    const availSkills=S.enemy.skills.filter(s=>{
+        if(s.passive) return false;
+        const cd=S.enemyCooldowns[s.id]||0;
+        if(cd>0) return false;
+        return S.enemy.stamina>=s.staminaCost;
+    });
+    
+    if(availSkills.length===0 && S.enemy.stamina<5) {
         addLog('<span class="log-enemy">⚡ 敌人体力不足，跳过回合</span>');
         endTurn();
         return;
     }
-    const skill=availSkills[Math.floor(Math.random()*availSkills.length)];
-    S.enemy.stamina-=skill.staminaCost;
-    addLog('<span class="log-enemy">▶️ '+S.enemy.name+' 使用 '+skill.icon+skill.name+'</span>');
-    processSkillEffect(skill, S.enemy, S.player, false);
+    
+    const noCdSkills=availSkills.filter(s=>s.cd===0);
+    const cdSkills=availSkills.filter(s=>s.cd>0);
+    let totalDmg=0;
+    
+    // 放所有无CD技能
+    noCdSkills.forEach(skill=>{
+        S.enemy.stamina-=skill.staminaCost;
+        addLog('<span class="log-enemy">▶️ '+S.enemy.name+' 使用 '+skill.icon+skill.name+'</span>');
+        const dmg=processSkillEffect(skill,S.enemy,S.player,false);
+        totalDmg+=dmg;
+    });
+    
+    // 放CD技能
+    cdSkills.forEach(skill=>{
+        S.enemy.stamina-=skill.staminaCost;
+        S.enemyCooldowns[skill.id]=skill.cd;
+        addLog('<span class="log-enemy">▶️ '+S.enemy.name+' 使用 '+skill.icon+skill.name+'</span>');
+        const dmg=processSkillEffect(skill,S.enemy,S.player,false);
+        totalDmg+=dmg;
+    });
+    
+    // 平A
+    if(S.enemy.stamina>=5) {
+        S.enemy.stamina-=5;
+        addLog('<span class="log-enemy">▶️ '+S.enemy.name+' 普通攻击</span>');
+        const atkDmg=Math.max(1,Math.floor(S.enemy.atk*0.8));
+        let finalDmg=atkDmg;
+        const isCrit=Math.random()<0.2;
+        if(isCrit) finalDmg*=2;
+        // 护盾吸收
+        if(S.player.shields>0) {
+            const absorb=Math.min(S.player.shields,finalDmg);
+            S.player.shields-=absorb;
+            finalDmg-=absorb;
+            addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
+        }
+        S.player.hp-=finalDmg;
+        totalDmg+=finalDmg;
+        showDamageNumber(document.getElementById('player-fighter'),finalDmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
+        playAttackAnimation('enemy-fighter','player-fighter',isCrit);
+        // 敌方吸血被动
+        if(S.enemy.lifesteal>0) {
+            const heal=Math.floor(totalDmg*S.enemy.lifesteal);
+            S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp+heal);
+            addLog('<span class="log-heal">💉 敌人吸血 '+heal+' HP</span>');
+        }
+    }
+    
+    S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp);
+    S.player.hp=Math.max(0,S.player.hp);
     updateUI();
+    
     if(S.player.hp<=0) {
         playerDefeated();
         return;
     }
-    setTimeout(endTurn, 600);
+    setTimeout(endTurn,getBattleDelay());
 }
 
 function endTurn() {
     if(!S.inBattle) return;
+    // 减少CD
+    for(let id in S.playerCooldowns) {
+        if(S.playerCooldowns[id]>0) S.playerCooldowns[id]--;
+    }
+    for(let id in S.enemyCooldowns) {
+        if(S.enemyCooldowns[id]>0) S.enemyCooldowns[id]--;
+    }
+    // 刷新被动状态
+    S.player.skills.forEach(s=>{
+        if(s.passive) {
+            if(s.id==='lifesteal') S.player.lifesteal=s.lifesteal;
+            if(s.id==='counter') S.player.counterRate=s.counterRate;
+            if(s.id==='resurrect') S.player.resurrectRate=s.resurrectRate;
+            if(s.id==='speedBoost'||s.id==='overclock') S.player.speedBoosted=true;
+        }
+    });
+    S.enemy.skills.forEach(s=>{
+        if(s.passive) {
+            if(s.id==='lifesteal') S.enemy.lifesteal=s.lifesteal;
+            if(s.id==='counter') S.enemy.counterRate=s.counterRate;
+            if(s.id==='resurrect') S.enemy.resurrectRate=s.resurrectRate;
+            if(s.id==='speedBoost'||s.id==='overclock') S.enemy.speedBoosted=true;
+        }
+    });
+    // 毒伤
     if(S.player.poisonDmg>0) {
         const pDmg=Math.floor(S.player.maxHp*S.player.poisonDmg);
         S.player.hp-=pDmg;
@@ -1124,7 +1292,7 @@ function closeWelcome() {
 initState();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.10 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.11 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
