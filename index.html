@@ -432,7 +432,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.21 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.22 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -538,11 +538,11 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.21';
+const VERSION = 'v1.22';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
-    {id:'combo',name:'连击',staminaCost:0,type:'attack',desc:'【被动】普通攻击概率触发额外一次攻击（伤害减半，不与必杀叠加）',icon:'👊',cd:0,passive:true,comboRate:0.3},
-    {id:'crit',name:'必杀',staminaCost:0,type:'attack',desc:'【被动】普通攻击概率造成双倍伤害（不与连击叠加）',icon:'💥',cd:0,passive:true,critRate:0.25},
+    {id:'combo',name:'连击',staminaCost:0,type:'attack',desc:'【被动】普通攻击概率触发额外一次攻击（伤害减半，可与必杀叠加）',icon:'👊',cd:0,passive:true,comboRate:0.3},
+    {id:'crit',name:'必杀',staminaCost:0,type:'attack',desc:'【被动】普通攻击概率造成双倍伤害（可与连击叠加）',icon:'💥',cd:0,passive:true,critRate:0.25},
     {id:'lifesteal',name:'吸血',staminaCost:0,type:'attack',desc:'【被动】普通攻击伤害的30%转为自己HP',icon:'🩸',cd:0,passive:true,lifesteal:0.3},
     {id:'resurrect',name:'神佑',staminaCost:0,type:'special',desc:'【被动】死亡时30%概率复活并恢复50%HP',icon:'✨',cd:0,passive:true,resurrectRate:0.3},
     {id:'counter',name:'反击',staminaCost:0,type:'defense',desc:'【被动】受到物理攻击时40%概率反击',icon:'🛡️',cd:0,passive:true,counterRate:0.4},
@@ -968,32 +968,25 @@ function processBattleQueue() {
         updateUI();
         setTimeout(processBattleQueue,delay);
     } else if(action.type==='attack') {
-        // 检查是否触发连击或必杀（互斥）
+        // 检查是否触发连击（必杀和连击可以同时触发）
         const comboSkill=S.player.skills.find(s=>s.id==='combo'&&s.passive);
         const critSkill=S.player.skills.find(s=>s.id==='crit'&&s.passive);
         const comboRate=comboSkill?comboSkill.comboRate:0;
-        const critRate=critSkill?critSkill.critRate:0;
         
         if(comboSkill && Math.random()<comboRate) {
-            // 连击：攻击2次，第二次伤害减半
+            // 连击：攻击2次，每次独立判断必杀
             addLog('<span class="log-player">⚡ 【连击】触发！连续攻击2次！</span>');
-            doNormalAttack(S.player,S.enemy,true,false);
+            doAttackWithCrit(S.player,S.enemy,true,false);
             updateUI();
             setTimeout(()=>{
-                doNormalAttack(S.player,S.enemy,true,true);
+                doAttackWithCrit(S.player,S.enemy,true,true);
                 updateUI();
                 setTimeout(processBattleQueue,delay);
             },delay);
             return;
-        } else if(critSkill && Math.random()<critRate) {
-            // 必杀：双倍伤害
-            addLog('<span class="log-player">💥 【必杀】触发！伤害翻倍！</span>');
-            doCritAttack(S.player,S.enemy,true);
-            updateUI();
-            setTimeout(processBattleQueue,delay);
         } else {
-            // 普通攻击
-            doNormalAttack(S.player,S.enemy,true,false);
+            // 普通攻击（可能触发必杀）
+            doAttackWithCrit(S.player,S.enemy,true,false);
             updateUI();
             setTimeout(processBattleQueue,delay);
         }
@@ -1023,6 +1016,46 @@ function doNormalAttack(attacker, defender, isPlayer, isSecondHit) {
     addLog('<span class="log-'+(isPlayer?'player':'enemy')+'">👊 '+(isPlayer?attacker.name:'敌人')+'普通攻击'+hitType+'造成 '+atkDmg+' 伤害</span>');
     showDamageNumber(document.getElementById(isPlayer?'enemy-fighter':'player-fighter'),atkDmg,'');
     playAttackAnimation(isPlayer?'player-fighter':'enemy-fighter',isPlayer?'enemy-fighter':'player-fighter',false);
+    // 吸血被动
+    if(attacker.lifesteal>0) {
+        const heal=Math.floor(atkDmg*attacker.lifesteal);
+        attacker.hp=Math.min(attacker.maxHp,attacker.hp+heal);
+        addLog('<span class="log-heal">💉 【吸血】 回复 '+heal+' HP</span>');
+    }
+}
+
+// 带必杀判断的攻击（连击用）
+function doAttackWithCrit(attacker, defender, isPlayer, isSecondHit) {
+    if(attacker.stamina<5) {
+        addLog('<span class="log-'+(isPlayer?'player':'enemy')+'">⚡ 体力不足，无法攻击</span>');
+        return;
+    }
+    attacker.stamina-=5;
+    let atkDmg=Math.max(1,Math.floor(attacker.atk*0.8));
+    // 连击第二次伤害减半
+    if(isSecondHit) {
+        atkDmg=Math.floor(atkDmg*0.5);
+    }
+    // 检查必杀（每次攻击独立判断）
+    const critSkill=attacker.skills.find(s=>s.id==='crit'&&s.passive);
+    let isCrit=false;
+    if(critSkill && Math.random()<critSkill.critRate) {
+        atkDmg*=2;
+        isCrit=true;
+    }
+    // 护盾吸收
+    if(defender.shields>0) {
+        const absorb=Math.min(defender.shields,atkDmg);
+        defender.shields-=absorb;
+        atkDmg-=absorb;
+        if(absorb>0) addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
+    }
+    defender.hp-=atkDmg;
+    const hitType=isSecondHit?'（连击第2次）':'';
+    const critMsg=isCrit?' 💥必杀暴击!':'';
+    addLog('<span class="log-'+(isPlayer?'player':'enemy')+'">👊 '+(isPlayer?attacker.name:'敌人')+'普通攻击'+hitType+critMsg+'造成 '+atkDmg+' 伤害</span>');
+    showDamageNumber(document.getElementById(isPlayer?'enemy-fighter':'player-fighter'),atkDmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
+    playAttackAnimation(isPlayer?'player-fighter':'enemy-fighter',isPlayer?'enemy-fighter':'player-fighter',isCrit);
     // 吸血被动
     if(attacker.lifesteal>0) {
         const heal=Math.floor(atkDmg*attacker.lifesteal);
@@ -1207,32 +1240,24 @@ function processEnemyQueue() {
         updateUI();
         setTimeout(processEnemyQueue,delay);
     } else if(action.type==='attack') {
-        // 检查是否触发连击或必杀（互斥）
+        // 检查是否触发连击（必杀和连击可以同时触发）
         const comboSkill=S.enemy.skills.find(s=>s.id==='combo'&&s.passive);
-        const critSkill=S.enemy.skills.find(s=>s.id==='crit'&&s.passive);
         const comboRate=comboSkill?comboSkill.comboRate:0;
-        const critRate=critSkill?critSkill.critRate:0;
         
         if(comboSkill && Math.random()<comboRate) {
-            // 连击：攻击2次，第二次伤害减半
+            // 连击：攻击2次，每次独立判断必杀
             addLog('<span class="log-enemy">⚡ 【连击】触发！连续攻击2次！</span>');
-            doNormalAttack(S.enemy,S.player,false,false);
+            doAttackWithCrit(S.enemy,S.player,false,false);
             updateUI();
             setTimeout(()=>{
-                doNormalAttack(S.enemy,S.player,false,true);
+                doAttackWithCrit(S.enemy,S.player,false,true);
                 updateUI();
                 setTimeout(processEnemyQueue,delay);
             },delay);
             return;
-        } else if(critSkill && Math.random()<critRate) {
-            // 必杀：双倍伤害
-            addLog('<span class="log-enemy">💥 【必杀】触发！伤害翻倍！</span>');
-            doCritAttack(S.enemy,S.player,false);
-            updateUI();
-            setTimeout(processEnemyQueue,delay);
         } else {
-            // 普通攻击
-            doNormalAttack(S.enemy,S.player,false,false);
+            // 普通攻击（可能触发必杀）
+            doAttackWithCrit(S.enemy,S.player,false,false);
             updateUI();
             setTimeout(processEnemyQueue,delay);
         }
@@ -1398,7 +1423,7 @@ showWelcomeLobster();
 updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.21 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.22 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
