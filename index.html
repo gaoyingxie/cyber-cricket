@@ -549,9 +549,8 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.37 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.38 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
-            <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
@@ -609,7 +608,6 @@
     <div class="reward-panel" id="reward-panel">
         <div class="reward-title">🎉 战斗胜利!</div>
         <div class="reward-item">经验 +<span id="reward-exp">0</span></div>
-        <div class="reward-item">金币 +<span id="reward-gold">0</span></div>
         <div class="reward-skill" id="reward-skill-container" style="display:none">
             <div>偷学到技能:</div>
             <div id="reward-skill-name"></div>
@@ -672,9 +670,9 @@
         <div class="welcome-content">
             <p>⏱️ 游戏共 <strong>5轮</strong> 战斗</p>
             <p>⚔️ 每次<strong>战胜</strong>可偷取对手<strong>1个技能</strong></p>
-            <p>🌀 消耗金币可<strong>进化</strong>龙虾属性（进化费用递增）</p>
+            <p>🌀 达到<strong>指定等级</strong>可<strong>进化</strong>龙虾属性</p>
             <p>📦 战斗<strong>掉落装备</strong>，可穿戴提升战力</p>
-            <p>🏆 每<strong>5轮</strong>里程碑额外金币奖励</p>
+            <p>⬆️ 战胜敌人获得<strong>经验</strong>，敌人越强经验越多</p>
         </div>
         <div class="lobster-reveal">
             <div class="lobster-reveal-title">🎰 这是你的随机初始小龙虾!</div>
@@ -691,7 +689,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.37';
+const VERSION = 'v1.38';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -744,11 +742,11 @@ const MAX_STAMINA = 100;
 const STAMINA_REGEN_BATTLE = 20;
 const STAMINA_REGEN_IDLE = 30;
 const AUTO_BATTLE_DELAY = 1500;
-let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false};
+let S={round:1,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false};
 
 function initState(){
     const oldSpeed=S.battleSpeed||1;
-    S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:oldSpeed,
+    S={round:1,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:oldSpeed,
         playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false,
         player:{
             name:'你的龙虾',level:1,exp:0,expToLevel:30,hp:120,maxHp:120,atk:10,def:5,spd:8,
@@ -946,7 +944,6 @@ function addLog(msg) {
 function updateUI() {
     if(!S.player) return;
     document.getElementById('round-num').textContent=S.round;
-    document.getElementById('gold').textContent=S.gold;
     document.getElementById('exp').textContent=S.player.exp+'/'+S.player.expToLevel;
     document.getElementById('phase').textContent=PHASES[S.phase];
     document.getElementById('level').textContent=S.player.level;
@@ -1040,12 +1037,12 @@ function updateBuffsDisplay(id, entity) {
 }
 
 function updateEvolveButton() {
-    const EVOLVE_COSTS=[0,150,350,700];
+    const EVOLVE_LEVELS=[1,3,5,8]; // 进化所需等级
     const btn=document.getElementById('btn-evolve');
     if(S.phase>=PHASES.length-1) { btn.disabled=true; btn.textContent='已满级'; return; }
-    const cost=EVOLVE_COSTS[S.phase+1]||999;
-    btn.disabled=S.gold<cost;
-    btn.textContent='🌀 进化 ('+cost+'金)';
+    const requiredLevel=EVOLVE_LEVELS[S.phase+1]||999;
+    btn.disabled=S.player.level<requiredLevel;
+    btn.textContent='🌀 进化 (需Lv.'+requiredLevel+')';
 }
 
 function startBattle() {
@@ -1483,18 +1480,12 @@ function endTurn() {
 function enemyDefeated() {
     S.inBattle=false;
     S.battleResult='win';
-    const expGain=10+S.round*3;
-    const goldGain=5+S.round*2;
+    // 经验奖励 = 基础(10) + 敌人等级*5 + 额外难度加成
+    const enemyLevel=S.enemy?S.enemy.level:1;
+    const expGain=10+Math.floor(enemyLevel*5)+Math.floor(S.round*2);
     S.player.exp+=expGain;
-    S.gold+=goldGain;
     levelUp();
-    addLog('<span class="log-system">🎉 胜利! 获得 '+expGain+' 经验, '+goldGain+' 金币</span>');
-    // 每5轮里程碑奖励
-    if(S.round%5===0) {
-        const milestoneBonus=50+S.round*5;
-        S.gold+=milestoneBonus;
-        addLog('<span class="log-system">🏆 里程碑奖励! 第 '+S.round+'轮完成! +'+milestoneBonus+' 金币</span>');
-    }
+    addLog('<span class="log-system">🎉 胜利! 获得 '+expGain+' 经验</span>');
     if(S.enemy && S.enemy.skills.length>0) {
         const enemySkillIdx=Math.floor(Math.random()*S.enemy.skills.length);
         const newSkill=cloneSkill(S.enemy.skills[enemySkillIdx]);
@@ -1520,7 +1511,6 @@ function enemyDefeated() {
         document.getElementById('reward-equip-container').style.display='none';
     }
     document.getElementById('reward-exp').textContent=expGain;
-    document.getElementById('reward-gold').textContent=goldGain;
     document.getElementById('reward-panel').classList.add('show');
     document.getElementById('btn-start').disabled=false;
     S.round++;
@@ -1647,8 +1637,9 @@ function unequipItem(type) {
 function evolve() {
     const EVOLVE_COSTS=[0,150,350,700]; // 每次进化的金币费用
     const cost=EVOLVE_COSTS[S.phase+1]||999;
-    if(S.gold<cost||S.phase>=PHASES.length-1) return;
-    S.gold-=cost;
+    const EVOLVE_LEVELS=[1,3,5,8];
+    const requiredLevel=EVOLVE_LEVELS[S.phase+1]||999;
+    if(S.player.level<requiredLevel||S.phase>=PHASES.length-1) return;
     S.phase++;
     calcPlayerStats();
     S.player.hp=S.player.maxHp;
@@ -1657,7 +1648,7 @@ function evolve() {
     setTimeout(()=>{
         document.getElementById('evolution-overlay').classList.remove('show');
     }, 2000);
-    addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'! 消耗 '+cost+' 金币</span>');
+    addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'!</span>');
     updateUI();
 }
 
@@ -1690,7 +1681,7 @@ showWelcomeLobster();
 updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.37 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.38 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
