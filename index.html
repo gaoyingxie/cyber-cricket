@@ -1610,9 +1610,15 @@ function enemyDefeated() {
         }
     }
     if(S.enemy && S.enemy.skills.length>0) {
-        const enemySkillIdx=Math.floor(Math.random()*S.enemy.skills.length);
-        const newSkill=cloneSkill(S.enemy.skills[enemySkillIdx]);
-        if(!S.player.skills.find(s=>s.id===newSkill.id)) {
+        // 必定偷取敌人第一个玩家没有的技能
+        let newSkill=null;
+        for(const s of S.enemy.skills) {
+            if(!S.player.skills.find(p=>p.id===s.id)) {
+                newSkill=cloneSkill(s);
+                break;
+            }
+        }
+        if(newSkill) {
             S.player.skills.push(newSkill);
             addLog('<span class="log-player">🌟 偷学到新技能: '+newSkill.icon+newSkill.name+'</span>');
             document.getElementById('reward-skill-name').textContent=newSkill.icon+newSkill.name;
