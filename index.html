@@ -338,11 +338,35 @@
             border-radius: 15px;
             padding: 25px;
             display: none;
-            z-index: 1001;
+            z-index: 1002;
             min-width: 300px;
             text-align: center;
         }
         .skill-popup.show { display: block; }
+        .skill-popup-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1001;
+        }
+        .skill-popup-backdrop.show { display: block; }
+        .skill-tooltip {
+            position: absolute;
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 0.85em;
+            color: #fff;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 1003;
+            display: none;
+        }
+        .skill-tooltip.show { display: block; }
+        .skill-tooltip-name { color: #00ff88; font-weight: bold; margin-bottom: 5px; }
+        .skill-tooltip-desc { color: #aaa; }
         .skill-popup-icon { font-size: 3em; margin-bottom: 10px; }
         .skill-popup-name { font-size: 1.5em; color: #fff; margin-bottom: 10px; }
         .skill-popup-type { font-size: 0.9em; color: #888; margin-bottom: 5px; }
@@ -384,7 +408,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.5 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.6 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -455,14 +479,18 @@
         <div class="enemy-select-list" id="enemy-select-list"></div>
         <button class="btn" onclick="closeEnemySelect()">返回</button>
     </div>
-    <div class="skill-popup" id="skill-popup" onclick="hideSkillPopup()">
+    <div class="skill-popup-backdrop" id="skill-backdrop" onclick="hideSkillPopup()"></div>
+    <div class="skill-popup" id="skill-popup">
         <div class="skill-popup-icon" id="skill-popup-icon"></div>
         <div class="skill-popup-name" id="skill-popup-name"></div>
         <div class="skill-popup-type" id="skill-popup-type"></div>
         <div class="skill-popup-cost" id="skill-popup-cost"></div>
         <div class="skill-popup-desc" id="skill-popup-desc"></div>
         <div class="skill-popup-effect" id="skill-popup-effect"></div>
-        <div class="skill-popup-close">点击任意处关闭</div>
+    </div>
+    <div class="skill-tooltip" id="skill-tooltip">
+        <div class="skill-tooltip-name" id="skill-tooltip-name"></div>
+        <div class="skill-tooltip-desc" id="skill-tooltip-desc"></div>
     </div>
     <div class="game-over" id="game-over">
         <h2 id="game-over-title">游戏结束</h2>
@@ -471,7 +499,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.5';
+const VERSION = 'v1.6';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊'},
@@ -610,10 +638,32 @@ function showSkillPopup(skillId) {
     if(skill.reduceStat) effect+=(effect?' | ':'')+'属性降低';
     document.getElementById('skill-popup-effect').textContent=effect||'无特殊效果';
     document.getElementById('skill-popup').classList.add('show');
+    document.getElementById('skill-backdrop').classList.add('show');
 }
 
 function hideSkillPopup() {
     document.getElementById('skill-popup').classList.remove('show');
+    document.getElementById('skill-backdrop').classList.remove('show');
+    document.getElementById('skill-tooltip').classList.remove('show');
+}
+
+function showSkillTooltip(skillId) {
+    const skill=ALL_SKILLS.find(s=>s.id===skillId);
+    if(!skill) return;
+    document.getElementById('skill-tooltip-name').textContent=skill.icon+' '+skill.name;
+    document.getElementById('skill-tooltip-desc').textContent=skill.desc;
+    const tooltip=document.getElementById('skill-tooltip');
+    tooltip.classList.add('show');
+    const event=window.event;
+    if(event && event.target) {
+        const rect=event.target.getBoundingClientRect();
+        tooltip.style.left=(rect.left+rect.width/2-100)+'px';
+        tooltip.style.top=(rect.bottom+5)+'px';
+    }
+}
+
+function hideSkillTooltip() {
+    document.getElementById('skill-tooltip').classList.remove('show');
 }
 
 function updateAutoIndicator() {
@@ -668,7 +718,7 @@ function updatePlayerUI() {
     document.getElementById('player-stats').textContent='攻:'+S.player.atk+' 防:'+S.player.def+' 速:'+S.player.spd;
     const speedPct=Math.min(100,S.player.spd/20*100);
     document.getElementById('player-speed-bar').style.width=speedPct+'%';
-    document.getElementById('player-skills').innerHTML='技能: '+S.player.skills.map(s=>'<span class="skill-item" onclick="showSkillPopup(\''+s.id+'\')" title="'+s.desc+'">'+s.icon+'</span>').join(' ');
+    document.getElementById('player-skills').innerHTML='技能: '+S.player.skills.map(s=>'<span class="skill-item" onmouseenter="showSkillTooltip(\''+s.id+'\')" onmouseleave="hideSkillTooltip()" onclick="showSkillPopup(\''+s.id+'\')">'+s.icon+'</span>').join(' ');
     updateBuffsDisplay('player-buffs', S.player);
 }
 
@@ -687,7 +737,7 @@ function updateEnemyUI() {
     const speedPct=Math.min(100,S.enemy.spd/20*100);
     document.getElementById('enemy-speed-bar').style.width=speedPct+'%';
     updateBuffsDisplay('enemy-buffs', S.enemy);
-    document.getElementById('enemy-skills').innerHTML='技能: '+S.enemy.skills.map(s=>'<span class="skill-item" onclick="showSkillPopup(\''+s.id+'\')" title="'+s.desc+'">'+s.icon+'</span>').join(' ');
+    document.getElementById('enemy-skills').innerHTML='技能: '+S.enemy.skills.map(s=>'<span class="skill-item" onmouseenter="showSkillTooltip(\''+s.id+'\')" onmouseleave="hideSkillTooltip()" onclick="showSkillPopup(\''+s.id+'\')">'+s.icon+'</span>').join(' ');
 }
 
 function updateBuffsDisplay(id, entity) {
@@ -1034,7 +1084,7 @@ function restartGame() {
 // 初始化
 initState();
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.5 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.6 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
