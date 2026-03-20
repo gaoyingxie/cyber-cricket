@@ -1218,6 +1218,7 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
 }
 
 function executeAutoTurn() {
+    console.log('executeAutoTurn called, S.inBattle=', S.inBattle, 'S.phase=', S.phase);
     if(!S.inBattle) return;
     if(S.player.stunned) {
         addLog('<span class="log-player">😵 被晕了，无法行动!</span>');
