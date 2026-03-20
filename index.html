@@ -432,7 +432,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.19 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.20 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -538,25 +538,25 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.19';
+const VERSION = 'v1.20';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
-    {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'【主动】连续攻击2次',minDmg:0.6,times:2,icon:'👊',cd:0},
-    {id:'crit',name:'暴击',staminaCost:12,type:'attack',desc:'【主动】高概率暴击',minDmg:0,critRate:0.45,critMult:2,icon:'💥',cd:0},
-    {id:'lifesteal',name:'吸血',staminaCost:18,type:'attack',desc:'【被动】伤害30%转HP',minDmg:0.8,lifesteal:0.3,icon:'🩸',cd:0,passive:true},
-    {id:'resurrect',name:'神佑',staminaCost:25,type:'special',desc:'【被动】死亡30%复活',resurrectRate:0.3,icon:'✨',cd:0,passive:true},
-    {id:'counter',name:'反击',staminaCost:10,type:'defense',desc:'【被动】受击时反击',counterRate:0.4,icon:'🛡️',cd:0,passive:true},
-    {id:'poison',name:'剧毒',staminaCost:14,type:'attack',desc:'【主动】每回合掉血5%',minDmg:0.5,poisonDmg:0.05,icon:'☠️',cd:0},
-    {id:'deadly',name:'必杀',staminaCost:22,type:'attack',desc:'【主动】2.5倍伤害',minDmg:0,critRate:1,critMult:2.5,icon:'⚔️',cd:0},
-    {id:'defend',name:'防御',staminaCost:8,type:'defense',desc:'【主动】受伤-50%',reduceDmg:0.5,icon:'🛡️',cd:1},
-    {id:'confuse',name:'混乱',staminaCost:16,type:'special',desc:'【主动】敌无法行动',stunRate:0.35,icon:'🌪️',cd:2},
-    {id:'seal',name:'封印',staminaCost:20,type:'special',desc:'【主动】封印1回合',sealRate:0.3,icon:'🔮',cd:2},
-    {id:'emp',name:'电磁脉冲',staminaCost:15,type:'special',desc:'【主动】伤害+沉默',minDmg:0.7,stunRate:0.25,icon:'⚡',cd:0},
-    {id:'hack',name:'数据入侵',staminaCost:18,type:'attack',desc:'【主动】窃取10%HP',minDmg:0.6,drain:0.1,icon:'💻',cd:0},
-    {id:'shield',name:'能量护盾',staminaCost:12,type:'defense',desc:'【主动】抵2次攻击',shield:2,icon:'🔰',cd:2},
-    {id:'virus',name:'病毒注入',staminaCost:20,type:'attack',desc:'【主动】持续伤害',minDmg:0.4,poisonDmg:0.08,reduceStat:0.1,icon:'🦠',cd:0},
-    {id:'overclock',name:'超频',staminaCost:10,type:'special',desc:'【被动】速度翻倍',speedBoost:true,icon:'🔥',cd:2,passive:true},
-    {id:'shield_break',name:'护盾击破',staminaCost:14,type:'attack',desc:'【主动】无视防御',minDmg:1.2,ignoreDef:true,icon:'💎',cd:1},
+    {id:'combo',name:'连击',staminaCost:0,type:'attack',desc:'【被动】普通攻击概率触发额外一次攻击',icon:'👊',cd:0,passive:true,comboRate:0.3},
+    {id:'crit',name:'必杀',staminaCost:0,type:'attack',desc:'【被动】普通攻击概率造成双倍伤害',icon:'💥',cd:0,passive:true,critRate:0.25},
+    {id:'lifesteal',name:'吸血',staminaCost:0,type:'attack',desc:'【被动】造成伤害的30%转为自己HP',icon:'🩸',cd:0,passive:true,lifesteal:0.3},
+    {id:'resurrect',name:'神佑',staminaCost:0,type:'special',desc:'【被动】死亡时30%概率复活并恢复50%HP',icon:'✨',cd:0,passive:true,resurrectRate:0.3},
+    {id:'counter',name:'反击',staminaCost:0,type:'defense',desc:'【被动】受到攻击时40%概率反击',icon:'🛡️',cd:0,passive:true,counterRate:0.4},
+    {id:'poison',name:'剧毒',staminaCost:15,type:'attack',desc:'【主动】造成伤害并使敌人每回合掉血5%',minDmg:0.6,poisonDmg:0.05,icon:'☠️',cd:0},
+    {id:'deadly',name:'高级必杀',staminaCost:20,type:'attack',desc:'【主动】造成2倍伤害',minDmg:0,critRate:1,critMult:2,icon:'⚔️',cd:0},
+    {id:'defend',name:'防御',staminaCost:8,type:'defense',desc:'【主动】本回合受伤降低50%',reduceDmg:0.5,icon:'🛡️',cd:1},
+    {id:'confuse',name:'混乱',staminaCost:16,type:'special',desc:'【主动】使敌人无法行动1回合',stunRate:0.35,icon:'🌪️',cd:2},
+    {id:'seal',name:'封印',staminaCost:18,type:'special',desc:'【主动】封印敌人1回合无法使用技能',sealRate:0.3,icon:'🔮',cd:2},
+    {id:'emp',name:'电磁脉冲',staminaCost:12,type:'special',desc:'【主动】造成伤害并有几率使敌人眩晕',minDmg:0.8,stunRate:0.2,icon:'⚡',cd:0},
+    {id:'hack',name:'数据入侵',staminaCost:15,type:'attack',desc:'【主动】造成伤害并偷取敌人10%当前HP',minDmg:0.5,drain:0.1,icon:'💻',cd:0},
+    {id:'shield',name:'能量护盾',staminaCost:10,type:'defense',desc:'【主动】获得可抵消2次攻击的护盾',shield:2,icon:'🔰',cd:2},
+    {id:'virus',name:'病毒注入',staminaCost:18,type:'attack',desc:'【主动】造成伤害并使敌人属性降低',minDmg:0.5,poisonDmg:0.06,reduceStat:0.1,icon:'🦠',cd:0},
+    {id:'overclock',name:'超频',staminaCost:8,type:'special',desc:'【被动】速度提升100%',speedBoost:true,icon:'🔥',cd:0,passive:true},
+    {id:'shield_break',name:'护盾击破',staminaCost:14,type:'attack',desc:'【主动】无视敌人护盾造成全额伤害',minDmg:1.0,ignoreDef:true,icon:'💎',cd:1},
 ];
 const ENEMY_NAMES=['机械龙虾','电路龙虾','芯片龙虾','程序龙虾','数据龙虾','比特龙虾','代码龙虾','网络龙虾','云端龙虾','量子龙虾','深渊机甲龙虾','泰坦机械龙虾','风暴电子龙虾','雷霆硅基龙虾','混沌编程龙虾'];
 const MAX_STAMINA = 100;
@@ -968,36 +968,51 @@ function processBattleQueue() {
         updateUI();
         setTimeout(processBattleQueue,delay);
     } else if(action.type==='attack') {
-        S.player.stamina-=5;
-        const atkDmg=Math.max(1,Math.floor(S.player.atk*0.8));
-        let finalDmg=atkDmg;
-        const isCrit=Math.random()<0.2;
-        if(isCrit) finalDmg*=2;
-        // 检查连击
-        const hasCombo=S.player.skills.find(s=>s.id==='combo');
-        if(hasCombo) {
-            finalDmg*=2;
-            addLog('<span class="log-player">💥 【连击】触发! 伤害翻倍!</span>');
-        }
-        // 护盾吸收
-        if(S.enemy.shields>0) {
-            const absorb=Math.min(S.enemy.shields,finalDmg);
-            S.enemy.shields-=absorb;
-            finalDmg-=absorb;
-            addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
-        }
-        S.enemy.hp-=finalDmg;
-        addLog('<span class="log-player">👊 '+S.player.name+' 普通攻击 '+(isCrit?'💥暴击! ':'')+'造成 '+finalDmg+' 伤害</span>');
-        showDamageNumber(document.getElementById('enemy-fighter'),finalDmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
-        playAttackAnimation('player-fighter','enemy-fighter',isCrit);
-        // 吸血被动
-        if(S.player.lifesteal>0) {
-            const heal=Math.floor(finalDmg*S.player.lifesteal);
-            S.player.hp=Math.min(S.player.maxHp,S.player.hp+heal);
-            addLog('<span class="log-heal">💉 【吸血】 回复 '+heal+' HP</span>');
-        }
+        // 执行一次普通攻击
+        doNormalAttack(S.player, S.enemy, true);
         updateUI();
+        // 检查是否触发连击（额外攻击一次）
+        const comboSkill=S.player.skills.find(s=>s.id==='combo'&&s.comboRate);
+        if(comboSkill && Math.random()<comboSkill.comboRate) {
+            addLog('<span class="log-player">💥 【连击】触发！再来一次攻击！</span>');
+            doNormalAttack(S.player, S.enemy, true);
+            updateUI();
+        }
         setTimeout(processBattleQueue,delay);
+    }
+}
+
+function doNormalAttack(attacker, defender, isPlayer) {
+    if(attacker.stamina<5) {
+        addLog('<span class="log-'+(isPlayer?'player':'enemy')+'">⚡ 体力不足，无法攻击</span>');
+        return;
+    }
+    attacker.stamina-=5;
+    let atkDmg=Math.max(1,Math.floor(attacker.atk*0.8));
+    let isCrit=false;
+    // 检查必杀被动
+    const critSkill=attacker.skills.find(s=>s.id==='crit'&&s.critRate);
+    if(critSkill && Math.random()<critSkill.critRate) {
+        atkDmg*=2;
+        isCrit=true;
+        addLog('<span class="log-'+(isPlayer?'player':'enemy')+'">💥 【必杀】触发！伤害翻倍！</span>');
+    }
+    // 护盾吸收
+    if(defender.shields>0) {
+        const absorb=Math.min(defender.shields,atkDmg);
+        defender.shields-=absorb;
+        atkDmg-=absorb;
+        if(absorb>0) addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
+    }
+    defender.hp-=atkDmg;
+    addLog('<span class="log-'+(isPlayer?'player':'enemy')+'">👊 '+(isPlayer?attacker.name:'敌人')+'普通攻击'+(isCrit?' 💥暴击! ':' ')+'造成 '+atkDmg+' 伤害</span>');
+    showDamageNumber(document.getElementById(isPlayer?'enemy-fighter':'player-fighter'),atkDmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
+    playAttackAnimation(isPlayer?'player-fighter':'enemy-fighter',isPlayer?'enemy-fighter':'player-fighter',isCrit);
+    // 吸血被动
+    if(attacker.lifesteal>0) {
+        const heal=Math.floor(atkDmg*attacker.lifesteal);
+        attacker.hp=Math.min(attacker.maxHp,attacker.hp+heal);
+        addLog('<span class="log-heal">💉 【吸血】 回复 '+heal+' HP</span>');
     }
 }
 
@@ -1151,35 +1166,16 @@ function processEnemyQueue() {
         updateUI();
         setTimeout(processEnemyQueue,delay);
     } else if(action.type==='attack') {
-        S.enemy.stamina-=5;
-        const atkDmg=Math.max(1,Math.floor(S.enemy.atk*0.8));
-        let finalDmg=atkDmg;
-        const isCrit=Math.random()<0.2;
-        if(isCrit) finalDmg*=2;
-        // 检查连击
-        const hasCombo=S.enemy.skills.find(s=>s.id==='combo');
-        if(hasCombo) {
-            finalDmg*=2;
-            addLog('<span class="log-enemy">💥 【连击】触发! 伤害翻倍!</span>');
-        }
-        // 护盾吸收
-        if(S.player.shields>0) {
-            const absorb=Math.min(S.player.shields,finalDmg);
-            S.player.shields-=absorb;
-            finalDmg-=absorb;
-            addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
-        }
-        S.player.hp-=finalDmg;
-        addLog('<span class="log-enemy">👊 '+S.enemy.name+' 普通攻击 '+(isCrit?'💥暴击! ':'')+'造成 '+finalDmg+' 伤害</span>');
-        showDamageNumber(document.getElementById('player-fighter'),finalDmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
-        playAttackAnimation('enemy-fighter','player-fighter',isCrit);
-        // 敌方吸血被动
-        if(S.enemy.lifesteal>0) {
-            const heal=Math.floor(finalDmg*S.enemy.lifesteal);
-            S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp+heal);
-            addLog('<span class="log-heal">💉 【吸血】 敌人回复 '+heal+' HP</span>');
-        }
+        // 执行一次普通攻击
+        doNormalAttack(S.enemy, S.player, false);
         updateUI();
+        // 检查是否触发连击（额外攻击一次）
+        const comboSkill=S.enemy.skills.find(s=>s.id==='combo'&&s.comboRate);
+        if(comboSkill && Math.random()<comboSkill.comboRate) {
+            addLog('<span class="log-enemy">💥 【连击】触发！再来一次攻击！</span>');
+            doNormalAttack(S.enemy, S.player, false);
+            updateUI();
+        }
         setTimeout(processEnemyQueue,delay);
     }
 }
@@ -1343,7 +1339,7 @@ showWelcomeLobster();
 updateSpeedButton();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.19 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.20 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
