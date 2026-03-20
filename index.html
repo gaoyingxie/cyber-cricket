@@ -583,28 +583,6 @@
         .skill-popup-desc { font-size: 1.1em; color: #00ff88; margin-bottom: 15px; }
         .skill-popup-effect { font-size: 0.9em; color: #aaa; }
         .skill-popup-close { margin-top: 15px; font-size: 0.9em; color: #666; }
-        .speed-indicator {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.7em;
-            color: #aaa;
-            white-space: nowrap;
-        }
-        .speed-bar-container {
-            width: 80%;
-            height: 4px;
-            background: #333;
-            border-radius: 2px;
-            margin: 5px auto 0;
-            overflow: hidden;
-        }
-        .speed-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #00ff88, #00ccff);
-            transition: width 0.3s;
-        }
         
         @media (max-width: 600px) and (orientation: portrait) {
             .container { padding: 10px; }
@@ -623,8 +601,6 @@
             .fighter-stats { font-size: 0.75em; }
             .player-skill-display { font-size: 1em; }
             .enemy-skill-display { font-size: 1em; }
-            .speed-indicator { font-size: 0.7em; }
-            .speed-bar-container { height: 6px; }
             .vs { margin: 5px 0; font-size: 1.2em; }
             .battle-log { max-height: 120px; padding: 8px; font-size: 0.8em; }
             .btn-row { flex-wrap: wrap; gap: 8px; }
@@ -652,8 +628,6 @@
             .fighter-stats { font-size: 0.7em; }
             .player-skill-display { font-size: 0.9em; margin-top: 3px; }
             .enemy-skill-display { font-size: 0.9em; margin-top: 3px; }
-            .speed-indicator { font-size: 0.65em; }
-            .speed-bar-container { height: 5px; }
             .vs { margin: 0 5px; font-size: 1em; align-self: center; }
             .battle-log { max-height: 100px; padding: 5px; font-size: 0.75em; margin: 5px 0; }
             .btn-row { gap: 5px; padding: 5px 0; }
@@ -668,7 +642,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.59 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.60 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
@@ -685,8 +659,6 @@
                 <div class="fighter-stats" id="player-stats">攻:10 防:5 速:8</div>
                 <div class="player-skill-display" id="player-skills"></div>
                 <div class="buffs-display" id="player-buffs"></div>
-                <div class="speed-indicator">速度</div>
-                <div class="speed-bar-container"><div class="speed-bar-fill" id="player-speed-bar" style="width:50%"></div></div>
             </div>
             <div class="vs">VS</div>
             <div class="fighter" id="enemy-fighter">
@@ -698,8 +670,6 @@
                 <div class="fighter-stats" id="enemy-stats"></div>
                 <div class="buffs-display" id="enemy-buffs"></div>
                 <div class="enemy-skill-display" id="enemy-skills"></div>
-                <div class="speed-indicator">速度</div>
-                <div class="speed-bar-container"><div class="speed-bar-fill" id="enemy-speed-bar" style="width:50%"></div></div>
             </div>
         </div>
         <div class="battle-log" id="battle-log"></div>
@@ -822,7 +792,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.59';
+const VERSION = 'v1.60';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.25,1.5,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -1110,8 +1080,6 @@ function updatePlayerUI() {
     document.getElementById('player-hp').textContent=Math.max(0,Math.floor(S.player.hp));
     document.getElementById('player-max-hp').textContent=S.player.maxHp;
     document.getElementById('player-stats').textContent='攻:'+S.player.atk+' 防:'+S.player.def+' 速:'+S.player.spd;
-    const speedPct=Math.min(100,S.player.spd/20*100);
-    document.getElementById('player-speed-bar').style.width=speedPct+'%';
     document.getElementById('player-skills').innerHTML='技能: '+S.player.skills.map(s=>{
         const cd=S.playerCooldowns[s.id]||0;
         const cdClass=cd>0?'on-cd':'';
@@ -1132,7 +1100,6 @@ function updateEnemyUI() {
         document.getElementById('enemy-hp').textContent='0';
         document.getElementById('enemy-max-hp').textContent='0';
         document.getElementById('enemy-stats').textContent='攻:0 防:0 速:0';
-        document.getElementById('enemy-speed-bar').style.width='0%';
         document.getElementById('enemy-buffs').innerHTML='';
         document.getElementById('enemy-skills').innerHTML='';
         return;
@@ -1148,8 +1115,6 @@ function updateEnemyUI() {
     document.getElementById('enemy-hp').textContent=Math.max(0,Math.floor(S.enemy.hp));
     document.getElementById('enemy-max-hp').textContent=S.enemy.maxHp;
     document.getElementById('enemy-stats').textContent='攻:'+S.enemy.atk+' 防:'+S.enemy.def+' 速:'+S.enemy.spd;
-    const speedPct=Math.min(100,S.enemy.spd/20*100);
-    document.getElementById('enemy-speed-bar').style.width=speedPct+'%';
     updateBuffsDisplay('enemy-buffs', S.enemy);
     document.getElementById('enemy-skills').innerHTML='技能: '+S.enemy.skills.map(s=>{
         const cd=S.enemyCooldowns[s.id]||0;
@@ -1972,7 +1937,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.59 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.60 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
