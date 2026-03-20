@@ -592,7 +592,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.40 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.41 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
@@ -755,7 +755,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.40';
+const VERSION = 'v1.41';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -1583,7 +1583,7 @@ function enemyDefeated() {
     document.getElementById('btn-start').disabled=false;
     S.round++;
     // 养虾模式完成5轮后显示导出面板
-    if(S.lobsterMode==='raise' && S.round>5 && !S.exported) {
+    if(S.lobsterMode==='raise' && S.round>=5 && !S.exported) {
         S.exported=true; // 防止重复显示
         setTimeout(()=>{
             document.getElementById('reward-panel').classList.remove('show');
@@ -1880,7 +1880,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.40 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.41 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </body>
