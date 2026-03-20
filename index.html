@@ -1206,7 +1206,6 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
         }
     });
     S.inBattle=true;
-    S.phase=1;
     S.turn=0;
     document.getElementById('btn-start').disabled=true;
     updateUI();
@@ -1219,7 +1218,7 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
 }
 
 function executeAutoTurn() {
-    if(!S.inBattle || S.phase!==1) return;
+    if(!S.inBattle) return;
     if(S.player.stunned) {
         addLog('<span class="log-player">😵 被晕了，无法行动!</span>');
         updateUI();
