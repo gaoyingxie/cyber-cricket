@@ -432,7 +432,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.13 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.14 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">金币</div><div class="stat-value" id="gold">0</div></div>
             <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/30</div></div>
@@ -538,7 +538,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.13';
+const VERSION = 'v1.14';
 const PHASES=['虾苗','幼虾','战斗虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞'], PHASE_STAT_MULT=[1,1.3,1.7,2.3];
 const ALL_SKILLS=[
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'连续攻击2次',minDmg:0.6,times:2,icon:'👊',cd:0},
@@ -563,7 +563,7 @@ const MAX_STAMINA = 100;
 const STAMINA_REGEN_BATTLE = 15;
 const STAMINA_REGEN_IDLE = 30;
 const AUTO_BATTLE_DELAY = 1000;
-let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{}};
+let S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false};
 
 function initState(){
     S={round:1,gold:0,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,turnOrder:null,
@@ -884,6 +884,8 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
     addLog('<span class="log-system">⚔️ 第 '+S.round+' 轮战斗开始!</span>');
     addLog('<span class="log-enemy">⚔️ 遇到野生 '+S.enemy.name+' (Lv.'+S.enemy.level+')</span>');
     addLog('<span class="log-system">📋 敌人技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(' ')+'</span>');
+    S.turn=1;
+    addLog('<span class="log-turn">━━━ 第 1 回合 ━━━</span>');
     setTimeout(executeAutoTurn, getBattleDelay());
 }
 
@@ -891,14 +893,15 @@ function executeAutoTurn() {
     if(!S.inBattle || S.phase!==1) return;
     if(S.player.stunned) {
         addLog('<span class="log-player">😵 被晕了，无法行动!</span>');
-        S.player.stunned=false;
-        enemyTurn();
+        updateUI();
+        setTimeout(()=>enemyTurn(),getBattleDelay());
         return;
     }
     if(S.player.sealed) {
         addLog('<span class="log-player">🔒 被封印了，无法行动!</span>');
         S.player.sealed=false;
-        enemyTurn();
+        updateUI();
+        setTimeout(()=>enemyTurn(),getBattleDelay());
         return;
     }
     // 收集可用技能（排除被动、排除CD中的）
@@ -911,42 +914,65 @@ function executeAutoTurn() {
     
     if(availSkills.length===0 && S.player.stamina<5) {
         addLog('<span class="log-player">⚡ 体力不足，跳过回合</span>');
-        enemyTurn();
+        updateUI();
+        setTimeout(()=>enemyTurn(),getBattleDelay());
         return;
     }
     
-    // 按CD分组：先放无CD的，再放有CD的
-    const noCdSkills=availSkills.filter(s=>s.cd===0);
-    const cdSkills=availSkills.filter(s=>s.cd>0);
+    // 构建行动队列
+    S.battleQueue=[];
     
-    S.turn=0;
-    let totalDmg=0;
-    
-    // 放所有无CD技能
-    noCdSkills.forEach(skill=>{
-        S.player.stamina-=skill.staminaCost;
-        addLog('<span class="log-player">▶️ '+S.player.name+' 使用 '+skill.icon+skill.name+'</span>');
-        const dmg=processSkillEffect(skill,S.player,S.enemy,true);
-        totalDmg+=dmg;
+    // 添加技能到队列
+    availSkills.forEach(skill=>{
+        S.battleQueue.push({type:'skill',skill:skill,isPlayer:true});
     });
     
-    // 放CD技能
-    cdSkills.forEach(skill=>{
-        S.player.stamina-=skill.staminaCost;
-        S.playerCooldowns[skill.id]=skill.cd;
-        addLog('<span class="log-player">▶️ '+S.player.name+' 使用 '+skill.icon+skill.name+'</span>');
-        const dmg=processSkillEffect(skill,S.player,S.enemy,true);
-        totalDmg+=dmg;
-    });
-    
-    // 平A（消耗5体力，可触发连击、暴击、吸血）
+    // 添加平A到队列
     if(S.player.stamina>=5) {
+        S.battleQueue.push({type:'attack',isPlayer:true});
+    }
+    
+    S.isProcessing=true;
+    processBattleQueue();
+}
+
+function processBattleQueue() {
+    if(!S.inBattle || S.battleQueue.length===0) {
+        S.isProcessing=false;
+        S.player.hp=Math.min(S.player.maxHp,S.player.hp);
+        S.enemy.hp=Math.max(0,S.enemy.hp);
+        updateUI();
+        if(S.enemy.hp<=0) {
+            enemyDefeated();
+        } else {
+            setTimeout(()=>enemyTurn(),getBattleDelay());
+        }
+        return;
+    }
+    
+    const action=S.battleQueue.shift();
+    const delay=getBattleDelay();
+    
+    if(action.type==='skill') {
+        const skill=action.skill;
+        if(skill.cd>0) S.playerCooldowns[skill.id]=skill.cd;
+        S.player.stamina-=skill.staminaCost;
+        addLog('<span class="log-player">🎯 '+S.player.name+' 使用 【'+skill.icon+skill.name+'】</span>');
+        processSkillEffect(skill,S.player,S.enemy,true);
+        updateUI();
+        setTimeout(processBattleQueue,delay);
+    } else if(action.type==='attack') {
         S.player.stamina-=5;
-        addLog('<span class="log-player">▶️ '+S.player.name+' 普通攻击</span>');
         const atkDmg=Math.max(1,Math.floor(S.player.atk*0.8));
         let finalDmg=atkDmg;
         const isCrit=Math.random()<0.2;
         if(isCrit) finalDmg*=2;
+        // 检查连击
+        const hasCombo=S.player.skills.find(s=>s.id==='combo');
+        if(hasCombo) {
+            finalDmg*=2;
+            addLog('<span class="log-player">💥 【连击】触发! 伤害翻倍!</span>');
+        }
         // 护盾吸收
         if(S.enemy.shields>0) {
             const absorb=Math.min(S.enemy.shields,finalDmg);
@@ -955,45 +981,18 @@ function executeAutoTurn() {
             addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
         }
         S.enemy.hp-=finalDmg;
-        totalDmg+=finalDmg;
+        addLog('<span class="log-player">👊 '+S.player.name+' 普通攻击 '+(isCrit?'💥暴击! ':'')+'造成 '+finalDmg+' 伤害</span>');
         showDamageNumber(document.getElementById('enemy-fighter'),finalDmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
         playAttackAnimation('player-fighter','enemy-fighter',isCrit);
         // 吸血被动
         if(S.player.lifesteal>0) {
-            const heal=Math.floor(totalDmg*S.player.lifesteal);
+            const heal=Math.floor(finalDmg*S.player.lifesteal);
             S.player.hp=Math.min(S.player.maxHp,S.player.hp+heal);
-            addLog('<span class="log-heal">💉 吸血 '+heal+' HP</span>');
+            addLog('<span class="log-heal">💉 【吸血】 回复 '+heal+' HP</span>');
         }
+        updateUI();
+        setTimeout(processBattleQueue,delay);
     }
-    
-    S.player.hp=Math.min(S.player.maxHp,S.player.hp);
-    S.enemy.hp=Math.max(0,S.enemy.hp);
-    updateUI();
-    
-    if(S.enemy.hp<=0) {
-        enemyDefeated();
-        return;
-    }
-    setTimeout(()=>enemyTurn(),getBattleDelay());
-}
-
-function useSkill(idx) {
-    if(!S.inBattle || S.phase!==1) return;
-    const skill=S.player.skills[idx];
-    if(S.player.stamina<skill.staminaCost) {
-        addLog('<span class="log-player">⚡ 体力不足!</span>');
-        return;
-    }
-    S.turn++;
-    S.player.stamina-=skill.staminaCost;
-    addLog('<span class="log-player">▶️ '+S.player.name+' 使用 '+skill.icon+skill.name+'</span>');
-    processSkillEffect(skill, S.player, S.enemy, true);
-    updateUI();
-    if(S.enemy.hp<=0) {
-        enemyDefeated();
-        return;
-    }
-    setTimeout(()=>enemyTurn(), 600);
 }
 
 function processSkillEffect(skill, attacker, defender, isPlayer) {
@@ -1079,13 +1078,15 @@ function enemyTurn() {
     if(S.enemy.stunned) {
         addLog('<span class="log-enemy">😵 敌人被晕了，无法行动!</span>');
         S.enemy.stunned=false;
-        endTurn();
+        updateUI();
+        setTimeout(()=>endTurn(),getBattleDelay());
         return;
     }
     if(S.enemy.sealed) {
         addLog('<span class="log-enemy">🔒 敌人被封印了，无法行动!</span>');
         S.enemy.sealed=false;
-        endTurn();
+        updateUI();
+        setTimeout(()=>endTurn(),getBattleDelay());
         return;
     }
     // 收集可用技能
@@ -1098,39 +1099,63 @@ function enemyTurn() {
     
     if(availSkills.length===0 && S.enemy.stamina<5) {
         addLog('<span class="log-enemy">⚡ 敌人体力不足，跳过回合</span>');
-        endTurn();
+        updateUI();
+        setTimeout(()=>endTurn(),getBattleDelay());
         return;
     }
     
-    const noCdSkills=availSkills.filter(s=>s.cd===0);
-    const cdSkills=availSkills.filter(s=>s.cd>0);
-    let totalDmg=0;
+    // 构建敌人行动队列
+    S.battleQueue=[];
     
-    // 放所有无CD技能
-    noCdSkills.forEach(skill=>{
-        S.enemy.stamina-=skill.staminaCost;
-        addLog('<span class="log-enemy">▶️ '+S.enemy.name+' 使用 '+skill.icon+skill.name+'</span>');
-        const dmg=processSkillEffect(skill,S.enemy,S.player,false);
-        totalDmg+=dmg;
+    // 添加技能到队列
+    availSkills.forEach(skill=>{
+        S.battleQueue.push({type:'skill',skill:skill,isPlayer:false});
     });
     
-    // 放CD技能
-    cdSkills.forEach(skill=>{
-        S.enemy.stamina-=skill.staminaCost;
-        S.enemyCooldowns[skill.id]=skill.cd;
-        addLog('<span class="log-enemy">▶️ '+S.enemy.name+' 使用 '+skill.icon+skill.name+'</span>');
-        const dmg=processSkillEffect(skill,S.enemy,S.player,false);
-        totalDmg+=dmg;
-    });
-    
-    // 平A
+    // 添加平A到队列
     if(S.enemy.stamina>=5) {
+        S.battleQueue.push({type:'attack',isPlayer:false});
+    }
+    
+    processEnemyQueue();
+}
+
+function processEnemyQueue() {
+    if(!S.inBattle || S.battleQueue.length===0) {
+        S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp);
+        S.player.hp=Math.max(0,S.player.hp);
+        updateUI();
+        if(S.player.hp<=0) {
+            playerDefeated();
+        } else {
+            setTimeout(()=>endTurn(),getBattleDelay());
+        }
+        return;
+    }
+    
+    const action=S.battleQueue.shift();
+    const delay=getBattleDelay();
+    
+    if(action.type==='skill') {
+        const skill=action.skill;
+        if(skill.cd>0) S.enemyCooldowns[skill.id]=skill.cd;
+        S.enemy.stamina-=skill.staminaCost;
+        addLog('<span class="log-enemy">🎯 '+S.enemy.name+' 使用 【'+skill.icon+skill.name+'】</span>');
+        processSkillEffect(skill,S.enemy,S.player,false);
+        updateUI();
+        setTimeout(processEnemyQueue,delay);
+    } else if(action.type==='attack') {
         S.enemy.stamina-=5;
-        addLog('<span class="log-enemy">▶️ '+S.enemy.name+' 普通攻击</span>');
         const atkDmg=Math.max(1,Math.floor(S.enemy.atk*0.8));
         let finalDmg=atkDmg;
         const isCrit=Math.random()<0.2;
         if(isCrit) finalDmg*=2;
+        // 检查连击
+        const hasCombo=S.enemy.skills.find(s=>s.id==='combo');
+        if(hasCombo) {
+            finalDmg*=2;
+            addLog('<span class="log-enemy">💥 【连击】触发! 伤害翻倍!</span>');
+        }
         // 护盾吸收
         if(S.player.shields>0) {
             const absorb=Math.min(S.player.shields,finalDmg);
@@ -1139,26 +1164,18 @@ function enemyTurn() {
             addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
         }
         S.player.hp-=finalDmg;
-        totalDmg+=finalDmg;
+        addLog('<span class="log-enemy">👊 '+S.enemy.name+' 普通攻击 '+(isCrit?'💥暴击! ':'')+'造成 '+finalDmg+' 伤害</span>');
         showDamageNumber(document.getElementById('player-fighter'),finalDmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
         playAttackAnimation('enemy-fighter','player-fighter',isCrit);
         // 敌方吸血被动
         if(S.enemy.lifesteal>0) {
-            const heal=Math.floor(totalDmg*S.enemy.lifesteal);
+            const heal=Math.floor(finalDmg*S.enemy.lifesteal);
             S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp+heal);
-            addLog('<span class="log-heal">💉 敌人吸血 '+heal+' HP</span>');
+            addLog('<span class="log-heal">💉 【吸血】 敌人回复 '+heal+' HP</span>');
         }
+        updateUI();
+        setTimeout(processEnemyQueue,delay);
     }
-    
-    S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp);
-    S.player.hp=Math.max(0,S.player.hp);
-    updateUI();
-    
-    if(S.player.hp<=0) {
-        playerDefeated();
-        return;
-    }
-    setTimeout(endTurn,getBattleDelay());
 }
 
 function endTurn() {
@@ -1171,6 +1188,7 @@ function endTurn() {
         if(S.enemyCooldowns[id]>0) S.enemyCooldowns[id]--;
     }
     // 刷新被动状态
+    S.player.lifesteal=0;S.player.counterRate=0;S.player.resurrectRate=0;S.player.speedBoosted=false;
     S.player.skills.forEach(s=>{
         if(s.passive) {
             if(s.id==='lifesteal') S.player.lifesteal=s.lifesteal;
@@ -1179,6 +1197,7 @@ function endTurn() {
             if(s.id==='speedBoost'||s.id==='overclock') S.player.speedBoosted=true;
         }
     });
+    S.enemy.lifesteal=0;S.enemy.counterRate=0;S.enemy.resurrectRate=0;S.enemy.speedBoosted=false;
     S.enemy.skills.forEach(s=>{
         if(s.passive) {
             if(s.id==='lifesteal') S.enemy.lifesteal=s.lifesteal;
@@ -1191,18 +1210,19 @@ function endTurn() {
     if(S.player.poisonDmg>0) {
         const pDmg=Math.floor(S.player.maxHp*S.player.poisonDmg);
         S.player.hp-=pDmg;
-        addLog('<span class="log-damage">🔥 毒发! 受到 '+pDmg+' 伤害</span>');
+        addLog('<span class="log-damage">🔥 【中毒】你的龙虾受到 '+pDmg+' 伤害</span>');
         showDamageNumber(document.getElementById('player-fighter'), pDmg, 'poison');
     }
     if(S.enemy.poisonDmg>0) {
         const eDmg=Math.floor(S.enemy.maxHp*S.enemy.poisonDmg);
         S.enemy.hp-=eDmg;
-        addLog('<span class="log-damage">🔥 敌人中毒! 受到 '+eDmg+' 伤害</span>');
+        addLog('<span class="log-damage">🔥 【中毒】敌人受到 '+eDmg+' 伤害</span>');
     }
     if(S.player.defReduced&&Math.random()<0.3) S.player.defReduced=false;
     if(S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
     S.player.stamina=Math.min(S.player.maxStamina,S.player.stamina+STAMINA_REGEN_BATTLE);
     S.enemy.stamina=Math.min(S.enemy.maxStamina,S.enemy.stamina+STAMINA_REGEN_BATTLE);
+    addLog('<span class="log-system">💚 回合结束，双方恢复 '+STAMINA_REGEN_BATTLE+' 体力</span>');
     S.player.buffs=[];
     S.enemy.buffs=[];
     updateUI();
@@ -1214,6 +1234,8 @@ function endTurn() {
         enemyDefeated();
         return;
     }
+    addLog('<span class="log-turn">━━━ 第 '+(S.turn+1)+' 回合 ━━━</span>');
+    S.turn++;
     setTimeout(executeAutoTurn, getBattleDelay());
 }
 
@@ -1314,7 +1336,7 @@ initState();
 showWelcomeLobster();
 document.getElementById('welcome-panel').classList.add('show');
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.13 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.14 准备就绪!</span>');
 addLog('<span class="log-system">💡 点击"开始战斗"进入战斗!</span>');
 </script>
 </body>
