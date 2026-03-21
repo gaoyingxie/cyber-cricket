@@ -118,6 +118,8 @@ function updateUI() {
     updateEvolveButton();
     renderSkillButtons();
     if(S.enemy) renderEnemySkills();
+    const roundEl=document.getElementById('round-num');
+    if(roundEl) roundEl.textContent=S.round;
 }
 
 function updatePlayerUI() {

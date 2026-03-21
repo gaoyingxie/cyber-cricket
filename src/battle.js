@@ -335,6 +335,9 @@ function processEnemyQueue() {
 }
 
 function endTurn() {
+    // 防御技能效果在回合开始时重置（无论战斗是否在进行）
+    S.player.reduceDmgRate=0;
+    if(S.enemy) S.enemy.reduceDmgRate=0;
     if(!S.inBattle) return;
     // CD减少
     for(let id in S.playerCooldowns) { if(S.playerCooldowns[id]>0) S.playerCooldowns[id]--; }
@@ -385,9 +388,6 @@ function endTurn() {
     }
     if(S.player.defReduced&&Math.random()<0.3) S.player.defReduced=false;
     if(S.enemy&&S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
-    // 防御技能效果只持续本回合
-    S.player.reduceDmgRate=0;
-    if(S.enemy) S.enemy.reduceDmgRate=0;
     S.player.buffs=[];
     if(S.enemy) S.enemy.buffs=[];
     updateUI();
