@@ -237,6 +237,7 @@
         .skill-btn.attack { border-color: #ff6644; color: #ff6644; background: linear-gradient(135deg, #3a2a1a, #2a1a0a); }
         .skill-btn.defense { border-color: #4488ff; color: #4488ff; background: linear-gradient(135deg, #1a2a3a, #0a1a2a); }
         .skill-btn.special { border-color: #ff44ff; color: #ff44ff; background: linear-gradient(135deg, #2a1a2a, #1a0a1a); }
+        .enemy-skill-btn { border-color: #ff6666; background: rgba(255,102,102,0.15); color: #ff6666; text-shadow: 0 0 5px #ff6666; }
         .battle-log {
             background: rgba(0,0,0,0.5);
             border: 1px solid #333;
@@ -794,6 +795,7 @@
 <!--# sourceMappingURL=game.map -->
 
 </div>
+
 
 
 
@@ -1889,11 +1891,23 @@ function renderSkillButtons() {
 function renderEnemySkills() {
     const container=document.getElementById('enemy-skills');
     if(!container||!S.enemy) return;
-    container.innerHTML='技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(' ');
+    container.innerHTML='';
+    S.enemy.skills.forEach(skill=>{
+        const btn=document.createElement('button');
+        btn.className='skill-btn enemy-skill-btn';
+        btn.disabled=true;
+        btn.innerHTML=skill.icon+' '+skill.name;
+        if(skill.passive) {
+            btn.innerHTML+=' [P]';
+            btn.style.opacity='0.6';
+        }
+        container.appendChild(btn);
+    });
 }
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->

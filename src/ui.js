@@ -203,5 +203,16 @@ function renderSkillButtons() {
 function renderEnemySkills() {
     const container=document.getElementById('enemy-skills');
     if(!container||!S.enemy) return;
-    container.innerHTML='技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(' ');
+    container.innerHTML='';
+    S.enemy.skills.forEach(skill=>{
+        const btn=document.createElement('button');
+        btn.className='skill-btn enemy-skill-btn';
+        btn.disabled=true;
+        btn.innerHTML=skill.icon+' '+skill.name;
+        if(skill.passive) {
+            btn.innerHTML+=' [P]';
+            btn.style.opacity='0.6';
+        }
+        container.appendChild(btn);
+    });
 }
