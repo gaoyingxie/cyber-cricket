@@ -117,11 +117,10 @@ function updatePlayerUI() {
     const p=S.player;
     const hpPct=Math.max(0,Math.min(100,(p.hp/p.maxHp)*100));
     document.getElementById('player-hp-bar').style.width=hpPct+'%';
-    document.getElementById('player-hp-text').textContent=Math.floor(p.hp)+'/'+p.maxHp;
-    document.getElementById('player-atk').textContent=p.atk;
-    document.getElementById('player-def').textContent=p.def;
-    document.getElementById('player-spd').textContent=p.spd;
+    document.getElementById('player-hp').textContent=Math.floor(p.hp);
+    document.getElementById('player-max-hp').textContent=p.maxHp;
     document.getElementById('player-level').textContent='Lv.'+p.level;
+    document.getElementById('player-stats').textContent='攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
     const sprite=document.getElementById('player-fighter');
     if(sprite) sprite.textContent=PHASE_SPRITES[p.phase]||'🦐';
     document.getElementById('player-shields').textContent=p.shields>0?'🛡️ '+p.shields:'';
@@ -132,11 +131,10 @@ function updateEnemyUI() {
     if(!e) return;
     const hpPct=Math.max(0,Math.min(100,(e.hp/e.maxHp)*100));
     document.getElementById('enemy-hp-bar').style.width=hpPct+'%';
-    document.getElementById('enemy-hp-text').textContent=Math.floor(e.hp)+'/'+e.maxHp;
-    document.getElementById('enemy-atk').textContent=e.atk;
-    document.getElementById('enemy-def').textContent=e.def;
-    document.getElementById('enemy-spd').textContent=e.spd;
+    document.getElementById('enemy-hp').textContent=Math.floor(e.hp);
+    document.getElementById('enemy-max-hp').textContent=e.maxHp;
     document.getElementById('enemy-level').textContent='Lv.'+e.level;
+    document.getElementById('enemy-stats').textContent='攻:'+e.atk+' 防:'+e.def+' 速:'+e.spd;
     const sprite=document.getElementById('enemy-fighter');
     if(sprite) sprite.textContent='🦞';
 }

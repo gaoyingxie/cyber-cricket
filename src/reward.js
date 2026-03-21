@@ -131,7 +131,7 @@ function closeEquipPanel() {
 }
 function updateEquipSlots() {
     ['atk','def','hp'].forEach(type=>{
-        const el=document.getElementById('equip-'+type);
+        const el=document.getElementById('equip-slot-'+type);
         const e=S.player.equipment[type];
         if(e) {
             el.innerHTML=e.icon+' '+e.name+'<br><small>+'+getEquipValue(e)+'</small>';
