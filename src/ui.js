@@ -148,12 +148,14 @@ function updateEnemyUI() {
     const lvlEl=document.getElementById('enemy-level');
     const statsEl=document.getElementById('enemy-stats');
     const sprite=document.getElementById('enemy-sprite');
+    const nameEl=document.getElementById('enemy-name');
     if(hpBar) hpBar.style.width=hpPct+'%';
     if(hpEl) hpEl.textContent=Math.floor(e.hp);
     if(maxHpEl) maxHpEl.textContent=e.maxHp;
     if(lvlEl) lvlEl.textContent='Lv.'+e.level;
     if(statsEl) statsEl.textContent='攻:'+e.atk+' 防:'+e.def+' 速:'+e.spd;
     if(sprite) sprite.textContent='🦞';
+    if(nameEl) nameEl.textContent=e.name;
 }
 
 function updateBuffsDisplay(id, entity) {
@@ -204,15 +206,12 @@ function renderEnemySkills() {
     const container=document.getElementById('enemy-skills');
     if(!container||!S.enemy) return;
     container.innerHTML='';
-    S.enemy.skills.forEach(skill=>{
+    // 只显示主动技能（被动技能自动生效，不显示按钮）
+    S.enemy.skills.filter(s=>!s.passive).forEach(skill=>{
         const btn=document.createElement('button');
         btn.className='skill-btn enemy-skill-btn';
         btn.disabled=true;
         btn.innerHTML=skill.icon+' '+skill.name;
-        if(skill.passive) {
-            btn.innerHTML+=' [P]';
-            btn.style.opacity='0.6';
-        }
         btn.onmouseenter=(e)=>showSkillTooltip(skill.id, e);
         btn.onmouseleave=hideSkillTooltip;
         container.appendChild(btn);
