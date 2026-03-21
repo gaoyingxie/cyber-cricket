@@ -115,15 +115,18 @@ function playerDefeated() {
     document.getElementById('game-over-title').textContent='游戏结束';
     
     // PVP模式和无尽模式显示不同消息
+    const roundEl=document.getElementById('game-over-round');
     if(S.lobsterMode==='pvp') {
         document.getElementById('game-over-msg').textContent='你输掉了PVP对战...';
-        document.getElementById('final-round').textContent='PVP';
+        if(roundEl) roundEl.style.display='none';
     } else if(S.lobsterMode==='endless') {
         document.getElementById('game-over-msg').textContent='无尽模式第 '+S.round+' 轮挑战失败...';
         document.getElementById('final-round').textContent=S.round;
+        if(roundEl) roundEl.style.display='block';
     } else {
         document.getElementById('game-over-msg').textContent='你的龙虾在第 '+S.round+' 轮倒下了...';
         document.getElementById('final-round').textContent=S.round;
+        if(roundEl) roundEl.style.display='block';
     }
     document.getElementById('btn-start').disabled=true;
     setTimeout(()=>{
@@ -140,7 +143,8 @@ function closeReward() {
         addLog('<span class="log-system">🦐 PVP对战结束!</span>');
         document.getElementById('game-over-title').textContent='🏆 PVP胜利!';
         document.getElementById('game-over-msg').textContent='你击败了对手!';
-        document.getElementById('final-round').textContent='PVP';
+        const roundEl=document.getElementById('game-over-round');
+        if(roundEl) roundEl.style.display='none';
         document.getElementById('btn-start').disabled=true;
         setTimeout(()=>{
             document.getElementById('game-over').classList.add('show','win');

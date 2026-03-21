@@ -1,7 +1,7 @@
 // ===== constants.js =====
-const VERSION = 'v2.16';
+const VERSION = 'v2.17';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
-const PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'];
+const PHASE_SPRITES=['🦐','🦞','🔥','🛡️','⚡👑🦞'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
 
 const EQUIP_TYPES=['atk','def','hp'];

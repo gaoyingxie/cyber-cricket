@@ -137,7 +137,12 @@ function updatePlayerUI() {
     if(hpEl) hpEl.textContent=Math.floor(p.hp);
     if(maxHpEl) maxHpEl.textContent=p.maxHp;
     if(statsEl) statsEl.textContent='攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
-    if(sprite) sprite.textContent=PHASE_SPRITES[p.phase]||'🦐';
+    if(sprite) {
+        sprite.textContent=PHASE_SPRITES[p.phase]||'🦐';
+        // 移除旧阶段样式，添加新阶段样式
+        sprite.className='fighter-sprite';
+        if(p.phase>0) sprite.classList.add('sprite-phase-'+p.phase);
+    }
 }
 
 function updateEnemyUI() {
