@@ -11,10 +11,11 @@ function showEnemySelect() {
     list.innerHTML='';
     for(let i=0;i<3;i++) {
         const r=S.round+(i*0.5);
-        const easyMod=r<=3?0.6:r<=5?0.8:1;
+        // 难度曲线：round1 40% → round5 100%，逐轮递增
+        const easyMod=Math.min(1, 0.4+(S.round-1)*0.15);
         const m=(1+(r-1)*0.15)*easyMod;
-        // 敌人等级：敌人1=Lv.round，敌人2/3=Lv.round+1（三人梯度：简单/难/最难）
-        const dispLvl=i===0?S.round:S.round+1;
+        // 敌人等级：敌人1/2=Lv.round，敌人3=Lv.round+1（112,223,334...）
+        const dispLvl=i<2?S.round:S.round+1;
         const nameOpt=ENEMY_NAMES[Math.min(dispLvl-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+dispLvl;
         const hp=Math.floor((100+r*15)*m);
         const atk=Math.floor((7+r*1.3)*m);

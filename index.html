@@ -643,7 +643,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v2.01 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v2.02 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
@@ -789,11 +789,18 @@
         <p>达到回合: <span id="final-round">0</span></p>
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
-<script>
 
-const VERSION = 'v2.01';
-const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'], PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
-// 装备系统
+<!--# sourceMappingURL=game.map -->
+
+</div>
+<script>
+// ===== constants.js =====
+// ===== constants.js =====
+const VERSION = 'v2.00';
+const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
+const PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'];
+const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
+
 const EQUIP_TYPES=['atk','def','hp'];
 const EQUIP_NAMES={
     atk:{name:'力量芯片',icon:'⚔️',desc:'攻击+'},
@@ -805,6 +812,7 @@ const EQUIP_QUALITY_COLOR=['#aaa','#00ff88','#4488ff','#ff44ff','#ffa500'];
 const EQUIP_QUALITY_MULT=[1,1.5,2,3,5];
 const EQUIP_BASE_VALUES={atk:3,def:2,hp:20};
 const DROP_CHANCE=0.4;
+
 const ALL_SKILLS=[
     // ===== 主动 =====
     {id:'combo',name:'连击',passive:true,desc:'[被动] 普通攻击50%概率再攻击一次',icon:'👊',cd:0},
@@ -838,282 +846,108 @@ const ALL_SKILLS=[
 ];
 const ENEMY_NAMES=['机械龙虾','电路龙虾','芯片龙虾','程序龙虾','数据龙虾','比特龙虾','代码龙虾','网络龙虾','云端龙虾','量子龙虾','深渊机甲龙虾','泰坦机械龙虾','风暴电子龙虾','雷霆硅基龙虾','混沌编程龙虾'];
 const AUTO_BATTLE_DELAY = 750;
-let S={round:1,phase:0,turn:0,inBattle:false,battleResult:null,player:null,enemy:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:1,playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false,lobsterMode:null,exported:false,waitingForExport:false};
 
-function initState(){
-    const oldSpeed=S.battleSpeed||1;
-    const oldMode=S.lobsterMode;
-    const oldExported=S.exported||false;
-    S={round:1,phase:0,turn:0,inBattle:false,battleResult:null,pendingEnemySkill:null,turnOrder:null,battleSpeed:oldSpeed,
-        playerCooldowns:{},enemyCooldowns:{},battleQueue:[],isProcessing:false,lobsterMode:oldMode,exported:oldExported,waitingForExport:false,
+// ===== state.js =====
+// ===== state.js =====
+// 全局游戏状态（由 initState() 初始化）
+let S = {
+    round:1, phase:0, turn:0, inBattle:false, battleResult:null,
+    player:null, enemy:null, pendingEnemySkill:null, turnOrder:null,
+    battleSpeed:1, playerCooldowns:{}, enemyCooldowns:{},
+    battleQueue:[], isProcessing:false,
+    lobsterMode:null, exported:false, waitingForExport:false
+};
+
+function initState() {
+    const oldSpeed = S.battleSpeed || 1;
+    const oldMode = S.lobsterMode;
+    const oldExported = S.exported || false;
+    S = {
+        round:1, phase:0, turn:0, inBattle:false, battleResult:null,
+        pendingEnemySkill:null, turnOrder:null,
+        battleSpeed:oldSpeed,
+        playerCooldowns:{}, enemyCooldowns:{}, battleQueue:[],
+        isProcessing:false,
+        lobsterMode:oldMode, exported:oldExported, waitingForExport:false,
         player:(()=>{
             const bhp=Math.floor(110+Math.random()*20);
             const batk=Math.floor(9+Math.random()*3);
             const bdef=Math.floor(4+Math.random()*3);
             const bspd=Math.floor(5+Math.random()*8);
             const cnt=Math.random()<0.9?2:3;
-            const s=[];while(s.length<cnt){const r=ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)];if(!s.find(x=>x.id===r.id))s.push(Object.assign({},r));}
-            return {
-                name:'你的龙虾',level:1,
-                hp:bhp,maxHp:bhp,atk:batk,def:bdef,spd:bspd,
-                baseHp:bhp,baseAtk:batk,baseDef:bdef,baseSpd:bspd,
-                skills:s,
-                buffs:[],shields:0,poisonDmg:0,bleedDmg:0,alive:true,resurrectUsed:false,stunned:false,sealed:false,
-                speedBoosted:false,defReduced:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,lifesteal:0,
-                equipment:{atk:null,def:null,hp:null},inventory:[]
-            };
-        })(),enemy:null};
-}
-function cloneSkill(s){return JSON.parse(JSON.stringify(s))}
-function getPhaseMult(){return PHASE_STAT_MULT[S.phase]}
-function calcPlayerStats(){
-    const m=getPhaseMult();
-    const bhp=(S.player.baseHp||100)+(S.player.level-1)*15;
-    const bAtk=(S.player.baseAtk||10)+(S.player.level-1)*2;
-    const bDef=(S.player.baseDef||4)+(S.player.level-1)*1;
-    const bSpd=(S.player.baseSpd||6)+(S.player.level-1)*1;
-    const hpM=S.player.defReduced?0.9:1,atkM=S.player.defReduced?0.9:1;
-    // 装备加成
-    const equipBonus={atk:0,def:0,hp:0};
-    if(S.player.equipment.atk){const e=S.player.equipment.atk;equipBonus.atk=Math.floor(EQUIP_BASE_VALUES.atk*(EQUIP_QUALITY_MULT[e.quality]||1)*(e.level||1));}
-    if(S.player.equipment.def){const e=S.player.equipment.def;equipBonus.def=Math.floor(EQUIP_BASE_VALUES.def*(EQUIP_QUALITY_MULT[e.quality]||1)*(e.level||1));}
-    if(S.player.equipment.hp){const e=S.player.equipment.hp;equipBonus.hp=Math.floor(EQUIP_BASE_VALUES.hp*(EQUIP_QUALITY_MULT[e.quality]||1)*(e.level||1));}
-    S.player.maxHp=Math.floor((bhp+equipBonus.hp)*m*hpM);
-    S.player.atk=Math.floor((bAtk+equipBonus.atk)*m*atkM);
-    S.player.def=Math.floor((bDef+equipBonus.def)*m);
-    const effectiveSpd=S.player.speedBoosted?bSpd*m*1.5:bSpd*m;
-    S.player.spd=Math.floor(effectiveSpd);
-    if(S.player.hp>S.player.maxHp)S.player.hp=S.player.maxHp;
-}
-function generateEnemy(){
-    const r=S.round;
-    // 前3回合为简单模式，敌人属性降低
-    const easyMod=r<=3?0.6:r<=5?0.8:1;
-    const m=(1+(r-1)*0.15)*easyMod;
-    const e={
-        name:ENEMY_NAMES[Math.min(r-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+r,
-        level:r,hp:Math.floor((100+r*15)*m),maxHp:Math.floor((100+r*15)*m),
-        atk:Math.floor((7+r*1.3)*m),def:Math.floor((3+r*0.8)*m),spd:Math.floor((5+r*0.6)*m),
-        skills:[],buffs:[],shields:0,poisonDmg:0,bleedDmg:0,alive:true,resurrected:false,
-        stunned:false,sealed:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
-        speedBoosted:false,defReduced:false
-    };
-    const cnt=r+Math.floor(Math.random()*2); // Round r: r to r+1 skills
-    const avail=ALL_SKILLS.filter(x=>x.id!=='resurrect'||Math.random()<0.2);
-    const sh=[...avail].sort(()=>Math.random()-0.5);
-    for(let i=0;i<Math.min(cnt,sh.length);i++) e.skills.push(cloneSkill(sh[i]));
-    S.enemy=e;
-}
-
-// 特效函数
-function showDamageNumber(element, value, type) {
-    const rect = element.getBoundingClientRect();
-    const dmgEl = document.createElement('div');
-    dmgEl.className = 'damage-number ' + type;
-    dmgEl.textContent = (type === 'heal' ? '+' : '-') + value;
-    dmgEl.style.left = (rect.left + rect.width / 2 - 30 + Math.random() * 20 - 10) + 'px';
-    dmgEl.style.top = (rect.top + 40) + 'px';
-    document.body.appendChild(dmgEl);
-    setTimeout(() => dmgEl.remove(), 1000);
-}
-
-function playAttackAnimation(attackerId, targetId, isCrit) {
-    const attacker = document.getElementById(attackerId);
-    const target = document.getElementById(targetId);
-    const animClass = attackerId === 'player-fighter' ? 'attacking-right' : 'enemy-attacking-left';
-    
-    attacker.classList.add(animClass);
-    setTimeout(() => {
-        attacker.classList.remove(animClass);
-        if (target) {
-            target.classList.add('hit-flash');
-            // 攻击时震屏
-            playScreenShake(targetId==='player-fighter'?'player':'enemy');
-            if (isCrit) {
-                target.classList.add('crit-effect');
-                // 暴击时屏幕闪烁
-                document.body.classList.add('crit-flash');
-                setTimeout(() => document.body.classList.remove('crit-flash'), 300);
-                setTimeout(() => target.classList.remove('crit-effect'), 500);
+            const s=[];
+            while(s.length<cnt){
+                const r=ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)];
+                if(!s.find(x=>x.id===r.id)) s.push(cloneSkill(r));
             }
-            setTimeout(() => target.classList.remove('hit-flash'), 300);
+            return {
+                name:'我的龙虾', level:1, hp:bhp, maxHp:bhp, atk:batk, def:bdef, spd:bspd,
+                phase:0, skills:s, equipment:{atk:null,def:null,hp:null},
+                inventory:[], buffs:[],
+                shields:0, poisonDmg:0, bleedDmg:0, alive:true, resurrectUsed:false,
+                stunned:false, sealed:false, speedBoosted:false, defReduced:false,
+                resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0,
+                baseHp:bhp, baseAtk:batk, baseDef:bdef, baseSpd:bspd,
+                hpM:1, atkM:1
+            };
+        })()
+    };
+    // 刷新被动
+    S.player.skills.forEach(s=>{
+        if(s.passive){
+            if(s.id==='lifesteal') S.player.lifesteal=s.lifesteal;
+            if(s.id==='counter') S.player.counterRate=s.counterRate;
+            if(s.id==='resurrect') S.player.resurrectRate=s.resurrectRate;
+            if(s.id==='speedBoost'||s.id==='overclock') S.player.speedBoosted=true;
         }
-    }, 300);
+    });
 }
 
-function playScreenShake(targetFighter) {
-    const arena=document.getElementById('arena');
-    arena.classList.add('screen-shake');
-    setTimeout(()=>arena.classList.remove('screen-shake'),200);
+function cloneSkill(s) {
+    return JSON.parse(JSON.stringify(s));
 }
 
-function playResurrectAnimation(element) {
-    element.classList.add('resurrect-effect');
-    setTimeout(() => element.classList.remove('resurrect-effect'), 800);
+function getPhaseMult() {
+    return PHASE_STAT_MULT[S.phase];
 }
 
-function showSkillPopup(skillId) {
-    const skill=ALL_SKILLS.find(s=>s.id===skillId);
-    if(!skill) return;
-    document.getElementById('skill-popup-icon').textContent=skill.icon;
-    document.getElementById('skill-popup-name').textContent=skill.name+(skill.desc?' '+skill.desc:'');
-    document.getElementById('skill-popup-cost').textContent='';
-    document.getElementById('skill-popup-desc').textContent='';
-    document.getElementById('skill-popup-effect').textContent='';
-    document.getElementById('skill-popup').classList.add('show');
-    document.getElementById('skill-backdrop').classList.add('show');
-}
-
-function hideSkillPopup() {
-    document.getElementById('skill-popup').classList.remove('show');
-    document.getElementById('skill-backdrop').classList.remove('show');
-    document.getElementById('skill-tooltip').classList.remove('show');
-}
-
-function showSkillTooltip(skillId) {
-    const skill=ALL_SKILLS.find(s=>s.id===skillId);
-    if(!skill) return;
-    document.getElementById('skill-tooltip-name').textContent=skill.icon+' '+skill.name;
-    document.getElementById('skill-tooltip-desc').textContent=skill.desc;
-    const tooltip=document.getElementById('skill-tooltip');
-    tooltip.classList.add('show');
-    const event=window.event;
-    if(event && event.target) {
-        const rect=event.target.getBoundingClientRect();
-        tooltip.style.left=(rect.left+rect.width/2-100)+'px';
-        tooltip.style.top=(rect.bottom+5)+'px';
-    }
-}
-
-function hideSkillTooltip() {
-    document.getElementById('skill-tooltip').classList.remove('show');
-}
-
-function updateAutoIndicator() {
-    const indicator=document.getElementById('auto-indicator');
-    indicator.classList.add('active');
-}
-
-function toggleSpeed() {
-    S.battleSpeed = S.battleSpeed === 1 ? 2 : 1;
-    updateSpeedButton();
-}
-
-function updateSpeedButton() {
-    const btn = document.getElementById('btn-speed');
-    if(S.battleSpeed === 2) {
-        btn.textContent = '⏩ 2倍速 (点击切换)';
-        btn.classList.add('btn-warning');
-    } else {
-        btn.textContent = '⏩ 1倍速 (点击切换)';
-        btn.classList.remove('btn-warning');
-    }
+function calcPlayerStats() {
+    const p=S.player;
+    const m=getPhaseMult();
+    const lvl=p.level-1;
+    const hpM=p.hpM||1, atkM=p.atkM||1;
+    p.maxHp=Math.floor((p.baseHp+lvl*15)*m*hpM);
+    p.atk=Math.floor((p.baseAtk+lvl*2)*m*atkM);
+    p.def=Math.floor((p.baseDef+lvl*1)*m*(p.defReduced?0.9:1));
+    p.spd=Math.floor((p.baseSpd+lvl*1)*m*(p.speedBoosted?1.5:1));
+    // 装备加成
+    if(p.equipment.atk) p.atk+=getEquipValue(p.equipment.atk);
+    if(p.equipment.def) p.def+=getEquipValue(p.equipment.def);
+    if(p.equipment.hp) p.maxHp+=getEquipValue(p.equipment.hp)*5;
+    p.maxHp=Math.max(1,p.maxHp);
+    p.hp=Math.min(p.hp,p.maxHp);
 }
 
 function getBattleDelay() {
-    return AUTO_BATTLE_DELAY / S.battleSpeed;
+    return Math.floor(AUTO_BATTLE_DELAY / S.battleSpeed);
 }
 
-function addLog(msg) {
-    const log=document.getElementById('battle-log');
-    const e=document.createElement('div');
-    e.className='log-entry';
-    e.innerHTML=msg;
-    log.insertBefore(e, log.firstChild);
-    while(log.children.length>50) log.removeChild(log.lastChild);
+function getEquipValue(e) {
+    return Math.floor(EQUIP_BASE_VALUES[e.type]*EQUIP_QUALITY_MULT[e.quality]*e.level);
 }
 
-function updateUI() {
-    if(!S.player) return;
-    document.getElementById('round-num').textContent=S.round;
-    document.getElementById('phase').textContent=PHASES[S.phase];
-    document.getElementById('level').textContent=S.player.level;
-    updatePlayerUI();
-    updateEnemyUI();
-    updateEvolveButton();
-    updateAutoIndicator();
+function generateEquipment() {
+    const type=EQUIP_TYPES[Math.floor(Math.random()*EQUIP_TYPES.length)];
+    const quality=Math.floor(Math.random()*Math.min(3+S.round*0.3,5));
+    const level=1+Math.min(Math.floor(S.round/2),10);
+    const name=EQUIP_NAMES[type].name+' Lv.'+level;
+    return {type,quality,level,name,icon:EQUIP_NAMES[type].icon};
 }
 
-function updatePlayerUI() {
-    if(!S.player || !S.player.skills) return;
-    const sprite=document.getElementById('player-sprite');
-    sprite.textContent=PHASE_SPRITES[S.phase];
-    const hpPct=S.player.hp/S.player.maxHp*100;
-    let spriteClass='fighter-sprite lobster-phase-'+S.phase;
-    if(hpPct<30 && hpPct>0) spriteClass+=' low-hp-warning';
-    sprite.className=spriteClass;
-    document.getElementById('player-name').textContent=S.player.name;
-    document.getElementById('player-level').textContent='Lv.'+S.player.level;
-    const hpBar=document.getElementById('player-hp-bar');
-    hpBar.style.width=hpPct+'%';
-    hpBar.className='hp-fill'+(hpPct>50?' green':'');
-    document.getElementById('player-hp').textContent=Math.max(0,Math.floor(S.player.hp));
-    document.getElementById('player-max-hp').textContent=S.player.maxHp;
-    document.getElementById('player-stats').textContent='攻:'+S.player.atk+' 防:'+S.player.def+' 速:'+S.player.spd;
-    document.getElementById('player-skills').innerHTML='技能: '+S.player.skills.map(s=>{
-        const cd=S.playerCooldowns[s.id]||0;
-        const cdClass=cd>0?'on-cd':'';
-        const passiveClass=s.passive?'passive-skill':'';
-        return '<span class="skill-item '+cdClass+' '+passiveClass+'" '+(cd>0?'data-cd="'+cd+'" ':'')+'onmouseenter="showSkillTooltip(\''+s.id+'\')" onmouseleave="hideSkillTooltip()" onclick="showSkillPopup(\''+s.id+'\')">'+s.icon+'</span>';
-    }).join(' ');
-    updateBuffsDisplay('player-buffs', S.player);
-}
+// ===== battle.js =====
+// ===== battle.js =====
 
-function updateEnemyUI() {
-    if(!S.enemy) {
-        // 清空敌人显示
-        document.getElementById('enemy-sprite').textContent='🦞';
-        document.getElementById('enemy-sprite').className='enemy-sprite';
-        document.getElementById('enemy-name').textContent='???';
-        document.getElementById('enemy-level').textContent='';
-        document.getElementById('enemy-hp-bar').style.width='0%';
-        document.getElementById('enemy-hp').textContent='0';
-        document.getElementById('enemy-max-hp').textContent='0';
-        document.getElementById('enemy-stats').textContent='攻:0 防:0 速:0';
-        document.getElementById('enemy-buffs').innerHTML='';
-        document.getElementById('enemy-skills').innerHTML='';
-        return;
-    }
-    document.getElementById('enemy-sprite').textContent='🦞';
-    document.getElementById('enemy-sprite').className='enemy-sprite';
-    document.getElementById('enemy-name').textContent=S.enemy.name;
-    document.getElementById('enemy-level').textContent='Lv.'+S.enemy.level;
-    const hpPct=S.enemy.hp/S.enemy.maxHp*100;
-    const hpBar=document.getElementById('enemy-hp-bar');
-    hpBar.style.width=hpPct+'%';
-    hpBar.className='hp-fill'+(hpPct>50?' green':'');
-    document.getElementById('enemy-hp').textContent=Math.max(0,Math.floor(S.enemy.hp));
-    document.getElementById('enemy-max-hp').textContent=S.enemy.maxHp;
-    document.getElementById('enemy-stats').textContent='攻:'+S.enemy.atk+' 防:'+S.enemy.def+' 速:'+S.enemy.spd;
-    updateBuffsDisplay('enemy-buffs', S.enemy);
-    document.getElementById('enemy-skills').innerHTML='技能: '+S.enemy.skills.map(s=>{
-        const cd=S.enemyCooldowns[s.id]||0;
-        const cdClass=cd>0?'on-cd':'';
-        return '<span class="skill-item '+cdClass+'" '+(cd>0?'data-cd="'+cd+'" ':'')+'onmouseenter="showSkillTooltip(\''+s.id+'\')" onmouseleave="hideSkillTooltip()" onclick="showSkillPopup(\''+s.id+'\')">'+s.icon+'</span>';
-    }).join(' ');
-}
-
-function updateBuffsDisplay(id, entity) {
-    const container=document.getElementById(id);
-    container.innerHTML='';
-    entity.buffs.forEach(b=>{
-        const tag=document.createElement('span');
-        tag.className='buff-tag buff-'+b.type;
-        tag.textContent=b.icon+' '+b.name;
-        container.appendChild(tag);
-    });
-    if(entity.shields>0) {
-        const tag=document.createElement('span');
-        tag.className='buff-tag buff-shield';
-        tag.textContent='🔰 '+entity.shields;
-        container.appendChild(tag);
-    }
-}
-
-function updateEvolveButton() {
-    // 进化现在是Lv.3自动进化，不再需要按钮
-}
-
+// ---------- 玩家行动 ----------
 function startBattle() {
     if(S.inBattle) return;
     showEnemySelect();
@@ -1124,15 +958,17 @@ function showEnemySelect() {
     list.innerHTML='';
     for(let i=0;i<3;i++) {
         const r=S.round+(i*0.5);
-        const easyMod=r<=3?0.6:r<=5?0.8:1;
+        // 难度曲线：round1 40% → round5 100%，逐轮递增
+        const easyMod=Math.min(1, 0.4+(S.round-1)*0.15);
         const m=(1+(r-1)*0.15)*easyMod;
-        const dispLvl=i===0?S.round:S.round+1;
+        // 敌人等级：敌人1/2=Lv.round，敌人3=Lv.round+1（112,223,334...）
+        const dispLvl=i<2?S.round:S.round+1;
         const nameOpt=ENEMY_NAMES[Math.min(dispLvl-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+dispLvl;
         const hp=Math.floor((100+r*15)*m);
         const atk=Math.floor((7+r*1.3)*m);
         const def=Math.floor((3+r*0.8)*m);
         const spd=Math.floor((5+r*0.6)*m);
-        const cnt=S.round+(i===2?1:0); // 前2敌人round技能，第3敌人round+1技能
+        const cnt=S.round+(i===2?1:0);
         const avail=ALL_SKILLS.filter(x=>x.id!=='resurrect'||Math.random()<0.2);
         const skills=[...avail].sort(()=>Math.random()-0.5).slice(0,Math.min(cnt,avail.length));
         const div=document.createElement('div');
@@ -1140,7 +976,7 @@ function showEnemySelect() {
         div.innerHTML='<div class="enemy-option-name">🦞 '+nameOpt+' (Lv.'+dispLvl+')</div>'+
             '<div class="enemy-option-stats">生命:'+hp+' 攻:'+atk+' 防:'+def+' 速:'+spd+'</div>'+
             '<div class="enemy-option-skills">技能: '+skills.map(s=>s.icon+s.name).join(' ')+'</div>';
-        div.onclick=()=>{ console.log('[DEBUG] enemy option clicked:', nameOpt); selectEnemy(nameOpt,dispLvl,hp,atk,def,spd,skills); };
+        div.onclick=()=>selectEnemy(nameOpt,dispLvl,hp,atk,def,spd,skills);
         list.appendChild(div);
     }
     document.getElementById('enemy-select-panel').classList.add('show');
@@ -1151,66 +987,47 @@ function closeEnemySelect() {
 }
 
 function selectEnemy(name,level,hp,atk,def,spd,skills) {
-    try {
-    console.log('[DEBUG] selectEnemy called, name:', name, 'skills count:', skills.length);
     closeEnemySelect();
-    console.log('[DEBUG] after closeEnemySelect');
-    // 玩家血量回满
     S.player.hp=S.player.maxHp;
-    S.player.poisonDmg=0;
-    S.player.bleedDmg=0;
-    S.player.shields=0;
-    S.player.stunned=false;
-    S.player.sealed=false;
-    S.enemy={
-        name:name,level:level,hp:hp,maxHp:hp,
-        atk:atk,def:def,spd:spd,
+    S.player.poisonDmg=0;S.player.bleedDmg=0;S.player.shields=0;
+    S.player.stunned=false;S.player.sealed=false;
+    S.enemy={name,level,hp,maxHp:hp,atk,def,spd,
         skills:skills.map(s=>cloneSkill(s)),
         buffs:[],shields:0,poisonDmg:0,bleedDmg:0,alive:true,resurrected:false,
         stunned:false,sealed:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
-        speedBoosted:false,defReduced:false,lifesteal:0
-    };
-    // 刷新敌人被动
+        speedBoosted:false,defReduced:false,lifesteal:0};
     S.enemy.skills.forEach(s=>{
-        if(s.passive) {
+        if(s.passive){
             if(s.id==='lifesteal') S.enemy.lifesteal=s.lifesteal;
             if(s.id==='counter') S.enemy.counterRate=s.counterRate;
             if(s.id==='resurrect') S.enemy.resurrectRate=s.resurrectRate;
             if(s.id==='speedBoost'||s.id==='overclock') S.enemy.speedBoosted=true;
         }
     });
-    // 重置玩家CD
-    S.playerCooldowns={};
-    S.enemyCooldowns={};
-    // 刷新玩家被动
-    S.player.lifesteal=0;S.player.counterRate=0;S.player.resurrectRate=0;
+    S.playerCooldowns={};S.enemyCooldowns={};
+    S.player.lifesteal=0;S.player.counterRate=0;S.player.resurrectRate=0;S.player.speedBoosted=false;
     S.player.skills.forEach(s=>{
-        if(s.passive) {
+        if(s.passive){
             if(s.id==='lifesteal') S.player.lifesteal=s.lifesteal;
             if(s.id==='counter') S.player.counterRate=s.counterRate;
             if(s.id==='resurrect') S.player.resurrectRate=s.resurrectRate;
             if(s.id==='speedBoost'||s.id==='overclock') S.player.speedBoosted=true;
         }
     });
-    S.inBattle=true;
-    S.turn=0;
+    S.inBattle=true;S.turn=0;
     document.getElementById('btn-start').disabled=true;
     updateUI();
     addLog('<span class="log-system">⚔️ 第 '+S.round+' 轮战斗开始!</span>');
     addLog('<span class="log-enemy">⚔️ 遇到野生 '+S.enemy.name+' (Lv.'+S.enemy.level+')</span>');
     addLog('<span class="log-system">📋 敌人技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(' ')+'</span>');
     S.turn=1;
-    console.log('[DEBUG] S.enemy set:', S.enemy ? S.enemy.name : 'NULL', 'S.inBattle:', S.inBattle);
     addLog('<span class="log-turn">━━━ 第 1 回合 ━━━</span>');
-    setTimeout(executeAutoTurn, getBattleDelay());
-    } catch(e) { console.error('[DEBUG] selectEnemy error:', e.message); }
+    setTimeout(executeAutoTurn,getBattleDelay());
 }
 
+// ---------- 玩家回合 ----------
 function executeAutoTurn() {
-    console.log('[DEBUG] executeAutoTurn called, S.inBattle:', S.inBattle, 'S.enemy:', S.enemy ? S.enemy.name : 'NULL');
     if(!S.inBattle) return;
-    // 眩晕/封印效果：持续1回合（跳过当前回合后自动清除）
-    // S.player.stunned 在 endTurn() 末尾清除，确保跳过当前回合后下回合恢复
     if(S.player.stunned) {
         addLog('<span class="log-player">😵 被晕了，无法行动!</span>');
         updateUI();
@@ -1224,50 +1041,35 @@ function executeAutoTurn() {
         setTimeout(()=>enemyTurn(),getBattleDelay());
         return;
     }
-    // 收集可用技能（排除被动、排除CD中的）
     const availSkills=S.player.skills.filter(s=>{
         if(s.passive) return false;
         const cd=S.playerCooldowns[s.id]||0;
         if(cd>0) return false;
         return true;
     });
-    
-    // 构建行动队列
     S.battleQueue=[];
-    
-    // 添加技能到队列
-    availSkills.forEach(skill=>{
-        S.battleQueue.push({type:'skill',skill:skill,isPlayer:true});
-    });
-    
-    // 添加平A到队列
-    S.battleQueue.push({type:'attack',isPlayer:true});
-    
+    if(availSkills.length>0&&Math.random()<0.7) {
+        const skill=availSkills[Math.floor(Math.random()*availSkills.length)];
+        S.battleQueue.push({type:'skill',skill});
+    }
+    S.battleQueue.push({type:'attack'});
     S.isProcessing=true;
     processBattleQueue();
 }
 
 function processBattleQueue() {
-    if(!S.inBattle || S.battleQueue.length===0) {
+    if(!S.inBattle||S.battleQueue.length===0) {
         S.isProcessing=false;
-        if(S.enemy) {
-            S.enemy.hp=Math.max(0,S.enemy.hp);
-        }
+        if(S.enemy) S.enemy.hp=Math.max(0,S.enemy.hp);
         S.player.hp=Math.min(S.player.maxHp,S.player.hp);
         updateUI();
-        if(S.enemy && S.enemy.hp<=0) {
-            enemyDefeated();
-        } else if(S.player.hp<=0) {
-            playerDefeated();
-        } else if(S.inBattle) {
-            setTimeout(()=>enemyTurn(),getBattleDelay());
-        }
+        if(S.enemy&&S.enemy.hp<=0) { enemyDefeated(); }
+        else if(S.player.hp<=0) { playerDefeated(); }
+        else if(S.inBattle) { setTimeout(()=>enemyTurn(),getBattleDelay()); }
         return;
     }
-    
     const action=S.battleQueue.shift();
     const delay=getBattleDelay();
-    
     if(action.type==='skill') {
         const skill=action.skill;
         if(skill.cd>0) S.playerCooldowns[skill.id]=skill.cd;
@@ -1276,58 +1078,45 @@ function processBattleQueue() {
         updateUI();
         setTimeout(processBattleQueue,delay);
     } else if(action.type==='attack') {
-        // 普通攻击
         doNormalAttack(S.player,S.enemy,true,false);
         updateUI();
         setTimeout(processBattleQueue,delay);
     }
 }
 
+// ---------- 普通攻击 ----------
 function doNormalAttack(attacker, defender, isPlayer, isSecondHit) {
     let atkDmg=Math.max(1,Math.floor((attacker.atk||0)*1.0));
-    // 连击第二次伤害减半
-    if(isSecondHit) {
-        atkDmg=Math.floor(atkDmg*0.5);
-    }
-    // 善恶有报处理
+    if(isSecondHit) atkDmg=Math.floor(atkDmg*0.5);
     const karmaSkill=attacker.skills.find(s=>s.id==='karma'&&s.passive);
     if(karmaSkill&&atkDmg>0) {
         if(Math.random()<0.2) {
-            // 20%概率治疗敌人
             const healAmt=Math.floor(defender.maxHp*0.1);
             defender.hp=Math.min(defender.maxHp,defender.hp+healAmt);
             addLog('<span class="log-system">⚖️ 【善恶有报】触发! 治疗敌人 '+healAmt+' HP</span>');
             playAttackAnimation(isPlayer?'player-fighter':'enemy-fighter',isPlayer?'enemy-fighter':'player-fighter',false);
             return;
-        } else {
-            // 80%概率双倍伤害
-            atkDmg*=2;
-        }
+        } else { atkDmg*=2; }
     }
-    // 愤怒处理：HP越低伤害越高
     const angerSkill=attacker.skills.find(s=>s.id==='anger'&&s.passive);
     if(angerSkill&&atkDmg>0) {
         const hpPct=attacker.hp/attacker.maxHp;
         if(hpPct<0.5) {
-            const angerBoost=1+(0.5-hpPct)*2; // 50%HP时×1，25%HP时×1.5，1%HP时×2
+            const angerBoost=1+(0.5-hpPct)*2;
             atkDmg=Math.floor(atkDmg*angerBoost);
             addLog('<span class="log-system">😤 【愤怒】激活! 伤害×'+angerBoost.toFixed(1)+'</span>');
         }
     }
-    // 必杀被动：50%概率暴击造成2倍伤害
     const critSkill=attacker.skills.find(s=>s.id==='crit'&&s.passive);
     if(critSkill&&atkDmg>0&&Math.random()<0.5) {
         atkDmg*=2;
         addLog('<span class="log-system">💥 【必杀】暴击! 伤害×2</span>');
     }
-    // 护盾吸收
     if(defender.shields>0) {
         const absorb=Math.min(defender.shields,atkDmg);
-        defender.shields-=absorb;
-        atkDmg-=absorb;
+        defender.shields-=absorb;atkDmg-=absorb;
         if(absorb>0) addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
     }
-    // 减伤率（防御技能效果）
     if(defender.reduceDmgRate>0) {
         const reduced=Math.floor(atkDmg*defender.reduceDmgRate);
         atkDmg-=reduced;
@@ -1338,13 +1127,11 @@ function doNormalAttack(attacker, defender, isPlayer, isSecondHit) {
     addLog('<span class="log-'+(isPlayer?'player':'enemy')+'">👊 '+(isPlayer?attacker.name:'敌人')+'普通攻击'+hitType+'造成 '+atkDmg+' 伤害</span>');
     showDamageNumber(document.getElementById(isPlayer?'enemy-fighter':'player-fighter'),atkDmg,'');
     playAttackAnimation(isPlayer?'player-fighter':'enemy-fighter',isPlayer?'enemy-fighter':'player-fighter',false);
-    // 吸血被动
     if(attacker.lifesteal>0) {
         const heal=Math.floor(atkDmg*attacker.lifesteal);
         attacker.hp=Math.min(attacker.maxHp,attacker.hp+heal);
         addLog('<span class="log-heal">💉 【吸血】 回复 '+heal+' HP</span>');
     }
-    // 连击被动：50%概率再攻击一次（仅第一次攻击触发，不能连续连击）
     const comboSkill=attacker.skills.find(s=>s.id==='combo'&&s.passive);
     if(comboSkill&&!isSecondHit&&defender.hp>0&&Math.random()<0.5) {
         addLog('<span class="log-system">👊 【连击】触发! 再次攻击</span>');
@@ -1352,59 +1139,41 @@ function doNormalAttack(attacker, defender, isPlayer, isSecondHit) {
     }
 }
 
-// 带必杀判断的攻击（连击用）
-
-
+// ---------- 技能效果 ----------
 function processSkillEffect(skill, attacker, defender, isPlayer) {
     let totalDmg=0;
     const times=skill.times||1;
     const isCrit=Math.random()<(skill.critRate||0);
     const critMult=isCrit?(skill.critMult||2):1;
-    // 检查善恶有报
     const karmaSkill=attacker.skills.find(s=>s.id==='karma'&&s.passive);
-    const karmaMult=karmaSkill?(Math.random()<0.8?2:0):1; // 0表示治疗敌人
+    const karmaMult=karmaSkill?(Math.random()<0.8?2:0):1;
     const karmaHeal=karmaSkill?(Math.random()<0.8?false:true):false;
     for(let t=0;t<times;t++) {
         let dmg=0;
-        if(skill.minDmg || skill.minDmg === 0) {
-            // 处决：敌人HP<50%时2倍伤害，否则保底0.3倍
+        if(skill.minDmg||skill.minDmg===0) {
             if(skill.execute) {
                 const hpPct=(defender.hp/defender.maxHp);
-                if(hpPct<0.5) {
-                    dmg=Math.max(1,Math.floor((attacker.atk||0)*1.0*2));
-                } else {
-                    dmg=Math.max(1,Math.floor((attacker.atk||0)*0.3));
-                }
+                dmg=Math.max(1,Math.floor((attacker.atk||0)*(hpPct<0.5?2:0.3)));
             } else {
                 dmg=Math.max(1,Math.floor((attacker.atk||0)*skill.minDmg*critMult));
             }
         }
-        // 善恶有报处理
         if(karmaSkill&&dmg>0) {
             if(karmaHeal) {
-                // 20%概率治疗敌人
                 const healAmt=Math.floor(defender.maxHp*0.1);
                 defender.hp=Math.min(defender.maxHp,defender.hp+healAmt);
                 addLog('<span class="log-system">⚖️ 【善恶有报】触发! 治疗敌人 '+healAmt+' HP</span>');
-                continue; // 不造成伤害
-            } else {
-                // 80%概率双倍伤害
-                dmg*=2;
-            }
+                continue;
+            } else { dmg*=2; }
         }
-        // 愤怒处理
         const angerSkill=attacker.skills.find(s=>s.id==='anger'&&s.passive);
         if(angerSkill&&dmg>0) {
             const hpPct=attacker.hp/attacker.maxHp;
-            if(hpPct<0.5) {
-                const angerBoost=1+(0.5-hpPct)*2;
-                dmg=Math.floor(dmg*angerBoost);
-            }
+            if(hpPct<0.5) dmg=Math.floor(dmg*(1+(0.5-hpPct)*2));
         }
         if(skill.drain) {
             const drainAmt=Math.floor((defender.hp||0)*skill.drain);
-            defender.hp-=drainAmt;
-            attacker.hp=Math.min(attacker.maxHp,(attacker.hp||0)+drainAmt);
+            defender.hp-=drainAmt;attacker.hp=Math.min(attacker.maxHp,(attacker.hp||0)+drainAmt);
             addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 吸取 '+drainAmt+' HP</span>');
         }
         if(skill.lifesteal) {
@@ -1412,17 +1181,14 @@ function processSkillEffect(skill, attacker, defender, isPlayer) {
             attacker.hp=Math.min(attacker.maxHp,(attacker.hp||0)+healAmt);
             addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 吸血 '+healAmt+' HP</span>');
         }
-        if(skill.ignoreDef) {
-            defender.hp-=dmg;
-            totalDmg+=dmg;
-        } else {
+        if(skill.ignoreDef) { defender.hp-=dmg;totalDmg+=dmg; }
+        else {
             const def=defender.def||0;
             const finalDmg=Math.max(1,Math.floor(dmg*(1-def/(dmg+100))));
-            defender.hp-=finalDmg;
-            totalDmg+=finalDmg;
+            defender.hp-=finalDmg;totalDmg+=finalDmg;
         }
-        if(isPlayer&&dmg>0) showDamageNumber(document.getElementById('enemy-fighter'), dmg+(isCrit?' 💥':''), isCrit?'crit':'damage');
-        if(!isPlayer&&dmg>0) showDamageNumber(document.getElementById('player-fighter'), dmg+(isCrit?' 💥':''), isCrit?'crit':'damage');
+        if(isPlayer&&dmg>0) showDamageNumber(document.getElementById('enemy-fighter'),dmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
+        if(!isPlayer&&dmg>0) showDamageNumber(document.getElementById('player-fighter'),dmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
     }
     if(isCrit&&totalDmg>0) addLog('<span class="log-crit">💥 暴击! 造成 '+totalDmg+' 伤害</span>');
     else if(totalDmg>0) addLog('<span class="log-damage">'+(isPlayer?'对敌':'对你')+'造成 '+totalDmg+' 伤害</span>');
@@ -1438,39 +1204,22 @@ function processSkillEffect(skill, attacker, defender, isPlayer) {
         defender.sealed=true;
         addLog('<span class="log-system">'+(isPlayer?'敌':'我')+' 被封印了!</span>');
     }
-    if(skill.reduceDmg) {
-        defender.reduceDmgRate=(defender.reduceDmgRate||0)+skill.reduceDmg;
-    }
-    if(skill.speedBoost) {
-        attacker.speedBoosted=true;
-        addLog('<span class="log-system">'+(isPlayer?'我':'敌')+' 速度翻倍!</span>');
-    }
-    if(skill.shield) {
-        attacker.shields=(attacker.shields||0)+skill.shield;
-        addLog('<span class="log-system">'+(isPlayer?'我':'敌')+' 获得 '+skill.shield+' 层护盾!</span>');
-    }
-    if(skill.counterRate) {
-        attacker.counterRate=skill.counterRate;
-    }
-    if(skill.resurrectRate) {
-        attacker.resurrectRate=skill.resurrectRate;
-    }
-    if(skill.reduceStat) {
-        defender.defReduced=true;
-    }
+    if(skill.reduceDmg) defender.reduceDmgRate=(defender.reduceDmgRate||0)+skill.reduceDmg;
+    if(skill.speedBoost) { attacker.speedBoosted=true; addLog('<span class="log-system">'+(isPlayer?'我':'敌')+' 速度翻倍!</span>'); }
+    if(skill.shield) { attacker.shields=(attacker.shields||0)+skill.shield; addLog('<span class="log-system">'+(isPlayer?'我':'敌')+' 获得 '+skill.shield+' 层护盾!</span>'); }
+    if(skill.counterRate) attacker.counterRate=skill.counterRate;
+    if(skill.resurrectRate) attacker.resurrectRate=skill.resurrectRate;
+    if(skill.reduceStat) defender.defReduced=true;
     if(isPlayer) playAttackAnimation('player-fighter','enemy-fighter',isCrit);
     else playAttackAnimation('enemy-fighter','player-fighter',isCrit);
     attacker.hp=Math.min(attacker.maxHp,attacker.hp);
     defender.hp=Math.max(0,defender.hp);
-    return totalDmg;
 }
 
+// ---------- 敌人回合 ----------
 function enemyTurn() {
-    if(!S.inBattle || !S.enemy) return;
-    if(S.enemy.hp<=0) {
-        enemyDefeated();
-        return;
-    }
+    if(!S.inBattle||!S.enemy) return;
+    if(S.enemy.hp<=0) { enemyDefeated(); return; }
     if(S.enemy.stunned) {
         addLog('<span class="log-enemy">😵 敌人被晕了，无法行动!</span>');
         S.enemy.stunned=false;
@@ -1485,49 +1234,31 @@ function enemyTurn() {
         setTimeout(()=>endTurn(),getBattleDelay());
         return;
     }
-    // 收集可用技能（只检查CD）
     const availSkills=S.enemy.skills.filter(s=>{
         if(s.passive) return false;
         const cd=S.enemyCooldowns[s.id]||0;
         if(cd>0) return false;
         return true;
     });
-    
-    // 构建敌人行动队列（普通攻击必定执行）
     S.battleQueue=[];
-    
-    // 添加技能到队列
-    availSkills.forEach(skill=>{
-        S.battleQueue.push({type:'skill',skill:skill,isPlayer:false});
-    });
-    
-    // 添加平A到队列
-    // 普通攻击免费，每个回合必定执行
+    availSkills.forEach(skill=>S.battleQueue.push({type:'skill',skill,isPlayer:false}));
     S.battleQueue.push({type:'attack',isPlayer:false});
-    
     processEnemyQueue();
 }
 
 function processEnemyQueue() {
-    if(!S.inBattle || S.battleQueue.length===0) {
-        if(S.enemy) {
-            S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp);
-        }
+    if(!S.inBattle||S.battleQueue.length===0) {
+        S.isProcessing=false;
+        if(S.enemy) S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp);
         S.player.hp=Math.max(0,S.player.hp);
         updateUI();
-        if(S.player.hp<=0) {
-            playerDefeated();
-        } else if(S.enemy && S.enemy.hp<=0) {
-            enemyDefeated();
-        } else if(S.inBattle) {
-            setTimeout(()=>endTurn(),getBattleDelay());
-        }
+        if(S.player.hp<=0) { playerDefeated(); }
+        else if(S.enemy&&S.enemy.hp<=0) { enemyDefeated(); }
+        else if(S.inBattle) { setTimeout(()=>endTurn(),getBattleDelay()); }
         return;
     }
-    
     const action=S.battleQueue.shift();
     const delay=getBattleDelay();
-    
     if(action.type==='skill') {
         const skill=action.skill;
         if(skill.cd>0) S.enemyCooldowns[skill.id]=skill.cd;
@@ -1536,7 +1267,6 @@ function processEnemyQueue() {
         updateUI();
         setTimeout(processEnemyQueue,delay);
     } else if(action.type==='attack') {
-        // 普通攻击
         doNormalAttack(S.enemy,S.player,false,false);
         updateUI();
         setTimeout(processEnemyQueue,delay);
@@ -1545,17 +1275,13 @@ function processEnemyQueue() {
 
 function endTurn() {
     if(!S.inBattle) return;
-    // 减少CD
-    for(let id in S.playerCooldowns) {
-        if(S.playerCooldowns[id]>0) S.playerCooldowns[id]--;
-    }
-    for(let id in S.enemyCooldowns) {
-        if(S.enemyCooldowns[id]>0) S.enemyCooldowns[id]--;
-    }
-    // 刷新被动状态
+    // CD减少
+    for(let id in S.playerCooldowns) { if(S.playerCooldowns[id]>0) S.playerCooldowns[id]--; }
+    for(let id in S.enemyCooldowns) { if(S.enemyCooldowns[id]>0) S.enemyCooldowns[id]--; }
+    // 刷新被动
     S.player.lifesteal=0;S.player.counterRate=0;S.player.resurrectRate=0;S.player.speedBoosted=false;
     S.player.skills.forEach(s=>{
-        if(s.passive) {
+        if(s.passive){
             if(s.id==='lifesteal') S.player.lifesteal=s.lifesteal;
             if(s.id==='counter') S.player.counterRate=s.counterRate;
             if(s.id==='resurrect') S.player.resurrectRate=s.resurrectRate;
@@ -1565,7 +1291,7 @@ function endTurn() {
     if(S.enemy) {
         S.enemy.lifesteal=0;S.enemy.counterRate=0;S.enemy.resurrectRate=0;S.enemy.speedBoosted=false;
         S.enemy.skills.forEach(s=>{
-            if(s.passive) {
+            if(s.passive){
                 if(s.id==='lifesteal') S.enemy.lifesteal=s.lifesteal;
                 if(s.id==='counter') S.enemy.counterRate=s.counterRate;
                 if(s.id==='resurrect') S.enemy.resurrectRate=s.resurrectRate;
@@ -1573,76 +1299,66 @@ function endTurn() {
             }
         });
     }
-    // 毒伤
+    // DOT伤害
     if(S.player.poisonDmg>0) {
         const pDmg=Math.floor(S.player.maxHp*S.player.poisonDmg);
         S.player.hp-=pDmg;
         addLog('<span class="log-damage">🔥 【中毒】你的龙虾受到 '+pDmg+' 伤害</span>');
-        showDamageNumber(document.getElementById('player-fighter'), pDmg, 'poison');
+        showDamageNumber(document.getElementById('player-fighter'),pDmg,'poison');
     }
-    if(S.enemy && S.enemy.poisonDmg>0) {
+    if(S.enemy&&S.enemy.poisonDmg>0) {
         const eDmg=Math.floor(S.enemy.maxHp*S.enemy.poisonDmg);
         S.enemy.hp-=eDmg;
         addLog('<span class="log-damage">🔥 【中毒】敌人受到 '+eDmg+' 伤害</span>');
     }
-    // 撕裂流血
     if(S.player.bleedDmg>0) {
         const bDmg=Math.floor(S.player.maxHp*S.player.bleedDmg);
         S.player.hp-=bDmg;
         addLog('<span class="log-damage">🩸 【撕裂】你的龙虾受到 '+bDmg+' 伤害</span>');
-        showDamageNumber(document.getElementById('player-fighter'), bDmg, 'poison');
+        showDamageNumber(document.getElementById('player-fighter'),bDmg,'poison');
     }
-    if(S.enemy && S.enemy.bleedDmg>0) {
+    if(S.enemy&&S.enemy.bleedDmg>0) {
         const bDmg=Math.floor(S.enemy.maxHp*S.enemy.bleedDmg);
         S.enemy.hp-=bDmg;
         addLog('<span class="log-damage">🩸 【撕裂】敌人受到 '+bDmg+' 伤害</span>');
     }
     if(S.player.defReduced&&Math.random()<0.3) S.player.defReduced=false;
-    if(S.enemy && S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
+    if(S.enemy&&S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
     S.player.buffs=[];
     if(S.enemy) S.enemy.buffs=[];
     updateUI();
-    if(S.player.hp<=0) {
-        playerDefeated();
-        return;
-    }
-    if(S.enemy && S.enemy.hp<=0) {
-        enemyDefeated();
-        return;
-    }
+    if(S.player.hp<=0) { playerDefeated(); return; }
+    if(S.enemy&&S.enemy.hp<=0) { enemyDefeated(); return; }
     addLog('<span class="log-turn">━━━ 第 '+(S.turn+1)+' 回合 ━━━</span>');
     S.turn++;
-    // 清除玩家眩晕/封印状态，让下回合可以行动
-    S.player.stunned=false;
-    S.player.sealed=false;
-    setTimeout(executeAutoTurn, getBattleDelay());
+    S.player.stunned=false;S.player.sealed=false;
+    setTimeout(executeAutoTurn,getBattleDelay());
 }
+
+// ===== reward.js =====
+// ===== reward.js =====
 
 function enemyDefeated() {
     if(S.inBattle===false) return; // 防止重复调用
     S.inBattle=false;
     S.battleResult='win';
-    // 战胜敌人直接升级
+    // 升级
     S.player.level++;
     calcPlayerStats();
     S.player.hp=S.player.maxHp;
     addLog('<span class="log-system">🎉 胜利! 升级到 Lv.'+S.player.level+'!</span>');
 
-    // 检查进化（Lv3: 虾苗→幼虾，Lv5: 幼虾→战斗虾）
-    let evolved=false;
-    let evolvedSkill=null;
-    if(S.player.level===3 && S.phase===0) {
-        S.phase=1;
-        evolved=true;
-    } else if(S.player.level===5 && S.phase===1) {
-        S.phase=2;
-        evolved=true;
+    // 进化检查（Lv3→幼虾，Lv5→战斗虾）
+    let evolved=false, evolvedSkill=null;
+    if(S.player.level===3&&S.phase===0) {
+        S.phase=1; evolved=true;
+    } else if(S.player.level===5&&S.phase===1) {
+        S.phase=2; evolved=true;
     }
     if(evolved) {
         calcPlayerStats();
         S.player.hp=S.player.maxHp;
         addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'! 获得随机技能!</span>');
-        // 进化时随机获得一个未拥有的技能
         const avail=ALL_SKILLS.filter(s=>!S.player.skills.find(p=>p.id===s.id));
         if(avail.length>0) {
             evolvedSkill=cloneSkill(avail[Math.floor(Math.random()*avail.length)]);
@@ -1652,7 +1368,7 @@ function enemyDefeated() {
     }
 
     // 偷学敌人技能
-    if(S.enemy && S.enemy.skills.length>0) {
+    if(S.enemy&&S.enemy.skills.length>0) {
         const enemySkillIdx=Math.floor(Math.random()*S.enemy.skills.length);
         const newSkill=cloneSkill(S.enemy.skills[enemySkillIdx]);
         if(!S.player.skills.find(s=>s.id===newSkill.id)) {
@@ -1667,7 +1383,7 @@ function enemyDefeated() {
         document.getElementById('reward-skill-container').style.display='none';
     }
 
-    // 装备掉落检查
+    // 装备掉落
     if(Math.random()<DROP_CHANCE) {
         const dropEquip=generateEquipment();
         S.player.inventory.push(dropEquip);
@@ -1678,7 +1394,7 @@ function enemyDefeated() {
         document.getElementById('reward-equip-container').style.display='none';
     }
 
-    // 进化信息显示在奖励弹窗中
+    // 进化信息
     if(evolved) {
         let evoText='🌀 进化为 <strong>'+PHASES[S.phase]+'</strong>！';
         if(evolvedSkill) evoText+='<br>🌟 领悟 '+evolvedSkill.icon+evolvedSkill.name;
@@ -1692,25 +1408,14 @@ function enemyDefeated() {
 
     document.getElementById('reward-panel').classList.add('show');
     document.getElementById('btn-start').disabled=false;
-    // 养虾模式完成5轮后显示导出面板（必须先让玩家看到奖励，再点继续才导出）
-    if(S.lobsterMode==='raise' && S.round>=5 && !S.exported) {
+
+    // 五轮结束：等待导出
+    if(S.lobsterMode==='raise'&&S.round>=5&&!S.exported) {
         S.waitingForExport=true;
     } else {
         S.round++;
     }
     updateUI();
-}
-
-function generateEquipment() {
-    const type=EQUIP_TYPES[Math.floor(Math.random()*EQUIP_TYPES.length)];
-    const quality=Math.floor(Math.random()*Math.min(3+S.round*0.3,5));
-    const level=1+Math.min(Math.floor(S.round/2),10);
-    const name=EQUIP_NAMES[type].name+' Lv.'+level;
-    return {type,quality,level,name,icon:EQUIP_NAMES[type].icon};
-}
-
-function getEquipValue(e) {
-    return Math.floor(EQUIP_BASE_VALUES[e.type]*EQUIP_QUALITY_MULT[e.quality]*e.level);
 }
 
 function playerDefeated() {
@@ -1728,11 +1433,10 @@ function playerDefeated() {
     document.getElementById('game-over-title').textContent='游戏结束';
     document.getElementById('game-over-msg').textContent='你的龙虾在第 '+S.round+' 轮倒下了...';
     document.getElementById('final-round').textContent=S.round;
-    // 延迟显示结算，让玩家先看战报
     document.getElementById('btn-start').disabled=true;
     setTimeout(()=>{
         document.getElementById('game-over').classList.add('show','lose');
-    }, 2000);
+    },2000);
 }
 
 function closeReward() {
@@ -1747,84 +1451,95 @@ function closeReward() {
     }
     S.round++;
     document.getElementById('btn-start').disabled=false;
-    // 如果背包有装备，提示玩家
-    if(S.player && S.player.inventory && S.player.inventory.length>0) {
+    if(S.player&&S.player.inventory&&S.player.inventory.length>0) {
         addLog('<span class="log-system">📦 背包有 '+S.player.inventory.length+' 件装备，请点击"装备"穿戴！</span>');
     }
 }
 
+// ---------- 装备系统 ----------
 function openEquipPanel() {
     updateEquipSlots();
     updateInventoryList();
     document.getElementById('equip-panel').classList.add('show');
     document.getElementById('equip-backdrop').classList.add('show');
 }
-
 function closeEquipPanel() {
     document.getElementById('equip-panel').classList.remove('show');
     document.getElementById('equip-backdrop').classList.remove('show');
 }
-
 function updateEquipSlots() {
-    EQUIP_TYPES.forEach(type=>{
-        const slot=document.getElementById('equip-slot-'+type+'-item');
-        const equip=S.player.equipment[type];
-        if(equip) {
-            slot.textContent=equip.icon+equip.name.split(' Lv.')[0]+' +'+getEquipValue(equip);
-            slot.className='equip-slot-item equipped';
-            slot.style.color=EQUIP_QUALITY_COLOR[equip.quality];
+    ['atk','def','hp'].forEach(type=>{
+        const el=document.getElementById('equip-slot-'+type);
+        const e=S.player.equipment[type];
+        if(e) {
+            el.innerHTML=e.icon+' '+e.name+'<br><small>+'+getEquipValue(e)+'</small>';
+            el.style.borderColor=EQUIP_QUALITY_COLOR[e.quality];
+            el.style.color=EQUIP_QUALITY_COLOR[e.quality];
         } else {
-            slot.textContent='空';
-            slot.className='equip-slot-item';
-            slot.style.color='#888';
+            el.innerHTML='<small>空</small>';
+            el.style.borderColor='#444';
+            el.style.color='#888';
         }
     });
 }
-
 function updateInventoryList() {
     const list=document.getElementById('equip-inv-list');
-    document.getElementById('inv-count').textContent=S.player.inventory.length;
+    if(!list) return;
     if(S.player.inventory.length===0) {
-        list.innerHTML='<div style="color:#666;font-size:0.9em;text-align:center;padding:20px;">背包空空~战斗可掉落装备</div>';
+        list.innerHTML='<div style="color:#888;text-align:center;padding:20px">背包空空</div>';
         return;
     }
     list.innerHTML=S.player.inventory.map((e,i)=>
-        '<div class="equip-inv-item">'+
-            '<span class="equip-inv-item-name" style="color:'+EQUIP_QUALITY_COLOR[e.quality]+'">'+e.icon+e.name+' +'+getEquipValue(e)+'</span>'+
-            '<button class="equip-inv-item-btn" onclick="equipItem('+i+')">穿戴</button>'+
-        '</div>'
+        '<div class="equip-item" onclick="equipItem('+i+')" style="cursor:pointer;border-left:3px solid '+EQUIP_QUALITY_COLOR[e.quality]+'">'
+        +e.icon+' '+e.name+' +'+getEquipValue(e)+'<br><small style="color:#888">'+EQUIP_NAMES[e.type].desc+'</small></div>'
     ).join('');
 }
-
 function equipItem(invIndex) {
-    const item=S.player.inventory[invIndex];
-    if(!item) return;
-    const type=item.type;
-    // 如果已有装备，穿上的装备放回背包
-    if(S.player.equipment[type]) {
-        S.player.inventory.push(S.player.equipment[type]);
+    const e=S.player.inventory[invIndex];
+    if(S.player.equipment[e.type]) {
+        S.player.inventory.push(S.player.equipment[e.type]);
     }
-    S.player.equipment[type]=item;
+    S.player.equipment[e.type]=e;
     S.player.inventory.splice(invIndex,1);
     calcPlayerStats();
-    S.player.hp=Math.min(S.player.maxHp,S.player.hp);
     updateEquipSlots();
     updateInventoryList();
     updateUI();
-    addLog('<span class="log-player">📦 穿戴 '+item.icon+item.name+' ['+EQUIP_QUALITY[item.quality]+']</span>');
+    addLog('<span class="log-system">'+e.icon+' 装备 '+e.name+'!</span>');
 }
-
 function unequipItem(type) {
-    const item=S.player.equipment[type];
-    if(!item) return;
-    S.player.inventory.push(item);
+    const e=S.player.equipment[type];
+    if(!e) return;
+    S.player.inventory.push(e);
     S.player.equipment[type]=null;
     calcPlayerStats();
-    S.player.hp=Math.min(S.player.maxHp,S.player.hp);
     updateEquipSlots();
     updateInventoryList();
     updateUI();
-    addLog('<span class="log-player">📦 卸下 '+item.icon+item.name+'</span>');
+    addLog('<span class="log-system">'+e.icon+' 卸下 '+e.name+'</span>');
+}
+
+// ===== modes.js =====
+// ===== modes.js =====
+
+// ---------- 模式选择 ----------
+function selectMode(mode) {
+    document.getElementById('mode-select-panel').style.display='none';
+    if(mode==='raise') {
+        S.lobsterMode='raise';
+        initState();
+        showWelcomeLobster();
+        document.getElementById('welcome-panel').classList.add('show');
+        document.getElementById('btn-start').disabled=false;
+    } else if(mode==='import') {
+        S.lobsterMode='import';
+        initState();
+        document.getElementById('import-panel').classList.add('show');
+        document.getElementById('import-code').value='';
+        document.getElementById('import-error').style.display='none';
+        document.getElementById('btn-start').disabled=false;
+    }
+    updateUI();
 }
 
 function restartGame() {
@@ -1842,88 +1557,55 @@ function closeWelcome() {
     document.getElementById('btn-start').disabled=false;
 }
 
-function selectMode(mode) {
-    document.getElementById('mode-select-panel').style.display='none';
-    if(mode==='raise') {
-        // 养虾模式
-        S.lobsterMode='raise';
-        initState();
-        showWelcomeLobster();
-        document.getElementById('welcome-panel').classList.add('show');
-        document.getElementById('btn-start').disabled=false;
-    } else if(mode==='import') {
-        // 成虾导入模式
-        S.lobsterMode='import';
-        initState();
-        document.getElementById('import-panel').classList.add('show');
-        document.getElementById('import-code').value='';
-        document.getElementById('import-error').style.display='none';
-        document.getElementById('btn-start').disabled=false;
-    }
-    updateUI();
-}
-
+// ---------- 成虾导入/导出 ----------
 function confirmImport() {
     const code=document.getElementById('import-code').value.trim();
-    const errorEl=document.getElementById('import-error');
-    if(!code) {
-        errorEl.textContent='请输入龙虾代码';
-        errorEl.style.display='block';
+    if(!code) return;
+    const imported=importLobster(code);
+    if(!imported) {
+        document.getElementById('import-error').style.display='block';
         return;
     }
-    const imported=importLobster(code);
-    if(imported) {
-        document.getElementById('import-panel').classList.remove('show');
-        S.inBattle=false;
-        S.round=1;
-        S.turn=0;
-        S.phase=imported.phase||0;
-        S.player=imported;
-        S.playerCooldowns={};
-        S.enemyCooldowns={};
-        S.battleQueue=[];
-        S.isProcessing=false;
-        calcPlayerStats();
-        updateUI();
-        addLog('<span class="log-system">🦐 成虾导入成功! Lv.'+S.player.level+' '+PHASES[S.phase]+'</span>');
-        document.getElementById('btn-start').disabled=false;
-    } else {
-        errorEl.textContent='无效的龙虾代码，请检查后重试';
-        errorEl.style.display='block';
-    }
+    document.getElementById('import-panel').classList.remove('show');
+    document.getElementById('welcome-panel').classList.remove('show');
+    addLog('<span class="log-system">🦐 成虾 【'+imported.name+'】 导入成功!</span>');
+    updateUI();
 }
 
 function importLobster(code) {
     try {
         const decoded=new TextDecoder().decode(new Uint8Array(atob(code).split('').map(c=>c.charCodeAt(0))));
         const data=JSON.parse(decoded);
-        // 验证必要字段
-        if(!data.skills || !data.level || data.phase===undefined) {
-            return null;
-        }
-        // 计算导入龙虾的基础值（用于升级计算）
+        if(!data.skills||!data.level||data.phase===undefined) return null;
         const baseHp=(data.maxHp||100)-(data.level-1)*15;
         const baseAtk=(data.atk||10)-(data.level-1)*2;
         const baseDef=(data.def||4)-(data.level-1)*1;
         const baseSpd=(data.spd||6)-(data.level-1)*1;
-        // 重建玩家数据
-        return {
-            name:data.name||'导入龙虾',
-            level:data.level||1,
-            hp:data.hp||data.maxHp||100,
-            maxHp:data.maxHp||100,
-            atk:data.atk||10,
-            def:data.def||5,
-            spd:data.spd||8,
-            baseHp:baseHp,baseAtk:baseAtk,baseDef:baseDef,baseSpd:baseSpd,
-            skills:data.skills.map(s=>cloneSkill(s)),
-            buffs:[],shields:0,poisonDmg:0,alive:true,
-            resurrected:false,stunned:false,sealed:false,
-            speedBoosted:false,defReduced:false,
-            resurrectRate:0,counterRate:0,reduceDmgRate:0,lifesteal:0,
+        S.player={
+            name:data.name||'龙虾',
+            level:data.level, phase:data.phase,
+            hp:data.hp||data.maxHp, maxHp:data.maxHp||100,
+            atk:data.atk||10, def:data.def||4, spd:data.spd||6,
+            skills:(data.skills||[]).map(s=>cloneSkill(s)),
             equipment:data.equipment||{atk:null,def:null,hp:null},
-            inventory:data.inventory||[]
+            inventory:data.inventory||[],
+            buffs:[], shields:0, poisonDmg:0, bleedDmg:0, alive:true,
+            resurrected:false, resurrectedUsed:false,
+            stunned:false, sealed:false,
+            speedBoosted:false, defReduced:false,
+            resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0,
+            baseHp, baseAtk, baseDef, baseSpd, hpM:1, atkM:1
         };
+        S.player.skills.forEach(s=>{
+            if(s.passive){
+                if(s.id==='lifesteal') S.player.lifesteal=s.lifesteal;
+                if(s.id==='counter') S.player.counterRate=s.counterRate;
+                if(s.id==='resurrect') S.player.resurrectRate=s.resurrectRate;
+                if(s.id==='speedBoost'||s.id==='overclock') S.player.speedBoosted=true;
+            }
+        });
+        calcPlayerStats();
+        return S.player;
     } catch(e) {
         return null;
     }
@@ -1931,44 +1613,36 @@ function importLobster(code) {
 
 function exportLobster() {
     const data={
-        name:S.player.name,
-        level:S.player.level,
-        hp:S.player.hp,
-        maxHp:S.player.maxHp,
-        atk:S.player.atk,
-        def:S.player.def,
-        spd:S.player.spd,
+        name:S.player.name, level:S.player.level,
+        hp:S.player.hp, maxHp:S.player.maxHp,
+        atk:S.player.atk, def:S.player.def, spd:S.player.spd,
         phase:S.phase,
-        skills:S.player.skills,
-        equipment:S.player.equipment,
+        skills:S.player.skills, equipment:S.player.equipment,
         inventory:S.player.inventory,
-        baseHp:S.player.baseHp,
-        baseAtk:S.player.baseAtk,
-        baseDef:S.player.baseDef,
-        baseSpd:S.player.baseSpd
+        baseHp:S.player.baseHp, baseAtk:S.player.baseAtk,
+        baseDef:S.player.baseDef, baseSpd:S.player.baseSpd
     };
-    const bytes=new TextEncoder().encode(JSON.stringify(data));let binary='';for(let i=0;i<bytes.length;i++) binary+=String.fromCharCode(bytes[i]);return btoa(binary);
+    const bytes=new TextEncoder().encode(JSON.stringify(data));
+    let binary='';
+    for(let i=0;i<bytes.length;i++) binary+=String.fromCharCode(bytes[i]);
+    return btoa(binary);
 }
 
 function closeImportPanel() {
     document.getElementById('import-panel').classList.remove('show');
     document.getElementById('mode-select-panel').style.display='flex';
 }
-
 function closeExportPanel() {
     document.getElementById('export-panel').classList.remove('show');
-    // 养虾模式完成后锁住开始按钮
     document.getElementById('btn-start').disabled=true;
     addLog('<span class="log-system">🦐 养虾完成！请复制成虾代码保存，或重新开始新游戏。</span>');
 }
-
 function showExportPanel() {
     const code=exportLobster();
     document.getElementById('export-code').value=code;
     document.getElementById('reward-panel').style.display='none';
     document.getElementById('export-panel').classList.add('show');
 }
-
 function copyExportCode() {
     const code=document.getElementById('export-code').value;
     navigator.clipboard.writeText(code).then(()=>{
@@ -1979,26 +1653,219 @@ function copyExportCode() {
         addLog('<span class="log-system">📋 成虾代码已复制到剪贴板!</span>');
     });
 }
-
 function showWelcomeLobster() {
-    if(S.player && S.player.skills) {
-        document.getElementById('welcome-sprite').textContent=PHASE_SPRITES[0];
-        document.getElementById('welcome-sprite').className='lobster-reveal-sprite lobster-phase-0';
-        document.getElementById('welcome-skills').textContent='技能: '+S.player.skills.map(s=>s.icon+s.name).join(' ');
-    }
+    if(!S.player||!S.player.skills) return;
+    const p=S.player;
+    const sprite=PHASE_SPRITES[p.phase]||'🦐';
+    const stats='生命:'+p.maxHp+' 攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
+    document.getElementById('welcome-sprite').textContent=sprite;
+    document.getElementById('welcome-name').textContent=p.name+' (Lv.'+p.level+') '+PHASES[p.phase];
+    document.getElementById('welcome-stats').textContent=stats;
+    document.getElementById('welcome-skills').textContent='技能: '+p.skills.map(s=>s.icon+s.name).join(' ');
 }
 
-// 初始化
-initState();
-updateSpeedButton();
-document.getElementById('mode-select-panel').style.display='flex';
-updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v2.01 准备就绪!</span>');
-addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
+// ===== ui.js =====
+// ===== ui.js =====
 
+// ---------- 动画 ----------
+function showDamageNumber(element, value, type) {
+    if(!element) return;
+    const div=document.createElement('div');
+    div.className='damage-number'+(type?' '+type:'');
+    div.textContent=value;
+    const rect=element.getBoundingClientRect();
+    div.style.left=(rect.left+rect.width/2-10+Math.random()*20)+'px';
+    div.style.top=(rect.top+10)+'px';
+    document.body.appendChild(div);
+    setTimeout(()=>div.remove(),1200);
+}
+
+function playAttackAnimation(attackerId, targetId, isCrit) {
+    const atk=document.getElementById(attackerId);
+    const def=document.getElementById(targetId);
+    if(!atk||!def) return;
+    atk.classList.add('attacking');
+    setTimeout(()=>{
+        atk.classList.remove('attacking');
+        def.classList.add('hit');
+        if(isCrit) {
+            def.classList.add('crit-effect');
+            document.body.classList.add('crit-flash');
+            setTimeout(()=>{document.body.classList.remove('crit-flash');},300);
+            setTimeout(()=>def.classList.remove('crit-effect'),500);
+        }
+        setTimeout(()=>def.classList.remove('hit'),300);
+    },300);
+}
+
+function playResurrectAnimation(element) {
+    if(!element) return;
+    element.classList.add('resurrected');
+    setTimeout(()=>element.classList.remove('resurrected'),1500);
+}
+
+// ---------- 技能弹窗 ----------
+function showSkillPopup(skillId) {
+    const skill=ALL_SKILLS.find(s=>s.id===skillId);
+    if(!skill) return;
+    const popup=document.getElementById('skill-popup');
+    const backdrop=document.getElementById('skill-backdrop');
+    if(!popup||!backdrop) return;
+    popup.innerHTML=
+        '<div class="skill-popup-icon">'+skill.icon+'</div>'+
+        '<div class="skill-popup-name">'+skill.name+'</div>'+
+        '<div class="skill-popup-desc">'+skill.desc+'</div>';
+    backdrop.classList.add('show');
+    popup.classList.add('show');
+}
+function hideSkillPopup() {
+    const backdrop=document.getElementById('skill-backdrop');
+    const popup=document.getElementById('skill-popup');
+    if(backdrop) backdrop.classList.remove('show');
+    if(popup) popup.classList.remove('show');
+}
+
+// ---------- 技能提示 ----------
+let skillTooltipTimer=null;
+function showSkillTooltip(skillId, event) {
+    const skill=ALL_SKILLS.find(s=>s.id===skillId);
+    if(!skill) return;
+    const tip=document.getElementById('skill-tooltip');
+    if(!tip) return;
+    tip.innerHTML='<b>'+skill.icon+' '+skill.name+'</b><br>'+skill.desc;
+    tip.style.display='block';
+    positionTooltip(tip, event);
+}
+function hideSkillTooltip() {
+    const tip=document.getElementById('skill-tooltip');
+    if(tip) tip.style.display='none';
+}
+function positionTooltip(tip, event) {
+    const x=event.clientX||0, y=event.clientY||0;
+    tip.style.left=(x+15)+'px';
+    tip.style.top=(y+15)+'px';
+}
+
+// ---------- 速度控制 ----------
+function toggleSpeed() {
+    const speeds=[1,2,3];
+    const idx=speeds.indexOf(S.battleSpeed);
+    S.battleSpeed=speeds[(idx+1)%speeds.length];
+    updateSpeedButton();
+    updateAutoIndicator();
+}
+function updateSpeedButton() {
+    const btn=document.getElementById('btn-speed');
+    if(btn) btn.textContent='⏩ '+S.battleSpeed+'x';
+}
+function updateAutoIndicator() {
+    const indicator=document.getElementById('auto-indicator');
+    if(indicator) indicator.style.display=S.autoMode?'inline':'none';
+}
+
+// ---------- 日志 ----------
+function addLog(msg) {
+    const log=document.getElementById('battle-log');
+    if(!log) return;
+    const div=document.createElement('div');
+    div.innerHTML=msg;
+    log.appendChild(div);
+    log.scrollTop=log.scrollHeight;
+    // 限制日志条数
+    while(log.children.length>50) log.removeChild(log.firstChild);
+}
+
+// ---------- 主UI刷新 ----------
+function updateUI() {
+    if(!S.player) return;
+    updatePlayerUI();
+    if(S.enemy) updateEnemyUI();
+    updateBuffsDisplay('player', S.player);
+    if(S.enemy) updateBuffsDisplay('enemy', S.enemy);
+    updateEvolveButton();
+    renderSkillButtons();
+}
+
+function updatePlayerUI() {
+    const p=S.player;
+    if(!p) return;
+    const hpPct=Math.max(0,Math.min(100,(p.hp/p.maxHp)*100));
+    const hpBar=document.getElementById('player-hp-bar');
+    const hpEl=document.getElementById('player-hp');
+    const maxHpEl=document.getElementById('player-max-hp');
+    const lvlEl=document.getElementById('player-level');
+    const statsEl=document.getElementById('player-stats');
+    const sprite=document.getElementById('player-fighter');
+    if(hpBar) hpBar.style.width=hpPct+'%';
+    if(hpEl) hpEl.textContent=Math.floor(p.hp);
+    if(maxHpEl) maxHpEl.textContent=p.maxHp;
+    if(lvlEl) lvlEl.textContent='Lv.'+p.level;
+    if(statsEl) statsEl.textContent='攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
+    if(sprite) sprite.textContent=PHASE_SPRITES[p.phase]||'🦐';
+}
+
+function updateEnemyUI() {
+    const e=S.enemy;
+    if(!e) return;
+    const hpPct=Math.max(0,Math.min(100,(e.hp/e.maxHp)*100));
+    const hpBar=document.getElementById('enemy-hp-bar');
+    const hpEl=document.getElementById('enemy-hp');
+    const maxHpEl=document.getElementById('enemy-max-hp');
+    const lvlEl=document.getElementById('enemy-level');
+    const statsEl=document.getElementById('enemy-stats');
+    const sprite=document.getElementById('enemy-fighter');
+    if(hpBar) hpBar.style.width=hpPct+'%';
+    if(hpEl) hpEl.textContent=Math.floor(e.hp);
+    if(maxHpEl) maxHpEl.textContent=e.maxHp;
+    if(lvlEl) lvlEl.textContent='Lv.'+e.level;
+    if(statsEl) statsEl.textContent='攻:'+e.atk+' 防:'+e.def+' 速:'+e.spd;
+    if(sprite) sprite.textContent='🦞';
+}
+
+function updateBuffsDisplay(id, entity) {
+    const container=document.getElementById(id+'-buffs');
+    if(!container) return;
+    const buffs=[];
+    if(entity.poisonDmg>0) buffs.push('<span class="buff-poison">毒:'+Math.floor(entity.poisonDmg*100)+'%</span>');
+    if(entity.bleedDmg>0) buffs.push('<span class="buff-bleed">血:'+Math.floor(entity.bleedDmg*100)+'%</span>');
+    if(entity.shields>0) buffs.push('<span class="buff-shield">护:'+entity.shields+'层</span>');
+    if(entity.stunned) buffs.push('<span class="buff-stun">晕</span>');
+    if(entity.sealed) buffs.push('<span class="buff-seal">封</span>');
+    if(entity.speedBoosted) buffs.push('<span class="buff-speed">加速</span>');
+    if(entity.defReduced) buffs.push('<span class="buff-def">降防</span>');
+    if(entity.reduceDmgRate>0) buffs.push('<span class="buff-defend">减伤:'+Math.floor(entity.reduceDmgRate*100)+'%</span>');
+    if(entity.counterRate>0) buffs.push('<span class="buff-counter">反击:'+Math.floor(entity.counterRate*100)+'%</span>');
+    container.innerHTML=buffs.join(' ');
+}
+
+function updateEvolveButton() {
+    // 进化提示由 reward panel 的 reward-evolution-container 显示，不需要额外按钮
+}
+
+// ---------- 技能按钮渲染 ----------
+function renderSkillButtons() {
+    const container=document.getElementById('skill-list');
+    if(!container||!S.player) return;
+    container.innerHTML='';
+    S.player.skills.forEach(skill=>{
+        if(skill.passive) return;
+        const cd=S.playerCooldowns[skill.id]||0;
+        const btn=document.createElement('button');
+        btn.className='skill-btn';
+        btn.disabled=cd>0||S.inBattle===false||S.isProcessing;
+        btn.innerHTML=skill.icon+' '+skill.name+(cd>0?' ('+cd+')':'');
+        btn.onclick=()=>{
+            S.selectedSkill=skill.id;
+            btn.classList.add('selected');
+            document.querySelectorAll('.skill-btn').forEach(b=>{if(b!==btn) b.classList.remove('selected');});
+        };
+        btn.onmouseenter=(e)=>showSkillTooltip(skill.id, e);
+        btn.onmouseleave=hideSkillTooltip;
+        btn.ondblclick=()=>showSkillPopup(skill.id);
+        container.appendChild(btn);
+    });
+}
 </script>
-<!--# sourceMappingURL=game.map -->
-
-</div>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
