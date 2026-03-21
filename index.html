@@ -645,7 +645,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v2.13 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v2.14 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
@@ -818,10 +818,12 @@
 
 
 
+
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
-const VERSION = 'v2.13';
+const VERSION = 'v2.14';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
 const PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
@@ -1446,10 +1448,9 @@ function enemyDefeated() {
     document.getElementById('btn-start').disabled=false;
 
     // 五轮结束：等待导出
+    // 注意：S.round++ 只在 closeReward() 中执行，避免重复递增
     if(S.round>=5&&!S.exported) {
         S.waitingForExport=true;
-    } else {
-        S.round++;
     }
     updateUI();
 }
@@ -1927,6 +1928,8 @@ function renderEnemySkills() {
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->

@@ -72,10 +72,9 @@ function enemyDefeated() {
     document.getElementById('btn-start').disabled=false;
 
     // 五轮结束：等待导出
+    // 注意：S.round++ 只在 closeReward() 中执行，避免重复递增
     if(S.round>=5&&!S.exported) {
         S.waitingForExport=true;
-    } else {
-        S.round++;
     }
     updateUI();
 }
