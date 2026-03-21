@@ -123,7 +123,6 @@ function updatePlayerUI() {
     document.getElementById('player-stats').textContent='攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
     const sprite=document.getElementById('player-fighter');
     if(sprite) sprite.textContent=PHASE_SPRITES[p.phase]||'🦐';
-    document.getElementById('player-shields').textContent=p.shields>0?'🛡️ '+p.shields:'';
 }
 
 function updateEnemyUI() {
