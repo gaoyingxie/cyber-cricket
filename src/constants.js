@@ -1,5 +1,5 @@
 // ===== constants.js =====
-const VERSION = 'v2.07';
+const VERSION = 'v2.08';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
 const PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];

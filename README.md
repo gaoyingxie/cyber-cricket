@@ -2,7 +2,7 @@
 
 > 养成你的最强龙虾，享受全自动战斗的乐趣！
 
-**当前版本: v2.07**  
+**当前版本: v2.08**  
 在线游戏: https://gaoyingxie.github.io/cyber-cricket/
 
 ---
