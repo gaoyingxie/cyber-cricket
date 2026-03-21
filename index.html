@@ -724,7 +724,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v2.17 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v2.18 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
         </div>
@@ -920,10 +920,12 @@
 
 
 
+
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
-const VERSION = 'v2.17';
+const VERSION = 'v2.18';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
 const PHASE_SPRITES=['🦐','🦞','🔥','🛡️','⚡👑🦞'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
@@ -1586,8 +1588,8 @@ function enemyDefeated() {
         document.getElementById('reward-skill-container').style.display='none';
     }
 
-    // 装备掉落（无尽/PVP模式不掉落）
-    if(!S.noEquipDrop&&Math.random()<DROP_CHANCE) {
+    // 装备掉落（无尽/PVP模式不掉落，第5轮不掉落保证及时导出）
+    if(!S.noEquipDrop&&S.round<5&&Math.random()<DROP_CHANCE) {
         const dropEquip=generateEquipment();
         S.player.inventory.push(dropEquip);
         addLog('<span class="log-system">📦 获得掉落装备: '+dropEquip.icon+dropEquip.name+' ['+EQUIP_QUALITY[dropEquip.quality]+']</span>');
@@ -1602,6 +1604,7 @@ function enemyDefeated() {
 
     // 养虾模式5轮结束：等待导出
     // 无尽模式永远不导出
+    // 如果刚掉落装备，先让玩家有机会穿戴，下次关闭才导出
     if(S.lobsterMode==='raise'&&S.round>=5&&!S.exported) {
         S.waitingForExport=true;
     }
@@ -2194,6 +2197,8 @@ function renderEnemySkills() {
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->

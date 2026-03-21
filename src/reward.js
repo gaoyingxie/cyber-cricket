@@ -78,8 +78,8 @@ function enemyDefeated() {
         document.getElementById('reward-skill-container').style.display='none';
     }
 
-    // 装备掉落（无尽/PVP模式不掉落）
-    if(!S.noEquipDrop&&Math.random()<DROP_CHANCE) {
+    // 装备掉落（无尽/PVP模式不掉落，第5轮不掉落保证及时导出）
+    if(!S.noEquipDrop&&S.round<5&&Math.random()<DROP_CHANCE) {
         const dropEquip=generateEquipment();
         S.player.inventory.push(dropEquip);
         addLog('<span class="log-system">📦 获得掉落装备: '+dropEquip.icon+dropEquip.name+' ['+EQUIP_QUALITY[dropEquip.quality]+']</span>');
@@ -94,6 +94,7 @@ function enemyDefeated() {
 
     // 养虾模式5轮结束：等待导出
     // 无尽模式永远不导出
+    // 如果刚掉落装备，先让玩家有机会穿戴，下次关闭才导出
     if(S.lobsterMode==='raise'&&S.round>=5&&!S.exported) {
         S.waitingForExport=true;
     }
