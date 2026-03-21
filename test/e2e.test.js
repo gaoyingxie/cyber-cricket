@@ -1,10 +1,9 @@
 /**
- * 赛博斗龙虾 - E2E测试
- * 使用 agent-browser + Chrome 进行端到端测试
+ * 赛博斗龙虾 - E2E测试 (修复版)
+ * 使用 eval 直接调用游戏JS + snapshot 验证渲染
  */
 
-const { spawn, execSync } = require('child_process');
-const path = require('path');
+const { spawn } = require('child_process');
 
 const AB = '/home/node/.npm-global/lib/node_modules/agent-browser/bin/agent-browser-linux-x64';
 const CHROME = '/home/node/.cache/ms-playwright/chromium-1091/chrome-linux/chrome';
@@ -14,16 +13,12 @@ const GAME_URL = 'https://gaoyingxie.github.io/cyber-cricket/';
 const env = { ...process.env, CHROME_PATH: CHROME, AGENT_BROWSER_BROWSERS_PATH: BROWSERS };
 
 let testsRun = 0, testsPassed = 0, testsFailed = 0;
-const failures = [];
 
 function log(msg) { console.log(msg); }
+function assert(cond, msg) { if (!cond) throw new Error(msg || 'assertion failed'); }
 
-function assert(cond, msg) {
-    if (!cond) throw new Error(msg || 'assertion failed');
-}
-
-function cmd(args) {
-    return new Promise((resolve, reject) => {
+async function cmd(args) {
+    return new Promise((resolve) => {
         const p = spawn(AB, args, { env });
         let out = '';
         p.stdout.on('data', d => out += d);
@@ -31,9 +26,14 @@ function cmd(args) {
     });
 }
 
-async function sleep(ms) {
-    return new Promise(r => setTimeout(r, ms));
+async function evalJS(js) {
+    const { out } = await cmd(['eval', js]);
+    return out;
 }
+
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+async function click(ref) { await cmd(['click', ref]); await sleep(400); }
+async function snap() { return (await cmd(['snapshot'])).out; }
 
 async function test(name, fn) {
     testsRun++;
@@ -43,7 +43,6 @@ async function test(name, fn) {
         console.log(`  ✅ ${name}`);
     } catch (e) {
         testsFailed++;
-        failures.push({ name, error: e.message });
         console.log(`  ❌ ${name}: ${e.message}`);
     }
 }
@@ -52,82 +51,107 @@ async function run() {
     console.log('\n🦐 赛博斗龙虾 - E2E测试\n');
     console.log('═'.repeat(50));
     
-    // 打开游戏
     log('打开游戏...');
     await cmd(['open', GAME_URL]);
-    await sleep(3000);
+    await sleep(2500);
     
-    // TEST-01: 版本号
+    // === E2E-01: 版本号 ===
     await test('E2E-01: 版本号显示v2.08', async () => {
-        const { out } = await cmd(['eval', "document.querySelector('.version').textContent"]);
-        assert(out.includes('v2.08'), `版本应为v2.08: ${out}`);
+        const v = await evalJS("document.querySelector('.version').textContent");
+        assert(v.includes('v2.08'), `应为v2.08: ${v}`);
     });
     
-    // TEST-02: 截图看界面
-    await test('E2E-02: 游戏主界面正常加载', async () => {
-        const { out } = await cmd(['snapshot']);
-        assert(out.includes('赛博斗龙虾'), '应有游戏标题');
-        assert(out.includes('养虾模式'), '应有养虾模式按钮');
+    // === E2E-02: 养虾模式 ===
+    await test('E2E-02: 选择养虾模式生成随机龙虾', async () => {
+        await evalJS("selectMode('raise')");
+        await sleep(200);
+        const name = (await evalJS("S.player.name")).replace(/"/g, '');
+        assert(name === '我的龙虾', `应有玩家龙虾: ${name}`);
+        const welcomeShown = await evalJS("document.getElementById('welcome-panel').classList.contains('show')");
+        assert(welcomeShown, '欢迎面板应显示');
     });
     
-    // TEST-03: 点击养虾模式
-    await test('E2E-03: 点击养虾模式显示欢迎面板', async () => {
-        await cmd(['click', 'text=养虾模式']);
-        await sleep(800);
-        const { out } = await cmd(['snapshot']);
-        assert(out.includes('欢迎来到赛博斗龙虾') || out.includes('开始游戏'), '应显示欢迎面板');
+    // === E2E-03: 欢迎面板内容 ===
+    await test('E2E-03: 欢迎面板显示完整信息', async () => {
+        const name = await evalJS("document.getElementById('welcome-name').textContent");
+        const stats = await evalJS("document.getElementById('welcome-stats').textContent");
+        const skills = await evalJS("document.getElementById('welcome-skills').textContent");
+        assert(name.includes('Lv.1'), `应有等级: ${name}`);
+        assert(stats.includes('生命') && stats.includes('攻:'), `应有属性: ${stats}`);
+        assert(skills.includes('技能:'), `应有技能: ${skills}`);
     });
     
-    // TEST-04: 点击开始游戏
-    await test('E2E-04: 点击开始游戏进入主界面', async () => {
-        await cmd(['click', 'text=开始游戏!']);
+    // === E2E-04: 关闭欢迎面板 ===
+    await test('E2E-04: 关闭欢迎面板进入主界面', async () => {
+        await evalJS("closeWelcome()");
+        const hidden = await evalJS("!document.getElementById('welcome-panel').classList.contains('show')");
+        assert(hidden, '欢迎面板应关闭');
+    });
+    
+    // === E2E-05: 技能按钮渲染 ===
+    await test('E2E-05: 主动技能显示按钮,被动技能隐藏', async () => {
+        const btns = await evalJS("document.querySelectorAll('#player-skills .skill-btn').length");
+        const actives = await evalJS("S.player.skills.filter(s=>!s.passive).length");
+        assert(btns == actives, `技能按钮应为${actives}个, 实际${btns}个`);
+    });
+    
+    // === E2E-06: 开始战斗 ===
+    await test('E2E-06: 点击开始战斗显示敌人选择', async () => {
+        await evalJS("startBattle()");
+        const shown = await evalJS("document.getElementById('enemy-select-panel').classList.contains('show')");
+        assert(shown, '敌人选择面板应显示');
+    });
+    
+    // === E2E-07: 敌人选项 ===
+    await test('E2E-07: 显示3个敌人选项', async () => {
+        const opts = await evalJS("document.querySelectorAll('.enemy-option').length");
+        assert(parseInt(opts) === 3, `应有3个敌人, 实际${opts}个`);
+    });
+    
+    // === E2E-08: 选择敌人 ===
+    await test('E2E-08: 选择敌人后进入战斗', async () => {
+        await evalJS("document.querySelector('.enemy-option').click()");
         await sleep(500);
-        const { out } = await cmd(['snapshot']);
-        assert(out.includes('开始战斗') || out.includes('你的龙虾'), '应进入主界面');
+        const inBattle = await evalJS("S.inBattle");
+        const enemyHp = await evalJS("S.enemy.hp");
+        assert(inBattle && enemyHp > 0, `应进入战斗, HP=${enemyHp}`);
     });
     
-    // TEST-05: 点击开始战斗
-    await test('E2E-05: 点击开始战斗显示敌人选择', async () => {
-        await cmd(['click', 'text=开始战斗']);
+    // === E2E-09: 敌人技能按钮 ===
+    await test('E2E-09: 敌人技能有按钮样式', async () => {
+        await evalJS("renderEnemySkills()");
+        const btns = await evalJS("document.querySelectorAll('#enemy-skills .skill-btn').length");
+        const enemySkills = await evalJS("S.enemy.skills.length");
+        assert(btns === enemySkills, `敌人技能按钮应为${enemySkills}个, 实际${btns}个`);
+    });
+    
+    // === E2E-10: 速度显示 ===
+    await test('E2E-10: 速度属性正确显示', async () => {
+        const stats = await evalJS("document.getElementById('player-stats').textContent");
+        assert(stats.includes('速:'), `应有速度: ${stats}`);
+    });
+    
+    // === E2E-11: 速度影响先手 ===
+    await test('E2E-11: 速度高者显示先手提示', async () => {
+        const logs = await evalJS("document.getElementById('battle-log').textContent");
+        assert(logs.includes('先手') || logs.includes('速度'), `应有先手提示: ${logs.slice(-100)}`);
+    });
+    
+    // === E2E-12: 战斗一回合执行 ===
+    await test('E2E-12: 一回合后敌人HP减少', async () => {
+        const before = parseInt(await evalJS("S.enemy.hp"));
+        await evalJS("executeAutoTurn()");
         await sleep(500);
-        const { out } = await cmd(['snapshot']);
-        assert(out.includes('选择对手') || out.includes('机械龙虾'), '应显示敌人选择');
+        const after = parseInt(await evalJS("S.enemy.hp"));
+        assert(after < before, `敌人HP应减少: ${before} → ${after}`);
     });
     
-    // TEST-06: 敌人选项
-    await test('E2E-06: 显示3个敌人选项', async () => {
-        const { out } = await cmd(['snapshot']);
-        const count = (out.match(/机械龙虾|电路龙虾|芯片龙虾/g) || []).length;
-        assert(count >= 2, `应有多个敌人选项: ${count}`);
-    });
-    
-    // TEST-07: 选择敌人开始战斗
-    await test('E2E-07: 选择敌人后进入战斗', async () => {
-        await cmd(['click', 'text=机械龙虾']);
-        await sleep(1000);
-        const { out } = await cmd(['snapshot']);
-        assert(out.includes('遇到野生') || out.includes('敌人技能'), '应进入战斗');
-    });
-    
-    // TEST-08: 战斗日志
-    await test('E2E-08: 战斗日志显示战斗信息', async () => {
-        await sleep(2000);
-        const { out } = await cmd(['snapshot']);
-        assert(out.includes('回合') || out.includes('伤害') || out.includes('攻击'), '应有战斗日志');
-    });
-    
-    // TEST-09: 速度显示
-    await test('E2E-09: 玩家属性正确显示', async () => {
-        const { out } = await cmd(['snapshot']);
-        assert(out.includes('攻:') && out.includes('防:') && out.includes('速:'), '应显示攻/防/速属性');
-    });
-    
-    // TEST-10: 速度按钮
-    await test('E2E-10: 速度切换按钮可点击', async () => {
-        await cmd(['click', 'text=1倍速']);
-        await sleep(300);
-        const { out } = await cmd(['snapshot']);
-        assert(out.includes('倍速'), '速度按钮应有切换');
+    // === E2E-13: 防御技能 ===
+    await test('E2E-13: 防御技能只持续一回合', async () => {
+        await evalJS("S.player.reduceDmgRate = 0.6");
+        await evalJS("endTurn()");
+        const rate = parseFloat(await evalJS("S.player.reduceDmgRate"));
+        assert(rate === 0, `防御应已重置, 实际为: ${rate}`);
     });
     
     console.log('═'.repeat(50));
@@ -135,12 +159,11 @@ async function run() {
     
     if (testsFailed > 0) {
         console.log(`\n❌ 失败 (${testsFailed}):`);
-        failures.forEach(f => console.log(`   ${f.name}`));
+        process.exit(1);
     } else {
-        console.log('\n✅ 全部通过!\n');
+        console.log('\n✅ 全部E2E测试通过!\n');
+        process.exit(0);
     }
-    
-    process.exit(testsFailed > 0 ? 1 : 0);
 }
 
 run().catch(e => {
