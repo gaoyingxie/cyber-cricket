@@ -643,7 +643,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v2.02 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v2.03 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
@@ -1654,20 +1654,13 @@ function copyExportCode() {
     });
 }
 function showWelcomeLobster() {
-    if(!S.player||!S.player.skills) return;
-    const p=S.player;
-    const sprite=PHASE_SPRITES[p.phase]||'🦐';
-    const stats='生命:'+p.maxHp+' 攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
-    document.getElementById('welcome-sprite').textContent=sprite;
-    document.getElementById('welcome-name').textContent=p.name+' (Lv.'+p.level+') '+PHASES[p.phase];
-    document.getElementById('welcome-stats').textContent=stats;
-    document.getElementById('welcome-skills').textContent='技能: '+p.skills.map(s=>s.icon+s.name).join(' ');
+    if(S.player && S.player.skills) {
+        document.getElementById('welcome-sprite').textContent=PHASE_SPRITES[0];
+        document.getElementById('welcome-sprite').className='lobster-reveal-sprite lobster-phase-0';
+        document.getElementById('welcome-skills').textContent='技能: '+S.player.skills.map(s=>s.icon+s.name).join(' ');
+    }
 }
 
-// ===== ui.js =====
-// ===== ui.js =====
-
-// ---------- 动画 ----------
 function showDamageNumber(element, value, type) {
     if(!element) return;
     const div=document.createElement('div');
