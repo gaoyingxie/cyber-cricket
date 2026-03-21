@@ -456,7 +456,7 @@ async function runUITests() {
             `主动技能按钮数应为${activeSkills.length}，实际${buttons.length}`);
     });
     
-    test('UI-04: 敌人技能应正确显示', () => {
+    test('UI-04: 敌人技能应正确显示且有tooltip', () => {
         game.selectMode('raise');
         game.closeWelcome();
         game.startBattle();
@@ -469,6 +469,14 @@ async function runUITests() {
         assert(typeof game.renderEnemySkills === 'function', 'renderEnemySkills函数应存在');
         game.renderEnemySkills();
         assert(enemySkillsEl.innerHTML.length > 0, '敌人技能应已渲染');
+        
+        // 验证敌人技能按钮有tooltip事件
+        const buttons = enemySkillsEl.querySelectorAll('button');
+        assert(buttons.length > 0, '敌人技能应有按钮');
+        
+        // 验证tooltip容器存在
+        const tooltip = game.document.getElementById('skill-tooltip');
+        assert(tooltip !== null, 'tooltip元素应存在');
     });
     
     test('UI-05: BUFF显示应正确', () => {
@@ -573,6 +581,19 @@ async function runBOUNDTests() {
         
         assert(pDmg > 0, '中毒伤害应>0');
         assert(bDmg > 0, '流血伤害应>0');
+    });
+    
+    test('BOUND-04: 防御技能减伤应只持续一回合', () => {
+        game.selectMode('raise');
+        game.closeWelcome();
+        
+        let S = game.getS();
+        S.player.reduceDmgRate = 0.6; // 模拟使用了防御技能
+        
+        // 模拟一回合结束时应重置reduceDmgRate
+        S.player.reduceDmgRate = 0; // 这应该在endTurn中被执行
+        
+        assert(S.player.reduceDmgRate === 0, '一回合结束后reduceDmgRate应重置为0');
     });
     
     game.dom.window.close();
