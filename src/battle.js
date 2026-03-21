@@ -73,9 +73,18 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
     addLog('<span class="log-system">⚔️ 第 '+S.round+' 轮战斗开始!</span>');
     addLog('<span class="log-enemy">⚔️ 遇到野生 '+S.enemy.name+' (Lv.'+S.enemy.level+')</span>');
     addLog('<span class="log-system">📋 敌人技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(' ')+'</span>');
-    S.turn=1;
-    addLog('<span class="log-turn">━━━ 第 1 回合 ━━━</span>');
-    setTimeout(executeAutoTurn,getBattleDelay());
+    // 速度高的先手
+    if(S.player.spd>=S.enemy.spd) {
+        addLog('<span class="log-system">⚡ 我方速度更高，先手!</span>');
+        S.turn=1;
+        addLog('<span class="log-turn">━━━ 第 1 回合 ━━━</span>');
+        setTimeout(executeAutoTurn,getBattleDelay());
+    } else {
+        addLog('<span class="log-system">⚡ 敌人速度更高，先手!</span>');
+        S.turn=1;
+        addLog('<span class="log-turn">━━━ 第 1 回合 ━━━</span>');
+        setTimeout(()=>enemyTurn(),getBattleDelay());
+    }
 }
 
 // ---------- 玩家回合 ----------
