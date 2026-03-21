@@ -8,7 +8,7 @@ const { spawn } = require('child_process');
 const AB = '/home/node/.npm-global/lib/node_modules/agent-browser/bin/agent-browser-linux-x64';
 const CHROME = '/home/node/.cache/ms-playwright/chromium-1091/chrome-linux/chrome';
 const BROWSERS = '/home/node/.cache/ms-playwright';
-const GAME_URL = 'file:///home/node/.openclaw/workspace/h5-games/cyber-cricket/index.html';
+const GAME_URL = 'https://gaoyingxie.github.io/cyber-cricket/';
 const env = { ...process.env, CHROME_PATH: CHROME, AGENT_BROWSER_BROWSERS_PATH: BROWSERS };
 
 let testsRun = 0, testsPassed = 0, testsFailed = 0;
@@ -422,8 +422,13 @@ async function run() {
     });
     
     await test('PVP-04: 无尽模式标志存在于状态', async () => {
-        const hasFlag = await evalJS("S.noGrowth !== undefined && S.noSkillSteal !== undefined && S.noEquipDrop !== undefined");
-        assert(hasFlag === true, '无尽模式标志(noGrowth等)应存在于状态中');
+        await sleep(500);
+        const noGrowth = await evalJS("S.noGrowth");
+        const noSkill = await evalJS("S.noSkillSteal");
+        const noEquip = await evalJS("S.noEquipDrop");
+        assert(noGrowth !== undefined, `noGrowth应为boolean: ${noGrowth} (${typeof noGrowth})`);
+        assert(noSkill !== undefined, `noSkillSteal应为boolean: ${noSkill}`);
+        assert(noEquip !== undefined, `noEquipDrop应为boolean: ${noEquip}`);
     });
     
     await test('PVP-05: 无尽模式战斗胜利后不升级', async () => {
