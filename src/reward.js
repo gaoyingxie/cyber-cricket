@@ -72,7 +72,7 @@ function enemyDefeated() {
     document.getElementById('btn-start').disabled=false;
 
     // 五轮结束：等待导出
-    if(S.lobsterMode==='raise'&&S.round>=5&&!S.exported) {
+    if(S.round>=5&&!S.exported) {
         S.waitingForExport=true;
     } else {
         S.round++;

@@ -87,6 +87,7 @@
         @keyframes enemyGlow { 0%,100%{filter:drop-shadow(0 0 15px #ff4444)} 50%{filter:drop-shadow(0 0 30px #ff4444)} }
         @keyframes enemyAttack { 0%{transform:translateX(0)} 30%{transform:translateX(-30px) scale(1.1)} 60%{transform:translateX(-15px)} 100%{transform:translateX(0)} }
         .enemy-attacking-left { animation: enemyAttack 0.4s ease-out !important; }
+        .attacking { animation: lobsterAttack 0.4s ease-out !important; }
         .attacking-right { animation: lobsterAttack 0.4s ease-out !important; }
         .attacking-left { animation: lobsterAttack 0.4s ease-out !important; transform: scaleX(-1); }
         .hit-flash { animation: lobsterHit 0.4s ease-out !important; }
@@ -644,7 +645,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v2.12 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v2.13 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
@@ -816,10 +817,11 @@
 
 
 
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
-const VERSION = 'v2.12';
+const VERSION = 'v2.13';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
 const PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
@@ -1444,7 +1446,7 @@ function enemyDefeated() {
     document.getElementById('btn-start').disabled=false;
 
     // 五轮结束：等待导出
-    if(S.lobsterMode==='raise'&&S.round>=5&&!S.exported) {
+    if(S.round>=5&&!S.exported) {
         S.waitingForExport=true;
     } else {
         S.round++;
@@ -1925,6 +1927,7 @@ function renderEnemySkills() {
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
