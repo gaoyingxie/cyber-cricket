@@ -793,6 +793,7 @@
 <!--# sourceMappingURL=game.map -->
 
 </div>
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
@@ -1654,13 +1655,20 @@ function copyExportCode() {
     });
 }
 function showWelcomeLobster() {
-    if(S.player && S.player.skills) {
-        document.getElementById('welcome-sprite').textContent=PHASE_SPRITES[0];
-        document.getElementById('welcome-sprite').className='lobster-reveal-sprite lobster-phase-0';
-        document.getElementById('welcome-skills').textContent='技能: '+S.player.skills.map(s=>s.icon+s.name).join(' ');
-    }
+    if(!S.player||!S.player.skills) return;
+    const p=S.player;
+    const sprite=PHASE_SPRITES[p.phase]||'🦐';
+    const stats='生命:'+p.maxHp+' 攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
+    document.getElementById('welcome-sprite').textContent=sprite;
+    document.getElementById('welcome-name').textContent=p.name+' (Lv.'+p.level+') '+PHASES[p.phase];
+    document.getElementById('welcome-stats').textContent=stats;
+    document.getElementById('welcome-skills').textContent='技能: '+p.skills.map(s=>s.icon+s.name).join(' ');
 }
 
+// ===== ui.js =====
+// ===== ui.js =====
+
+// ---------- 动画 ----------
 function showDamageNumber(element, value, type) {
     if(!element) return;
     const div=document.createElement('div');
@@ -1837,7 +1845,7 @@ function updateEvolveButton() {
 
 // ---------- 技能按钮渲染 ----------
 function renderSkillButtons() {
-    const container=document.getElementById('skill-list');
+    const container=document.getElementById('player-skills');
     if(!container||!S.player) return;
     container.innerHTML='';
     S.player.skills.forEach(skill=>{
@@ -1861,4 +1869,5 @@ function renderSkillButtons() {
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
