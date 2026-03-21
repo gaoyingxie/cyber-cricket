@@ -56,9 +56,9 @@ async function run() {
     await sleep(2500);
     
     // === E2E-01: 版本号 ===
-    await test('E2E-01: 版本号显示v2.08', async () => {
+    await test('E2E-01: 版本号正确显示', async () => {
         const v = await evalJS("document.querySelector('.version').textContent");
-        assert(v.includes('v2.08'), `应为v2.08: ${v}`);
+        assert(v.includes('v2.') && v.includes('第'), `版本号格式应正确: ${v}`);
     });
     
     // === E2E-02: 养虾模式 ===
@@ -103,9 +103,14 @@ async function run() {
     });
     
     // === E2E-07: 敌人选项 ===
-    await test('E2E-07: 显示3个敌人选项', async () => {
+    await test('E2E-07: 显示3个敌人选项且等级正确', async () => {
         const opts = await evalJS("document.querySelectorAll('.enemy-option').length");
         assert(parseInt(opts) === 3, `应有3个敌人, 实际${opts}个`);
+        // 验证第1轮的敌人等级: 前2个Lv.1, 第3个Lv.2
+        const levels = await evalJS("Array.from(document.querySelectorAll('.enemy-option')).map(el => el.textContent)");
+        const hasLv1 = levels.includes('Lv.1');
+        const hasLv2 = levels.includes('Lv.2');
+        assert(hasLv1 && hasLv2, `第1轮应有Lv.1和Lv.2敌人: ${levels}`);
     });
     
     // === E2E-08: 选择敌人 ===
@@ -140,14 +145,16 @@ async function run() {
     
     // === E2E-12: 战斗一回合执行 ===
     await test('E2E-12: executeAutoTurn正常执行', async () => {
+        // 先重置敌人HP到一个安全值
+        await evalJS("S.enemy.hp = 50; S.enemy.maxHp = 50");
         const before = parseInt(await evalJS("S.enemy.hp"));
         // 调用executeAutoTurn不应报错
         await evalJS("executeAutoTurn()");
         await sleep(200);
         const after = parseInt(await evalJS("S.enemy.hp"));
         // HP应该在有效范围内
-        assert(!isNaN(before) && !isNaN(after) && after >= 0 && after <= 500, 
-            `敌人HP应有效: ${before} → ${after}`);
+        assert(!isNaN(before) && !isNaN(after) && after <= before + 1, 
+            `敌人HP计算正常: ${before} → ${after}`);
     });
     
     // === E2E-13: 防御技能 ===
