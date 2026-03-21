@@ -117,6 +117,7 @@ function updateUI() {
     if(S.enemy) updateBuffsDisplay('enemy', S.enemy);
     updateEvolveButton();
     renderSkillButtons();
+    if(S.enemy) renderEnemySkills();
 }
 
 function updatePlayerUI() {
@@ -197,4 +198,10 @@ function renderSkillButtons() {
         btn.ondblclick=()=>showSkillPopup(skill.id);
         container.appendChild(btn);
     });
+}
+
+function renderEnemySkills() {
+    const container=document.getElementById('enemy-skills');
+    if(!container||!S.enemy) return;
+    container.innerHTML='技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(' ');
 }
