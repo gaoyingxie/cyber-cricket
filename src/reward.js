@@ -109,9 +109,11 @@ function closeReward() {
         S.round++;
         S.exported=true;
         showExportPanel();
+        updateUI();
         return;
     }
     S.round++;
+    updateUI();
     document.getElementById('btn-start').disabled=false;
     if(S.player&&S.player.inventory&&S.player.inventory.length>0) {
         addLog('<span class="log-system">📦 背包有 '+S.player.inventory.length+' 件装备，请点击"装备"穿戴！</span>');
