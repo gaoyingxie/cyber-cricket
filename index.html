@@ -342,6 +342,7 @@
         @keyframes revealFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-10px) scale(1.05)} }
         @keyframes revealGlow { 0%,100%{filter:drop-shadow(0 0 20px #00ff88)} 50%{filter:drop-shadow(0 0 40px #00ff88)} }
         .lobster-reveal-name { font-size: 1.3em; color: #fff; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .lobster-reveal-stats { font-size: 1em; color: #aaa; margin-bottom: 10px; }
         .lobster-reveal-skills { font-size: 1em; color: #aaa; }
         .mode-select-panel {
             position: fixed;
@@ -762,7 +763,8 @@
         <div class="lobster-reveal">
             <div class="lobster-reveal-title">🎰 这是你的随机初始小龙虾!</div>
             <div class="lobster-reveal-sprite" id="welcome-sprite">🦐</div>
-            <div class="lobster-reveal-name">你的龙虾</div>
+            <div class="lobster-reveal-name" id="welcome-name">你的龙虾</div>
+            <div class="lobster-reveal-stats" id="welcome-stats"></div>
             <div class="lobster-reveal-skills" id="welcome-skills">技能加载中...</div>
         </div>
         <button class="btn" onclick="closeWelcome()">开始游戏!</button>
@@ -793,6 +795,8 @@
 </div>
 
 
+
+<!--# sourceMappingURL=game.map -->
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
@@ -1854,6 +1858,6 @@ function renderSkillButtons() {
     });
 }
 </script>
-<!--# sourceMappingURL=game.map -->
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
