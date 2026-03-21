@@ -101,10 +101,9 @@ function executeAutoTurn() {
         return true;
     });
     S.battleQueue=[];
-    if(availSkills.length>0&&Math.random()<0.7) {
-        const skill=availSkills[Math.floor(Math.random()*availSkills.length)];
-        S.battleQueue.push({type:'skill',skill});
-    }
+    // 释放所有可用主动技能
+    availSkills.forEach(skill=>S.battleQueue.push({type:'skill',skill}));
+    // 技能释放完毕后进行一次普通攻击
     S.battleQueue.push({type:'attack'});
     S.isProcessing=true;
     processBattleQueue();
