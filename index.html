@@ -646,7 +646,6 @@
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
-            <div class="stat"><div class="stat-label">经验</div><div class="stat-value" id="exp">0/10</div></div>
         </div>
         <div class="auto-battle-indicator active" id="auto-indicator"></div>
         <div class="arena" id="arena">
@@ -1043,7 +1042,6 @@ function addLog(msg) {
 function updateUI() {
     if(!S.player) return;
     document.getElementById('round-num').textContent=S.round;
-    document.getElementById('exp').textContent=S.player.exp+'/'+S.player.expToLevel;
     document.getElementById('phase').textContent=PHASES[S.phase];
     document.getElementById('level').textContent=S.player.level;
     updatePlayerUI();
