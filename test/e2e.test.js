@@ -8,7 +8,7 @@ const { spawn } = require('child_process');
 const AB = '/home/node/.npm-global/lib/node_modules/agent-browser/bin/agent-browser-linux-x64';
 const CHROME = '/home/node/.cache/ms-playwright/chromium-1091/chrome-linux/chrome';
 const BROWSERS = '/home/node/.cache/ms-playwright';
-const GAME_URL = 'https://gaoyingxie.github.io/cyber-cricket/';
+const GAME_URL = 'file:///home/node/.openclaw/workspace/h5-games/cyber-cricket/index.html';
 const env = { ...process.env, CHROME_PATH: CHROME, AGENT_BROWSER_BROWSERS_PATH: BROWSERS };
 
 let testsRun = 0, testsPassed = 0, testsFailed = 0;
@@ -401,6 +401,38 @@ async function run() {
         await evalJS("endTurn()");
         const rate = await evalJS("S.player.reduceDmgRate");
         assert(parseFloat(rate) === 0, `防御应重置: ${rate}`);
+    });
+    
+    // ==================== 成虾模式测试 ====================
+    console.log('\n📋 ENDLESS+PVP: 成虾模式(v2.16)');
+    
+    await test('PVP-01: 成虾模式面板存在', async () => {
+        const hasPanel = await evalJS("document.getElementById('lobster-mode-panel') !== null");
+        assert(hasPanel, 'lobster-mode-panel应存在');
+    });
+    
+    await test('PVP-02: selectLobsterMode函数存在', async () => {
+        const fnExists = await evalJS("typeof selectLobsterMode === 'function'");
+        assert(fnExists === 'true', 'selectLobsterMode函数应存在');
+    });
+    
+    await test('PVP-03: confirmPvpImport函数存在', async () => {
+        const fnExists = await evalJS("typeof confirmPvpImport === 'function'");
+        assert(fnExists === 'true', 'confirmPvpImport函数应存在');
+    });
+    
+    await test('PVP-04: 无尽模式标志存在于状态', async () => {
+        const hasFlag = await evalJS("S.noGrowth !== undefined && S.noSkillSteal !== undefined && S.noEquipDrop !== undefined");
+        assert(hasFlag === true, '无尽模式标志(noGrowth等)应存在于状态中');
+    });
+    
+    await test('PVP-05: 无尽模式战斗胜利后不升级', async () => {
+        await evalJS("S.lobsterMode = 'endless'; S.noGrowth = true; S.player.level = 5;");
+        await evalJS("S.inBattle = false; S.battleResult = 'win';");
+        await evalJS("enemyDefeated()");
+        await sleep(200);
+        const level = await evalJS("S.player.level");
+        assert(parseInt(level) === 5, `无尽模式不升级: ${level}`);
     });
     
     console.log('═'.repeat(50));
