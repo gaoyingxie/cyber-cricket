@@ -425,6 +425,7 @@
         .reward-item { margin: 10px 0; font-size: 1.1em; }
         .reward-skill { background: rgba(255,68,255,0.2); border: 1px solid #ff44ff; border-radius: 8px; padding: 10px; margin: 10px 0; color: #ff44ff; }
         .reward-equip { background: rgba(255,165,0,0.2); border: 1px solid #ffa500; border-radius: 8px; padding: 10px; margin: 10px 0; color: #ffa500; }
+        .reward-evolution { background: rgba(0,255,136,0.15); border: 2px solid #00ff88; border-radius: 10px; padding: 15px; margin: 12px 0; color: #00ff88; font-size: 1.1em; text-shadow: 0 0 10px #00ff88; animation: evolveText 0.8s ease-out; }
         .enemy-select-panel {
             position: fixed;
             top: 50%; left: 50%;
@@ -642,7 +643,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.81 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.82 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
@@ -682,7 +683,8 @@
         <div class="evolution-text" id="evolution-text">🌀 进化中...</div>
     </div>
     <div class="reward-panel" id="reward-panel">
-        <div class="reward-title">🎉 战斗胜利!</div>
+        <div class="reward-title" id="reward-title">🎉 战斗胜利!</div>
+        <div class="reward-evolution" id="reward-evolution-container" style="display:none"></div>
         <div class="reward-skill" id="reward-skill-container" style="display:none">
             <div>偷学到技能:</div>
             <div id="reward-skill-name"></div>
@@ -788,7 +790,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.81';
+const VERSION = 'v1.82';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'], PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -1595,25 +1597,31 @@ function enemyDefeated() {
     calcPlayerStats();
     S.player.hp=S.player.maxHp;
     addLog('<span class="log-system">🎉 胜利! 升级到 Lv.'+S.player.level+'!</span>');
-    // Lv.3自动进化
+
+    // 检查进化（Lv3: 虾苗→幼虾，Lv5: 幼虾→战斗虾）
+    let evolved=false;
+    let evolvedSkill=null;
     if(S.player.level===3 && S.phase===0) {
         S.phase=1;
+        evolved=true;
+    } else if(S.player.level===5 && S.phase===1) {
+        S.phase=2;
+        evolved=true;
+    }
+    if(evolved) {
         calcPlayerStats();
         S.player.hp=S.player.maxHp;
-        document.getElementById('evolution-text').textContent='🌀 '+PHASES[S.phase]+'!';
-        document.getElementById('evolution-overlay').classList.add('show');
-        setTimeout(()=>{
-            document.getElementById('evolution-overlay').classList.remove('show');
-        }, 2000);
         addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'! 获得随机技能!</span>');
-        // 进化时获得随机技能
+        // 进化时随机获得一个未拥有的技能
         const avail=ALL_SKILLS.filter(s=>!S.player.skills.find(p=>p.id===s.id));
         if(avail.length>0) {
-            const newSkill=cloneSkill(avail[Math.floor(Math.random()*avail.length)]);
-            S.player.skills.push(newSkill);
-            addLog('<span class="log-player">🌟 进化奖励: 获得 【'+newSkill.icon+newSkill.name+'】!</span>');
+            evolvedSkill=cloneSkill(avail[Math.floor(Math.random()*avail.length)]);
+            S.player.skills.push(evolvedSkill);
+            addLog('<span class="log-player">🌟 进化奖励: 获得 【'+evolvedSkill.icon+evolvedSkill.name+'】!</span>');
         }
     }
+
+    // 偷学敌人技能
     if(S.enemy && S.enemy.skills.length>0) {
         const enemySkillIdx=Math.floor(Math.random()*S.enemy.skills.length);
         const newSkill=cloneSkill(S.enemy.skills[enemySkillIdx]);
@@ -1628,6 +1636,7 @@ function enemyDefeated() {
     } else {
         document.getElementById('reward-skill-container').style.display='none';
     }
+
     // 装备掉落检查
     if(Math.random()<DROP_CHANCE) {
         const dropEquip=generateEquipment();
@@ -1638,6 +1647,19 @@ function enemyDefeated() {
     } else {
         document.getElementById('reward-equip-container').style.display='none';
     }
+
+    // 进化信息显示在奖励弹窗中
+    if(evolved) {
+        let evoText='🌀 进化为 <strong>'+PHASES[S.phase]+'</strong>！';
+        if(evolvedSkill) evoText+='<br>🌟 领悟 '+evolvedSkill.icon+evolvedSkill.name;
+        document.getElementById('reward-evolution-container').innerHTML=evoText;
+        document.getElementById('reward-evolution-container').style.display='block';
+        document.getElementById('reward-title').textContent='🎉 进化成功!';
+    } else {
+        document.getElementById('reward-evolution-container').style.display='none';
+        document.getElementById('reward-title').textContent='🎉 战斗胜利!';
+    }
+
     document.getElementById('reward-panel').classList.add('show');
     document.getElementById('btn-start').disabled=false;
     S.round++;
@@ -1932,7 +1954,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.81 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.82 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </div>
