@@ -110,7 +110,9 @@
         .buff-speed { background: rgba(255,100,50,0.15); border: 1px solid #ff6432; color: #ff6432; }
         .buff-defend { background: rgba(100,180,255,0.15); border: 1px solid #64b4ff; color: #64b4ff; }
         .buff-counter { background: rgba(255,150,50,0.15); border: 1px solid #ff9632; color: #ff9632; }
-        .vs { font-size: 2em; color: #ff4444; text-shadow: 0 0 10px #ff4444; animation: pulse 1s infinite; position: relative; z-index: 1; }
+        .vs { font-size: 2em; color: #ff4444; text-shadow: 0 0 10px #ff4444; animation: pulse 1s infinite; position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px; }
+        .vs br { line-height: 0.5; }
+        #arena-round { font-size: 0.4em; color: #ffcc00; text-shadow: 0 0 8px #ffcc00; margin-top: 5px; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.1); } }
         @keyframes screenShake {
             0%, 100% { transform: translate(0, 0); }
@@ -645,28 +647,25 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v2.14 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v2.15 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
-            <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
         </div>
         <div class="auto-battle-indicator active" id="auto-indicator"></div>
         <div class="arena" id="arena">
             <div class="fighter" id="player-fighter">
                 <div class="fighter-sprite" id="player-sprite">🐛</div>
                 <div class="fighter-name" id="player-name">你的龙虾</div>
-                <div class="fighter-level" id="player-level">Lv.1</div>
                 <div class="hp-bar"><div class="hp-fill" id="player-hp-bar"></div></div>
                 <div class="hp-text"><span id="player-hp">100</span> / <span id="player-max-hp">100</span></div>
                 <div class="fighter-stats" id="player-stats">攻:10 防:5 速:8</div>
                 <div class="player-skill-display" id="player-skills"></div>
                 <div class="buffs-display" id="player-buffs"></div>
             </div>
-            <div class="vs">VS</div>
+            <div class="vs">VS<br><span id="arena-round">第1轮</span></div>
             <div class="fighter" id="enemy-fighter">
                 <div class="fighter-sprite enemy-sprite" id="enemy-sprite">🦞</div>
                 <div class="fighter-name" id="enemy-name">???</div>
-                <div class="fighter-level" id="enemy-level"></div>
                 <div class="hp-bar"><div class="hp-fill" id="enemy-hp-bar"></div></div>
                 <div class="hp-text"><span id="enemy-hp">0</span> / <span id="enemy-max-hp">0</span></div>
                 <div class="fighter-stats" id="enemy-stats"></div>
@@ -820,10 +819,12 @@
 
 
 
+
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
-const VERSION = 'v2.14';
+const VERSION = 'v2.15';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
 const PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
@@ -1826,6 +1827,8 @@ function updateUI() {
     if(S.enemy) renderEnemySkills();
     const roundEl=document.getElementById('round-num');
     if(roundEl) roundEl.textContent=S.round;
+    const arenaRoundEl=document.getElementById('arena-round');
+    if(arenaRoundEl) arenaRoundEl.textContent='第'+S.round+'轮';
 }
 
 function updatePlayerUI() {
@@ -1835,13 +1838,11 @@ function updatePlayerUI() {
     const hpBar=document.getElementById('player-hp-bar');
     const hpEl=document.getElementById('player-hp');
     const maxHpEl=document.getElementById('player-max-hp');
-    const lvlEl=document.getElementById('player-level');
     const statsEl=document.getElementById('player-stats');
     const sprite=document.getElementById('player-sprite');
     if(hpBar) hpBar.style.width=hpPct+'%';
     if(hpEl) hpEl.textContent=Math.floor(p.hp);
     if(maxHpEl) maxHpEl.textContent=p.maxHp;
-    if(lvlEl) lvlEl.textContent='Lv.'+p.level;
     if(statsEl) statsEl.textContent='攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
     if(sprite) sprite.textContent=PHASE_SPRITES[p.phase]||'🦐';
 }
@@ -1853,14 +1854,12 @@ function updateEnemyUI() {
     const hpBar=document.getElementById('enemy-hp-bar');
     const hpEl=document.getElementById('enemy-hp');
     const maxHpEl=document.getElementById('enemy-max-hp');
-    const lvlEl=document.getElementById('enemy-level');
     const statsEl=document.getElementById('enemy-stats');
     const sprite=document.getElementById('enemy-sprite');
     const nameEl=document.getElementById('enemy-name');
     if(hpBar) hpBar.style.width=hpPct+'%';
     if(hpEl) hpEl.textContent=Math.floor(e.hp);
     if(maxHpEl) maxHpEl.textContent=e.maxHp;
-    if(lvlEl) lvlEl.textContent='Lv.'+e.level;
     if(statsEl) statsEl.textContent='攻:'+e.atk+' 防:'+e.def+' 速:'+e.spd;
     if(sprite) sprite.textContent='🦞';
     if(nameEl) nameEl.textContent=e.name;
@@ -1928,6 +1927,8 @@ function renderEnemySkills() {
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->

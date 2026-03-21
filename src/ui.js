@@ -120,6 +120,8 @@ function updateUI() {
     if(S.enemy) renderEnemySkills();
     const roundEl=document.getElementById('round-num');
     if(roundEl) roundEl.textContent=S.round;
+    const arenaRoundEl=document.getElementById('arena-round');
+    if(arenaRoundEl) arenaRoundEl.textContent='第'+S.round+'轮';
 }
 
 function updatePlayerUI() {
@@ -129,13 +131,11 @@ function updatePlayerUI() {
     const hpBar=document.getElementById('player-hp-bar');
     const hpEl=document.getElementById('player-hp');
     const maxHpEl=document.getElementById('player-max-hp');
-    const lvlEl=document.getElementById('player-level');
     const statsEl=document.getElementById('player-stats');
     const sprite=document.getElementById('player-sprite');
     if(hpBar) hpBar.style.width=hpPct+'%';
     if(hpEl) hpEl.textContent=Math.floor(p.hp);
     if(maxHpEl) maxHpEl.textContent=p.maxHp;
-    if(lvlEl) lvlEl.textContent='Lv.'+p.level;
     if(statsEl) statsEl.textContent='攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
     if(sprite) sprite.textContent=PHASE_SPRITES[p.phase]||'🦐';
 }
@@ -147,14 +147,12 @@ function updateEnemyUI() {
     const hpBar=document.getElementById('enemy-hp-bar');
     const hpEl=document.getElementById('enemy-hp');
     const maxHpEl=document.getElementById('enemy-max-hp');
-    const lvlEl=document.getElementById('enemy-level');
     const statsEl=document.getElementById('enemy-stats');
     const sprite=document.getElementById('enemy-sprite');
     const nameEl=document.getElementById('enemy-name');
     if(hpBar) hpBar.style.width=hpPct+'%';
     if(hpEl) hpEl.textContent=Math.floor(e.hp);
     if(maxHpEl) maxHpEl.textContent=e.maxHp;
-    if(lvlEl) lvlEl.textContent='Lv.'+e.level;
     if(statsEl) statsEl.textContent='攻:'+e.atk+' 防:'+e.def+' 速:'+e.spd;
     if(sprite) sprite.textContent='🦞';
     if(nameEl) nameEl.textContent=e.name;
