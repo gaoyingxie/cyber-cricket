@@ -18,7 +18,7 @@ const DROP_CHANCE=0.4;
 
 const ALL_SKILLS=[
     // ===== 主动 =====
-    {id:'combo',name:'连击',passive:true,desc:'[被动] 普通攻击50%概率再攻击一次',icon:'👊',cd:0},
+    {id:'combo',name:'连击',desc:'[主动] CD:0 效果 普通攻击50%概率再攻击一次',icon:'👊',cd:0},
     {id:'heavy',name:'重击',desc:'[主动] CD:0 效果 造成2.0倍伤害',minDmg:2.0,icon:'💪',cd:0},
     {id:'poison',name:'剧毒',desc:'[主动] CD:0 效果 造成0.6倍伤害+敌人每回合损失8%HP',minDmg:0.6,poisonDmg:0.08,icon:'☠️',cd:0},
     {id:'virus',name:'病毒注入',desc:'[主动] CD:0 效果 造成0.5倍伤害+敌人每回合损失6%HP+降属性',minDmg:0.5,poisonDmg:0.06,reduceStat:0.15,icon:'🦠',cd:0},

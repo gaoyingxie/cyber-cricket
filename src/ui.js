@@ -177,7 +177,7 @@ function updateEvolveButton() {
 
 // ---------- 技能按钮渲染 ----------
 function renderSkillButtons() {
-    const container=document.getElementById('skill-list');
+    const container=document.getElementById('player-skills');
     if(!container||!S.player) return;
     container.innerHTML='';
     S.player.skills.forEach(skill=>{
