@@ -145,7 +145,7 @@ function updateEquipSlots() {
     });
 }
 function updateInventoryList() {
-    const list=document.getElementById('inventory-list');
+    const list=document.getElementById('equip-inv-list');
     if(!list) return;
     if(S.player.inventory.length===0) {
         list.innerHTML='<div style="color:#888;text-align:center;padding:20px">背包空空</div>';

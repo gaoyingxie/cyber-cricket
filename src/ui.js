@@ -82,7 +82,7 @@ function toggleSpeed() {
     updateAutoIndicator();
 }
 function updateSpeedButton() {
-    const btn=document.getElementById('speed-btn');
+    const btn=document.getElementById('btn-speed');
     if(btn) btn.textContent='⏩ '+S.battleSpeed+'x';
 }
 function updateAutoIndicator() {
@@ -156,10 +156,7 @@ function updateBuffsDisplay(id, entity) {
 }
 
 function updateEvolveButton() {
-    const btn=document.getElementById('evolve-btn');
-    if(!btn) return;
-    // 进化按钮逻辑（根据当前phase显示）
-    btn.style.display='none';
+    // 进化提示由 reward panel 的 reward-evolution-container 显示，不需要额外按钮
 }
 
 // ---------- 技能按钮渲染 ----------

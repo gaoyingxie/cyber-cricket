@@ -644,7 +644,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.97 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.98 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
@@ -799,10 +799,12 @@
 <!--# sourceMappingURL=game.map -->
 
 
+
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
-const VERSION = 'v1.97';
+const VERSION = 'v1.98';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
 const PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
@@ -1488,7 +1490,7 @@ function updateEquipSlots() {
     });
 }
 function updateInventoryList() {
-    const list=document.getElementById('inventory-list');
+    const list=document.getElementById('equip-inv-list');
     if(!list) return;
     if(S.player.inventory.length===0) {
         list.innerHTML='<div style="color:#888;text-align:center;padding:20px">背包空空</div>';
@@ -1754,7 +1756,7 @@ function toggleSpeed() {
     updateAutoIndicator();
 }
 function updateSpeedButton() {
-    const btn=document.getElementById('speed-btn');
+    const btn=document.getElementById('btn-speed');
     if(btn) btn.textContent='⏩ '+S.battleSpeed+'x';
 }
 function updateAutoIndicator() {
@@ -1828,10 +1830,7 @@ function updateBuffsDisplay(id, entity) {
 }
 
 function updateEvolveButton() {
-    const btn=document.getElementById('evolve-btn');
-    if(!btn) return;
-    // 进化按钮逻辑（根据当前phase显示）
-    btn.style.display='none';
+    // 进化提示由 reward panel 的 reward-evolution-container 显示，不需要额外按钮
 }
 
 // ---------- 技能按钮渲染 ----------
@@ -1860,6 +1859,8 @@ function renderSkillButtons() {
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
