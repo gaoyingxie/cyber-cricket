@@ -42,16 +42,20 @@ function showSkillPopup(skillId) {
     const skill=ALL_SKILLS.find(s=>s.id===skillId);
     if(!skill) return;
     const popup=document.getElementById('skill-popup');
+    const backdrop=document.getElementById('skill-backdrop');
+    if(!popup||!backdrop) return;
     popup.innerHTML=
         '<div class="skill-popup-icon">'+skill.icon+'</div>'+
         '<div class="skill-popup-name">'+skill.name+'</div>'+
         '<div class="skill-popup-desc">'+skill.desc+'</div>';
-    document.getElementById('skill-backdrop').classList.add('show');
+    backdrop.classList.add('show');
     popup.classList.add('show');
 }
 function hideSkillPopup() {
-    document.getElementById('skill-backdrop').classList.remove('show');
-    document.getElementById('skill-popup').classList.remove('show');
+    const backdrop=document.getElementById('skill-backdrop');
+    const popup=document.getElementById('skill-popup');
+    if(backdrop) backdrop.classList.remove('show');
+    if(popup) popup.classList.remove('show');
 }
 
 // ---------- 技能提示 ----------
@@ -60,12 +64,14 @@ function showSkillTooltip(skillId, event) {
     const skill=ALL_SKILLS.find(s=>s.id===skillId);
     if(!skill) return;
     const tip=document.getElementById('skill-tooltip');
+    if(!tip) return;
     tip.innerHTML='<b>'+skill.icon+' '+skill.name+'</b><br>'+skill.desc;
     tip.style.display='block';
     positionTooltip(tip, event);
 }
 function hideSkillTooltip() {
-    document.getElementById('skill-tooltip').style.display='none';
+    const tip=document.getElementById('skill-tooltip');
+    if(tip) tip.style.display='none';
 }
 function positionTooltip(tip, event) {
     const x=event.clientX||0, y=event.clientY||0;
@@ -115,13 +121,19 @@ function updateUI() {
 
 function updatePlayerUI() {
     const p=S.player;
+    if(!p) return;
     const hpPct=Math.max(0,Math.min(100,(p.hp/p.maxHp)*100));
-    document.getElementById('player-hp-bar').style.width=hpPct+'%';
-    document.getElementById('player-hp').textContent=Math.floor(p.hp);
-    document.getElementById('player-max-hp').textContent=p.maxHp;
-    document.getElementById('player-level').textContent='Lv.'+p.level;
-    document.getElementById('player-stats').textContent='攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
+    const hpBar=document.getElementById('player-hp-bar');
+    const hpEl=document.getElementById('player-hp');
+    const maxHpEl=document.getElementById('player-max-hp');
+    const lvlEl=document.getElementById('player-level');
+    const statsEl=document.getElementById('player-stats');
     const sprite=document.getElementById('player-fighter');
+    if(hpBar) hpBar.style.width=hpPct+'%';
+    if(hpEl) hpEl.textContent=Math.floor(p.hp);
+    if(maxHpEl) maxHpEl.textContent=p.maxHp;
+    if(lvlEl) lvlEl.textContent='Lv.'+p.level;
+    if(statsEl) statsEl.textContent='攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
     if(sprite) sprite.textContent=PHASE_SPRITES[p.phase]||'🦐';
 }
 
@@ -129,12 +141,17 @@ function updateEnemyUI() {
     const e=S.enemy;
     if(!e) return;
     const hpPct=Math.max(0,Math.min(100,(e.hp/e.maxHp)*100));
-    document.getElementById('enemy-hp-bar').style.width=hpPct+'%';
-    document.getElementById('enemy-hp').textContent=Math.floor(e.hp);
-    document.getElementById('enemy-max-hp').textContent=e.maxHp;
-    document.getElementById('enemy-level').textContent='Lv.'+e.level;
-    document.getElementById('enemy-stats').textContent='攻:'+e.atk+' 防:'+e.def+' 速:'+e.spd;
+    const hpBar=document.getElementById('enemy-hp-bar');
+    const hpEl=document.getElementById('enemy-hp');
+    const maxHpEl=document.getElementById('enemy-max-hp');
+    const lvlEl=document.getElementById('enemy-level');
+    const statsEl=document.getElementById('enemy-stats');
     const sprite=document.getElementById('enemy-fighter');
+    if(hpBar) hpBar.style.width=hpPct+'%';
+    if(hpEl) hpEl.textContent=Math.floor(e.hp);
+    if(maxHpEl) maxHpEl.textContent=e.maxHp;
+    if(lvlEl) lvlEl.textContent='Lv.'+e.level;
+    if(statsEl) statsEl.textContent='攻:'+e.atk+' 防:'+e.def+' 速:'+e.spd;
     if(sprite) sprite.textContent='🦞';
 }
 
