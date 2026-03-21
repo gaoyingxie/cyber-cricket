@@ -791,10 +791,12 @@
     </div>
 
 </div>
+
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
-const VERSION = 'v1.95';
+const VERSION = 'v1.96';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
 const PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
@@ -958,7 +960,9 @@ function showEnemySelect() {
         const r=S.round+(i*0.5);
         const easyMod=r<=3?0.6:r<=5?0.8:1;
         const m=(1+(r-1)*0.15)*easyMod;
-        const nameOpt=ENEMY_NAMES[Math.min(Math.floor(r)-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+Math.floor(r);
+        // 敌人等级：敌人1=Lv.round，敌人2/3=Lv.round+1（三人梯度：简单/难/最难）
+        const dispLvl=i===0?S.round:S.round+1;
+        const nameOpt=ENEMY_NAMES[Math.min(dispLvl-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+dispLvl;
         const hp=Math.floor((100+r*15)*m);
         const atk=Math.floor((7+r*1.3)*m);
         const def=Math.floor((3+r*0.8)*m);
@@ -968,10 +972,10 @@ function showEnemySelect() {
         const skills=[...avail].sort(()=>Math.random()-0.5).slice(0,Math.min(cnt,avail.length));
         const div=document.createElement('div');
         div.className='enemy-option';
-        div.innerHTML='<div class="enemy-option-name">🦞 '+nameOpt+' (Lv.'+Math.floor(r)+')</div>'+
+        div.innerHTML='<div class="enemy-option-name">🦞 '+nameOpt+' (Lv.'+dispLvl+')</div>'+
             '<div class="enemy-option-stats">生命:'+hp+' 攻:'+atk+' 防:'+def+' 速:'+spd+'</div>'+
             '<div class="enemy-option-skills">技能: '+skills.map(s=>s.icon+s.name).join(' ')+'</div>';
-        div.onclick=()=>selectEnemy(nameOpt,Math.floor(r),hp,atk,def,spd,skills);
+        div.onclick=()=>selectEnemy(nameOpt,dispLvl,hp,atk,def,spd,skills);
         list.appendChild(div);
     }
     document.getElementById('enemy-select-panel').classList.add('show');
@@ -1852,4 +1856,6 @@ function renderSkillButtons() {
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
