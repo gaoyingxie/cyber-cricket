@@ -1554,6 +1554,7 @@ function restartGame() {
 }
 
 function closeWelcome() {
+    updateUI();
     document.getElementById('welcome-panel').classList.remove('show');
     document.getElementById('btn-start').disabled=false;
 }
