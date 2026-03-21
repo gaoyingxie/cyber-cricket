@@ -805,7 +805,7 @@ const DROP_CHANCE=0.4;
 const ALL_SKILLS=[
     // ===== 攻击系 =====
     {id:'combo',name:'连击',staminaCost:15,type:'attack',desc:'【主动★100%】连续攻击2次（第2次伤害×0.5）',minDmg:0.5,times:2,icon:'👊',cd:0},
-    {id:'crit',name:'必杀',staminaCost:15,type:'attack',desc:'【主动★100%】造成双倍伤害（必定暴击×2）',minDmg:0,critRate:1,critMult:2,icon:'💥',cd:0},
+    {id:'crit',name:'必杀',staminaCost:15,type:'attack',desc:'【主动★100%】造成2倍伤害（必定暴击×2）',minDmg:1,critRate:1,critMult:2,icon:'💥',cd:0},
     {id:'heavy',name:'重击',staminaCost:10,type:'attack',desc:'【主动★100%】造成1.5倍伤害',minDmg:1.5,icon:'💪',cd:0},
     {id:'poison',name:'剧毒',staminaCost:12,type:'attack',desc:'【主动★100%】伤害+每回合损失8%HP',minDmg:0.6,poisonDmg:0.08,icon:'☠️',cd:0},
     {id:'virus',name:'病毒注入',staminaCost:13,type:'attack',desc:'【主动★100%】伤害+每回合6%HP+降属性',minDmg:0.5,poisonDmg:0.06,reduceStat:0.15,icon:'🦠',cd:0},
