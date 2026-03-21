@@ -128,7 +128,7 @@ function updatePlayerUI() {
     const maxHpEl=document.getElementById('player-max-hp');
     const lvlEl=document.getElementById('player-level');
     const statsEl=document.getElementById('player-stats');
-    const sprite=document.getElementById('player-fighter');
+    const sprite=document.getElementById('player-sprite');
     if(hpBar) hpBar.style.width=hpPct+'%';
     if(hpEl) hpEl.textContent=Math.floor(p.hp);
     if(maxHpEl) maxHpEl.textContent=p.maxHp;
@@ -146,7 +146,7 @@ function updateEnemyUI() {
     const maxHpEl=document.getElementById('enemy-max-hp');
     const lvlEl=document.getElementById('enemy-level');
     const statsEl=document.getElementById('enemy-stats');
-    const sprite=document.getElementById('enemy-fighter');
+    const sprite=document.getElementById('enemy-sprite');
     if(hpBar) hpBar.style.width=hpPct+'%';
     if(hpEl) hpEl.textContent=Math.floor(e.hp);
     if(maxHpEl) maxHpEl.textContent=e.maxHp;
