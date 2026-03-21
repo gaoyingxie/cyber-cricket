@@ -152,13 +152,13 @@ async function run() {
     });
     
     await test('UI-17: 玩家HP数值显示', async () => {
-        const hp = await evalJS("document.getElementById('player-hp').textContent");
-        assert(parseInt(hp) > 0, `玩家HP应>0: ${hp}`);
+        const hp = await evalJS("parseInt(document.getElementById('player-hp').textContent)");
+        assert(hp > 0, `玩家HP应>0: ${hp}`);
     });
     
     await test('UI-18: 玩家最大HP显示', async () => {
-        const maxHp = await evalJS("document.getElementById('player-max-hp').textContent");
-        assert(parseInt(maxHp) > 0, `玩家最大HP应>0: ${maxHp}`);
+        const maxHp = await evalJS("parseInt(document.getElementById('player-max-hp').textContent)");
+        assert(maxHp > 0, `玩家最大HP应>0: ${maxHp}`);
     });
     
     await test('UI-19: 玩家等级显示', async () => {
@@ -213,7 +213,7 @@ async function run() {
     });
     
     await test('UI-28: 第1轮敌人等级正确(Lv.1和Lv.2)', async () => {
-        const levels = await evalJS("Array.from(document.querySelectorAll('.enemy-option')).map(el => el.textContent)");
+        const levels = JSON.parse(await evalJS("JSON.stringify(Array.from(document.querySelectorAll('.enemy-option')).map(el => el.textContent))"));
         assert(levels.some(l => l.includes('Lv.1')) && levels.some(l => l.includes('Lv.2')), 
             `第1轮应有Lv.1和Lv.2敌人: ${levels.join(', ')}`);
     });
@@ -249,8 +249,8 @@ async function run() {
     });
     
     await test('UI-34: 敌人HP数值显示', async () => {
-        const hp = await evalJS("document.getElementById('enemy-hp').textContent");
-        assert(parseInt(hp) > 0, `敌人HP应>0: ${hp}`);
+        const hp = await evalJS("parseInt(document.getElementById('enemy-hp').textContent)");
+        assert(hp > 0, `敌人HP应>0: ${hp}`);
     });
     
     await test('UI-35: 敌人属性(攻/防/速)显示', async () => {
