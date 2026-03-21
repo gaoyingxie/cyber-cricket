@@ -68,9 +68,10 @@ async function run() {
         assert(v.includes('v2.') && v.includes('第') && v.includes('轮'), `版本轮数应显示: ${v}`);
     });
     
-    await test('UI-03: 阶别和等级显示', async () => {
+    await test('UI-03: 阶别和回合数显示', async () => {
         const snapOut = await snap();
-        assert(snapOut.includes('阶别') && snapOut.includes('幼虫') && snapOut.includes('等级') && snapOut.includes('Lv.1'), '阶别等级应显示');
+        // 阶别显示在状态栏，回合数显示在顶部和VS区域
+        assert(snapOut.includes('阶别') && snapOut.includes('幼虫') && snapOut.includes('第') && snapOut.includes('轮'), '阶别和回合数应显示');
     });
     
     await test('UI-04: 速度切换按钮显示', async () => {
@@ -161,9 +162,10 @@ async function run() {
         assert(maxHp > 0, `玩家最大HP应>0: ${maxHp}`);
     });
     
-    await test('UI-19: 玩家等级显示', async () => {
-        const lvl = await evalJS("document.getElementById('player-level').textContent");
-        assert(lvl.includes('Lv.1'), `玩家等级应显示: ${lvl}`);
+    await test('UI-19: 回合数显示元素存在', async () => {
+        // VS区域回合数元素应存在于DOM中
+        const exists = await evalJS("document.getElementById('arena-round') !== null");
+        assert(exists === 'true', 'arena-round元素应存在');
     });
     
     await test('UI-20: 玩家属性(攻/防/速)显示', async () => {
@@ -243,9 +245,13 @@ async function run() {
         assert(name !== '???' && name.length > 0, `敌人名字应显示: ${name}`);
     });
     
-    await test('UI-33: 敌人等级显示', async () => {
-        const lvl = await evalJS("document.getElementById('enemy-level').textContent");
-        assert(lvl.includes('Lv.'), `敌人等级应显示: ${lvl}`);
+    await test('UI-33: 回合数在多处正确显示', async () => {
+        // 回合数同时显示在顶部和VS区域
+        const topRound = await evalJS("document.getElementById('round-num').textContent");
+        const arenaRound = await evalJS("document.getElementById('arena-round').textContent");
+        // 两者都应显示轮数（格式可能不同：顶部"1" vs VS区域"第1轮"）
+        assert(topRound && topRound.length > 0, `顶部应有轮数显示`);
+        assert(arenaRound && arenaRound.length > 0 && arenaRound.includes('轮'), `VS区域应有轮数显示: ${arenaRound}`);
     });
     
     await test('UI-34: 敌人HP数值显示', async () => {
