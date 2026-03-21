@@ -213,6 +213,8 @@ function renderEnemySkills() {
             btn.innerHTML+=' [P]';
             btn.style.opacity='0.6';
         }
+        btn.onmouseenter=(e)=>showSkillTooltip(skill.id, e);
+        btn.onmouseleave=hideSkillTooltip;
         container.appendChild(btn);
     });
 }

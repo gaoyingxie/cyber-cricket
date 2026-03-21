@@ -385,6 +385,9 @@ function endTurn() {
     }
     if(S.player.defReduced&&Math.random()<0.3) S.player.defReduced=false;
     if(S.enemy&&S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
+    // 防御技能效果只持续本回合
+    S.player.reduceDmgRate=0;
+    if(S.enemy) S.enemy.reduceDmgRate=0;
     S.player.buffs=[];
     if(S.enemy) S.enemy.buffs=[];
     updateUI();

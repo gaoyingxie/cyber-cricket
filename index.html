@@ -806,6 +806,7 @@
 
 
 
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
@@ -1345,6 +1346,9 @@ function endTurn() {
     }
     if(S.player.defReduced&&Math.random()<0.3) S.player.defReduced=false;
     if(S.enemy&&S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
+    // 防御技能效果只持续本回合
+    S.player.reduceDmgRate=0;
+    if(S.enemy) S.enemy.reduceDmgRate=0;
     S.player.buffs=[];
     if(S.enemy) S.enemy.buffs=[];
     updateUI();
@@ -1901,12 +1905,15 @@ function renderEnemySkills() {
             btn.innerHTML+=' [P]';
             btn.style.opacity='0.6';
         }
+        btn.onmouseenter=(e)=>showSkillTooltip(skill.id, e);
+        btn.onmouseleave=hideSkillTooltip;
         container.appendChild(btn);
     });
 }
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
