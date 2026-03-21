@@ -643,7 +643,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v1.87 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v1.88 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
             <div class="stat"><div class="stat-label">等级</div><div class="stat-value" id="level">1</div></div>
@@ -790,7 +790,7 @@
         <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
     </div>
 <script>
-const VERSION = 'v1.87';
+const VERSION = 'v1.88';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'], PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'], PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
 // 装备系统
 const EQUIP_TYPES=['atk','def','hp'];
@@ -860,7 +860,7 @@ function initState(){
                 hp:bhp,maxHp:bhp,atk:batk,def:bdef,spd:bspd,
                 baseHp:bhp,baseAtk:batk,baseDef:bdef,baseSpd:bspd,
                 skills:s,
-                buffs:[],shields:0,poisonDmg:0,alive:true,resurrectUsed:false,stunned:false,sealed:false,
+                buffs:[],shields:0,poisonDmg:0,bleedDmg:0,alive:true,resurrectUsed:false,stunned:false,sealed:false,
                 speedBoosted:false,defReduced:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,lifesteal:0,
                 equipment:{atk:null,def:null,hp:null},inventory:[]
             };
@@ -896,7 +896,7 @@ function generateEnemy(){
         name:ENEMY_NAMES[Math.min(r-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+r,
         level:r,hp:Math.floor((100+r*15)*m),maxHp:Math.floor((100+r*15)*m),
         atk:Math.floor((7+r*1.3)*m),def:Math.floor((3+r*0.8)*m),spd:Math.floor((5+r*0.6)*m),
-        skills:[],buffs:[],shields:0,poisonDmg:0,alive:true,resurrected:false,
+        skills:[],buffs:[],shields:0,poisonDmg:0,bleedDmg:0,alive:true,resurrected:false,
         stunned:false,sealed:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
         speedBoosted:false,defReduced:false
     };
@@ -1175,6 +1175,7 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
     // 玩家血量回满
     S.player.hp=S.player.maxHp;
     S.player.poisonDmg=0;
+    S.player.bleedDmg=0;
     S.player.shields=0;
     S.player.stunned=false;
     S.player.sealed=false;
@@ -1182,7 +1183,7 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
         name:name,level:level,hp:hp,maxHp:hp,
         atk:atk,def:def,spd:spd,
         skills:skills.map(s=>cloneSkill(s)),
-        buffs:[],shields:0,poisonDmg:0,alive:true,resurrected:false,
+        buffs:[],shields:0,poisonDmg:0,bleedDmg:0,alive:true,resurrected:false,
         stunned:false,sealed:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
         speedBoosted:false,defReduced:false,lifesteal:0
     };
@@ -1225,6 +1226,8 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
 function executeAutoTurn() {
     console.log('[DEBUG] executeAutoTurn called, S.inBattle:', S.inBattle, 'S.enemy:', S.enemy ? S.enemy.name : 'NULL');
     if(!S.inBattle) return;
+    // 眩晕/封印效果：持续1回合（跳过当前回合后自动清除）
+    // S.player.stunned 在 endTurn() 末尾清除，确保跳过当前回合后下回合恢复
     if(S.player.stunned) {
         addLog('<span class="log-player">😵 被晕了，无法行动!</span>');
         updateUI();
@@ -1340,6 +1343,12 @@ function doNormalAttack(attacker, defender, isPlayer, isSecondHit) {
         defender.shields-=absorb;
         atkDmg-=absorb;
         if(absorb>0) addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
+    }
+    // 减伤率（防御技能效果）
+    if(defender.reduceDmgRate>0) {
+        const reduced=Math.floor(atkDmg*defender.reduceDmgRate);
+        atkDmg-=reduced;
+        if(reduced>0) addLog('<span class="log-system">🛡️ 减伤效果抵消了 '+reduced+' 伤害</span>');
     }
     defender.hp-=atkDmg;
     const hitType=isSecondHit?'（连击第2次）':'';
@@ -1577,6 +1586,18 @@ function endTurn() {
         S.enemy.hp-=eDmg;
         addLog('<span class="log-damage">🔥 【中毒】敌人受到 '+eDmg+' 伤害</span>');
     }
+    // 撕裂流血
+    if(S.player.bleedDmg>0) {
+        const bDmg=Math.floor(S.player.maxHp*S.player.bleedDmg);
+        S.player.hp-=bDmg;
+        addLog('<span class="log-damage">🩸 【撕裂】你的龙虾受到 '+bDmg+' 伤害</span>');
+        showDamageNumber(document.getElementById('player-fighter'), bDmg, 'poison');
+    }
+    if(S.enemy && S.enemy.bleedDmg>0) {
+        const bDmg=Math.floor(S.enemy.maxHp*S.enemy.bleedDmg);
+        S.enemy.hp-=bDmg;
+        addLog('<span class="log-damage">🩸 【撕裂】敌人受到 '+bDmg+' 伤害</span>');
+    }
     if(S.player.defReduced&&Math.random()<0.3) S.player.defReduced=false;
     if(S.enemy && S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
     S.player.buffs=[];
@@ -1592,6 +1613,9 @@ function endTurn() {
     }
     addLog('<span class="log-turn">━━━ 第 '+(S.turn+1)+' 回合 ━━━</span>');
     S.turn++;
+    // 清除玩家眩晕/封印状态，让下回合可以行动
+    S.player.stunned=false;
+    S.player.sealed=false;
     setTimeout(executeAutoTurn, getBattleDelay());
 }
 
@@ -1966,7 +1990,7 @@ initState();
 updateSpeedButton();
 document.getElementById('mode-select-panel').style.display='flex';
 updateUI();
-addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.87 准备就绪!</span>');
+addLog('<span class="log-system">⚡ 赛博斗龙虾 v1.88 准备就绪!</span>');
 addLog('<span class="log-system">💡 选择游戏模式开始!</span>');
 </script>
 </div>
