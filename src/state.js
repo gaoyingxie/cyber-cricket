@@ -5,7 +5,10 @@ let S = {
     player:null, enemy:null, pendingEnemySkill:null, turnOrder:null,
     battleSpeed:1, playerCooldowns:{}, enemyCooldowns:{},
     battleQueue:[], isProcessing:false,
-    lobsterMode:null, exported:false, waitingForExport:false
+    lobsterMode:null, exported:false, waitingForExport:false,
+    // 成虾模式专属
+    noGrowth:false, noSkillSteal:false, noEquipDrop:false,
+    pvpOpponent:null, pvpReady:false
 };
 
 function initState() {

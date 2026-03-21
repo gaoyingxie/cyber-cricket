@@ -47,6 +47,84 @@ function confirmImport() {
     document.getElementById('import-panel').classList.remove('show');
     document.getElementById('welcome-panel').classList.remove('show');
     addLog('<span class="log-system">🦐 成虾 【'+imported.name+'】 导入成功!</span>');
+    // 显示成虾模式选择面板
+    showLobsterModePanel();
+    updateUI();
+}
+
+function showLobsterModePanel() {
+    const p=S.player;
+    const sprite=PHASE_SPRITES[p.phase]||'🦐';
+    const desc='等级: Lv.'+p.level+' | 阶别: '+PHASES[p.phase]+' | 技能: '+p.skills.length+'个';
+    document.getElementById('lobster-mode-desc').innerHTML=sprite+'<br>'+p.name+'<br><small style="color:#aaa">'+desc+'</small>';
+    document.getElementById('lobster-mode-panel').classList.add('show');
+}
+
+function closeLobsterModePanel() {
+    document.getElementById('lobster-mode-panel').classList.remove('show');
+    document.getElementById('mode-select-panel').style.display='flex';
+}
+
+function selectLobsterMode(mode) {
+    document.getElementById('lobster-mode-panel').classList.remove('show');
+    if(mode==='endless') {
+        S.lobsterMode='endless';
+        S.round=1;
+        // 成虾不成长：禁止升级、禁止偷技能、禁止掉落装备
+        S.noGrowth=true;
+        S.noSkillSteal=true;
+        S.noEquipDrop=true;
+        addLog('<span class="log-system">♾️ 进入无尽模式！怪物难度从第6轮开始...</span>');
+        document.getElementById('btn-start').disabled=false;
+    } else if(mode==='pvp') {
+        S.lobsterMode='pvp';
+        // PVP模式：显示对手导入面板
+        document.getElementById('pvp-import-panel').classList.add('show');
+        document.getElementById('pvp-import-code').value='';
+        document.getElementById('pvp-import-error').style.display='none';
+    }
+    updateUI();
+}
+
+function closePvpImportPanel() {
+    document.getElementById('pvp-import-panel').classList.remove('show');
+    document.getElementById('lobster-mode-panel').classList.add('show');
+}
+
+function confirmPvpImport() {
+    const code=document.getElementById('pvp-import-code').value.trim();
+    if(!code) return;
+    const opponent=importLobster(code);
+    if(!opponent) {
+        document.getElementById('pvp-import-error').style.display='block';
+        document.getElementById('pvp-import-error').textContent='对手代码无效，请重新输入';
+        return;
+    }
+    // 保存对手数据
+    S.pvpOpponent=JSON.parse(JSON.stringify({
+        name:opponent.name, level:opponent.level, phase:opponent.phase,
+        hp:opponent.hp, maxHp:opponent.maxHp,
+        atk:opponent.atk, def:opponent.def, spd:opponent.spd,
+        skills:opponent.skills, equipment:opponent.equipment,
+        buffs:[], shields:0, poisonDmg:0, bleedDmg:0, alive:true,
+        resurrected:false, resurrectedUsed:false,
+        stunned:false, sealed:false,
+        speedBoosted:false, defReduced:false,
+        resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0
+    }));
+    // 传递被动技能属性
+    S.pvpOpponent.skills.forEach(s=>{
+        if(s.passive){
+            if(s.id==='lifesteal') S.pvpOpponent.lifesteal=s.lifesteal;
+            if(s.id==='counter') S.pvpOpponent.counterRate=s.counterRate;
+            if(s.id==='resurrect') S.pvpOpponent.resurrectRate=s.resurrectRate;
+            if(s.id==='speedBoost'||s.id==='overclock') S.pvpOpponent.speedBoosted=true;
+        }
+    });
+    document.getElementById('pvp-import-panel').classList.remove('show');
+    S.pvpReady=true;
+    addLog('<span class="log-system">⚔️ 对手 【'+opponent.name+'】 已就位!</span>');
+    document.getElementById('btn-start').disabled=false;
     updateUI();
 }
 

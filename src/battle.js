@@ -3,25 +3,54 @@
 // ---------- 玩家行动 ----------
 function startBattle() {
     if(S.inBattle) return;
+    
+    // PVP模式：直接使用已导入的对手
+    if(S.lobsterMode==='pvp'&&S.pvpOpponent) {
+        const opp=S.pvpOpponent;
+        opp.hp=opp.maxHp;
+        opp.poisonDmg=0;opp.bleedDmg=0;opp.shields=0;
+        opp.stunned=false;opp.sealed=false;
+        opp.buffs=[];opp.reduceDmgRate=0;opp.defReduced=false;
+        opp.resurrected=false;
+        S.enemy=opp;
+        S.player.hp=S.player.maxHp;
+        S.player.poisonDmg=0;S.player.bleedDmg=0;S.player.shields=0;
+        S.player.stunned=false;S.player.sealed=false;
+        S.player.reduceDmgRate=0;S.player.defReduced=false;
+        S.player.buffs=[];
+        S.playerCooldowns={};S.enemyCooldowns={};
+        S.round=1;S.turn=0;
+        S.inBattle=true;S.battleResult=null;
+        document.getElementById('btn-start').disabled=true;
+        addLog('<span class="log-enemy">⚔️ 对战: '+S.player.name+' vs '+opp.name+'!</span>');
+        updateUI();
+        setTimeout(()=>executeAutoTurn(),500);
+        return;
+    }
+    
     showEnemySelect();
 }
 
 function showEnemySelect() {
     const list=document.getElementById('enemy-select-list');
     list.innerHTML='';
+    
+    // 无尽模式难度：round 6起
+    const effectiveRound=S.lobsterMode==='endless'?S.round+5:S.round;
+    
     for(let i=0;i<3;i++) {
-        const r=S.round+(i*0.5);
-        // 难度曲线：round1 40% → round5 100%，逐轮递增
-        const easyMod=Math.min(1, 0.4+(S.round-1)*0.15);
-        const m=(1+(r-1)*0.15)*easyMod;
-        // 敌人等级：敌人1/2=Lv.round，敌人3=Lv.round+1（112,223,334...）
-        const dispLvl=i<2?S.round:S.round+1;
+        const r=effectiveRound+(i*0.5);
+        // 难度曲线：round1 40% → round5 100%，逐轮递增，无尽模式从110%起
+        const baseMod=S.lobsterMode==='endless'?1.1:Math.min(1, 0.4+(effectiveRound-1)*0.15);
+        const m=(1+(r-1)*0.15)*baseMod;
+        // 敌人等级：敌人1/2=Lv.round，敌人3=Lv.round+1
+        const dispLvl=i<2?effectiveRound:effectiveRound+1;
         const nameOpt=ENEMY_NAMES[Math.min(dispLvl-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+dispLvl;
         const hp=Math.floor((100+r*15)*m);
         const atk=Math.floor((7+r*1.3)*m);
         const def=Math.floor((3+r*0.8)*m);
         const spd=Math.floor((5+r*0.6)*m);
-        const cnt=S.round+(i===2?1:0);
+        const cnt=effectiveRound+(i===2?1:0);
         const avail=ALL_SKILLS.filter(x=>x.id!=='resurrect'||Math.random()<0.2);
         const skills=[...avail].sort(()=>Math.random()-0.5).slice(0,Math.min(cnt,avail.length));
         const div=document.createElement('div');

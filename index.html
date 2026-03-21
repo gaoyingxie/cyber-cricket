@@ -380,6 +380,26 @@
         }
         .import-panel.show, .export-panel.show { display: block; }
         .import-title, .export-title { font-size: 1.6em; color: #00ff88; margin-bottom: 15px; text-shadow: 0 0 15px #00ff88; }
+        .lobster-mode-panel, .pvp-import-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 1001;
+            min-width: 450px;
+            text-align: center;
+        }
+        .lobster-mode-panel.show, .pvp-import-panel.show { display: block; }
+        .lobster-mode-title, .pvp-import-title { font-size: 1.6em; color: #00ff88; margin-bottom: 15px; text-shadow: 0 0 15px #00ff88; }
+        .lobster-mode-desc, .pvp-import-desc { color: #aaa; margin-bottom: 15px; font-size: 1.1em; }
+        .lobster-mode-buttons { display: flex; gap: 15px; justify-content: center; margin: 20px 0; }
+        .btn-endless { background: linear-gradient(135deg, #1a6, #0c8) !important; border-color: #0c8 !important; }
+        .btn-pvp { background: linear-gradient(135deg, #c44, #a22) !important; border-color: #a22 !important; }
+        .lobster-mode-hint { color: #666; font-size: 0.9em; margin-top: 15px; line-height: 1.6; }
         .import-desc, .export-desc { color: #aaa; margin-bottom: 15px; font-size: 1.1em; }
         .import-code, .export-code {
             width: 100%; height: 120px; background: #0a0a1e; border: 1px solid #444;
@@ -647,7 +667,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v2.15 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v2.16 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">幼虫</div></div>
         </div>
@@ -786,6 +806,24 @@
         <button class="btn" onclick="copyExportCode()">📋 复制代码</button>
         <button class="btn" onclick="closeExportPanel()">完成</button>
     </div>
+    <div class="lobster-mode-panel" id="lobster-mode-panel">
+        <div class="lobster-mode-title">🎮 选择挑战模式</div>
+        <div class="lobster-mode-desc" id="lobster-mode-desc">你的龙虾信息将显示在这里</div>
+        <div class="lobster-mode-buttons">
+            <button class="btn btn-endless" onclick="selectLobsterMode('endless')">♾️ 无尽模式</button>
+            <button class="btn btn-pvp" onclick="selectLobsterMode('pvp')">⚔️ PVP模式</button>
+        </div>
+        <div class="lobster-mode-hint">无尽模式: 无限轮挑战，怪物难度逐轮递增<br>PVP模式: 导入对手代码，一局定胜负</div>
+        <button class="btn btn-secondary" onclick="closeLobsterModePanel()">返回</button>
+    </div>
+    <div class="pvp-import-panel" id="pvp-import-panel">
+        <div class="pvp-import-title">⚔️ PVP模式 - 导入对手</div>
+        <div class="pvp-import-desc">请输入对手龙虾的成虾代码：</div>
+        <textarea class="import-code" id="pvp-import-code" placeholder="在此粘贴对手的龙虾代码..."></textarea>
+        <div class="import-error" id="pvp-import-error" style="display:none;color:#ff4444;margin:10px 0;"></div>
+        <button class="btn" onclick="confirmPvpImport()">确认对手</button>
+        <button class="btn btn-secondary" onclick="closePvpImportPanel()">返回</button>
+    </div>
     <div class="game-over" id="game-over">
         <h2 id="game-over-title">游戏结束</h2>
         <p id="game-over-msg"></p>
@@ -821,10 +859,12 @@
 
 
 
+
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
-const VERSION = 'v2.15';
+const VERSION = 'v2.16';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
 const PHASE_SPRITES=['🦐','🦞','⚡🦞','🔱🦞','👑'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
@@ -883,7 +923,10 @@ let S = {
     player:null, enemy:null, pendingEnemySkill:null, turnOrder:null,
     battleSpeed:1, playerCooldowns:{}, enemyCooldowns:{},
     battleQueue:[], isProcessing:false,
-    lobsterMode:null, exported:false, waitingForExport:false
+    lobsterMode:null, exported:false, waitingForExport:false,
+    // 成虾模式专属
+    noGrowth:false, noSkillSteal:false, noEquipDrop:false,
+    pvpOpponent:null, pvpReady:false
 };
 
 function initState() {
@@ -978,25 +1021,54 @@ function generateEquipment() {
 // ---------- 玩家行动 ----------
 function startBattle() {
     if(S.inBattle) return;
+    
+    // PVP模式：直接使用已导入的对手
+    if(S.lobsterMode==='pvp'&&S.pvpOpponent) {
+        const opp=S.pvpOpponent;
+        opp.hp=opp.maxHp;
+        opp.poisonDmg=0;opp.bleedDmg=0;opp.shields=0;
+        opp.stunned=false;opp.sealed=false;
+        opp.buffs=[];opp.reduceDmgRate=0;opp.defReduced=false;
+        opp.resurrected=false;
+        S.enemy=opp;
+        S.player.hp=S.player.maxHp;
+        S.player.poisonDmg=0;S.player.bleedDmg=0;S.player.shields=0;
+        S.player.stunned=false;S.player.sealed=false;
+        S.player.reduceDmgRate=0;S.player.defReduced=false;
+        S.player.buffs=[];
+        S.playerCooldowns={};S.enemyCooldowns={};
+        S.round=1;S.turn=0;
+        S.inBattle=true;S.battleResult=null;
+        document.getElementById('btn-start').disabled=true;
+        addLog('<span class="log-enemy">⚔️ 对战: '+S.player.name+' vs '+opp.name+'!</span>');
+        updateUI();
+        setTimeout(()=>executeAutoTurn(),500);
+        return;
+    }
+    
     showEnemySelect();
 }
 
 function showEnemySelect() {
     const list=document.getElementById('enemy-select-list');
     list.innerHTML='';
+    
+    // 无尽模式难度：round 6起
+    const effectiveRound=S.lobsterMode==='endless'?S.round+5:S.round;
+    
     for(let i=0;i<3;i++) {
-        const r=S.round+(i*0.5);
-        // 难度曲线：round1 40% → round5 100%，逐轮递增
-        const easyMod=Math.min(1, 0.4+(S.round-1)*0.15);
-        const m=(1+(r-1)*0.15)*easyMod;
-        // 敌人等级：敌人1/2=Lv.round，敌人3=Lv.round+1（112,223,334...）
-        const dispLvl=i<2?S.round:S.round+1;
+        const r=effectiveRound+(i*0.5);
+        // 难度曲线：round1 40% → round5 100%，逐轮递增，无尽模式从110%起
+        const baseMod=S.lobsterMode==='endless'?1.1:Math.min(1, 0.4+(effectiveRound-1)*0.15);
+        const m=(1+(r-1)*0.15)*baseMod;
+        // 敌人等级：敌人1/2=Lv.round，敌人3=Lv.round+1
+        const dispLvl=i<2?effectiveRound:effectiveRound+1;
         const nameOpt=ENEMY_NAMES[Math.min(dispLvl-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+dispLvl;
         const hp=Math.floor((100+r*15)*m);
         const atk=Math.floor((7+r*1.3)*m);
         const def=Math.floor((3+r*0.8)*m);
         const spd=Math.floor((5+r*0.6)*m);
-        const cnt=S.round+(i===2?1:0);
+        const cnt=effectiveRound+(i===2?1:0);
         const avail=ALL_SKILLS.filter(x=>x.id!=='resurrect'||Math.random()<0.2);
         const skills=[...avail].sort(()=>Math.random()-0.5).slice(0,Math.min(cnt,avail.length));
         const div=document.createElement('div');
@@ -1381,33 +1453,66 @@ function enemyDefeated() {
     if(S.inBattle===false) return; // 防止重复调用
     S.inBattle=false;
     S.battleResult='win';
-    // 升级
-    S.player.level++;
-    calcPlayerStats();
-    S.player.hp=S.player.maxHp;
-    addLog('<span class="log-system">🎉 胜利! 升级到 Lv.'+S.player.level+'!</span>');
 
-    // 进化检查（Lv3→幼虾，Lv5→战斗虾）
-    let evolved=false, evolvedSkill=null;
-    if(S.player.level===3&&S.phase===0) {
-        S.phase=1; evolved=true;
-    } else if(S.player.level===5&&S.phase===1) {
-        S.phase=2; evolved=true;
+    // PVP模式：一局定胜负，显示结果后直接结束
+    if(S.lobsterMode==='pvp') {
+        addLog('<span class="log-system">🎉 PVP胜利! 恭喜你击败了对手!</span>');
+        document.getElementById('reward-title').textContent='🏆 PVP胜利!';
+        document.getElementById('reward-evolution-container').style.display='none';
+        document.getElementById('reward-skill-container').style.display='none';
+        document.getElementById('reward-equip-container').style.display='none';
+        document.getElementById('reward-panel').classList.add('show');
+        document.getElementById('btn-start').disabled=true;
+        S.waitingForExport=true; // 复用这个flag让closeReward处理结束
+        updateUI();
+        return;
     }
-    if(evolved) {
+
+    // 升级（无尽模式不升级）
+    if(!S.noGrowth) {
+        S.player.level++;
         calcPlayerStats();
         S.player.hp=S.player.maxHp;
-        addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'! 获得随机技能!</span>');
-        const avail=ALL_SKILLS.filter(s=>!S.player.skills.find(p=>p.id===s.id));
-        if(avail.length>0) {
-            evolvedSkill=cloneSkill(avail[Math.floor(Math.random()*avail.length)]);
-            S.player.skills.push(evolvedSkill);
-            addLog('<span class="log-player">🌟 进化奖励: 获得 【'+evolvedSkill.icon+evolvedSkill.name+'】!</span>');
+        addLog('<span class="log-system">🎉 胜利! 升级到 Lv.'+S.player.level+'!</span>');
+
+        // 进化检查（Lv3→幼虾，Lv5→战斗虾）
+        let evolved=false, evolvedSkill=null;
+        if(S.player.level===3&&S.phase===0) {
+            S.phase=1; evolved=true;
+        } else if(S.player.level===5&&S.phase===1) {
+            S.phase=2; evolved=true;
         }
+        if(evolved) {
+            calcPlayerStats();
+            S.player.hp=S.player.maxHp;
+            addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'! 获得随机技能!</span>');
+            const avail=ALL_SKILLS.filter(s=>!S.player.skills.find(p=>p.id===s.id));
+            if(avail.length>0) {
+                evolvedSkill=cloneSkill(avail[Math.floor(Math.random()*avail.length)]);
+                S.player.skills.push(evolvedSkill);
+                addLog('<span class="log-player">🌟 进化奖励: 获得 【'+evolvedSkill.icon+evolvedSkill.name+'】!</span>');
+            }
+        }
+        if(evolved) {
+            let evoText='🌀 进化为 <strong>'+PHASES[S.phase]+'</strong>！';
+            if(evolvedSkill) evoText+='<br>🌟 领悟 '+evolvedSkill.icon+evolvedSkill.name;
+            document.getElementById('reward-evolution-container').innerHTML=evoText;
+            document.getElementById('reward-evolution-container').style.display='block';
+            document.getElementById('reward-title').textContent='🎉 进化成功!';
+        } else {
+            document.getElementById('reward-evolution-container').style.display='none';
+            document.getElementById('reward-title').textContent='🎉 战斗胜利!';
+        }
+    } else {
+        // 无尽模式不成长
+        S.player.hp=S.player.maxHp;
+        addLog('<span class="log-system">🎉 无尽模式第 '+S.round+' 轮胜利!</span>');
+        document.getElementById('reward-evolution-container').style.display='none';
+        document.getElementById('reward-title').textContent='🎉 继续挑战!';
     }
 
-    // 偷学敌人技能
-    if(S.enemy&&S.enemy.skills.length>0) {
+    // 偷学敌人技能（无尽/PVP模式不偷学）
+    if(!S.noSkillSteal&&S.enemy&&S.enemy.skills.length>0) {
         const enemySkillIdx=Math.floor(Math.random()*S.enemy.skills.length);
         const newSkill=cloneSkill(S.enemy.skills[enemySkillIdx]);
         if(!S.player.skills.find(s=>s.id===newSkill.id)) {
@@ -1422,8 +1527,8 @@ function enemyDefeated() {
         document.getElementById('reward-skill-container').style.display='none';
     }
 
-    // 装备掉落
-    if(Math.random()<DROP_CHANCE) {
+    // 装备掉落（无尽/PVP模式不掉落）
+    if(!S.noEquipDrop&&Math.random()<DROP_CHANCE) {
         const dropEquip=generateEquipment();
         S.player.inventory.push(dropEquip);
         addLog('<span class="log-system">📦 获得掉落装备: '+dropEquip.icon+dropEquip.name+' ['+EQUIP_QUALITY[dropEquip.quality]+']</span>');
@@ -1433,24 +1538,12 @@ function enemyDefeated() {
         document.getElementById('reward-equip-container').style.display='none';
     }
 
-    // 进化信息
-    if(evolved) {
-        let evoText='🌀 进化为 <strong>'+PHASES[S.phase]+'</strong>！';
-        if(evolvedSkill) evoText+='<br>🌟 领悟 '+evolvedSkill.icon+evolvedSkill.name;
-        document.getElementById('reward-evolution-container').innerHTML=evoText;
-        document.getElementById('reward-evolution-container').style.display='block';
-        document.getElementById('reward-title').textContent='🎉 进化成功!';
-    } else {
-        document.getElementById('reward-evolution-container').style.display='none';
-        document.getElementById('reward-title').textContent='🎉 战斗胜利!';
-    }
-
     document.getElementById('reward-panel').classList.add('show');
     document.getElementById('btn-start').disabled=false;
 
-    // 五轮结束：等待导出
-    // 注意：S.round++ 只在 closeReward() 中执行，避免重复递增
-    if(S.round>=5&&!S.exported) {
+    // 养虾模式5轮结束：等待导出
+    // 无尽模式永远不导出
+    if(S.lobsterMode==='raise'&&S.round>=5&&!S.exported) {
         S.waitingForExport=true;
     }
     updateUI();
@@ -1469,8 +1562,18 @@ function playerDefeated() {
     S.battleResult='lose';
     addLog('<span class="log-system">💀 败北...</span>');
     document.getElementById('game-over-title').textContent='游戏结束';
-    document.getElementById('game-over-msg').textContent='你的龙虾在第 '+S.round+' 轮倒下了...';
-    document.getElementById('final-round').textContent=S.round;
+    
+    // PVP模式和无尽模式显示不同消息
+    if(S.lobsterMode==='pvp') {
+        document.getElementById('game-over-msg').textContent='你输掉了PVP对战...';
+        document.getElementById('final-round').textContent='PVP';
+    } else if(S.lobsterMode==='endless') {
+        document.getElementById('game-over-msg').textContent='无尽模式第 '+S.round+' 轮挑战失败...';
+        document.getElementById('final-round').textContent=S.round;
+    } else {
+        document.getElementById('game-over-msg').textContent='你的龙虾在第 '+S.round+' 轮倒下了...';
+        document.getElementById('final-round').textContent=S.round;
+    }
     document.getElementById('btn-start').disabled=true;
     setTimeout(()=>{
         document.getElementById('game-over').classList.add('show','lose');
@@ -1479,7 +1582,23 @@ function playerDefeated() {
 
 function closeReward() {
     document.getElementById('reward-panel').classList.remove('show');
-    // 五轮结束：显示成虾导出面板
+    
+    // PVP模式：胜利后直接结束，不继续
+    if(S.lobsterMode==='pvp'&&S.battleResult==='win') {
+        S.waitingForExport=false;
+        addLog('<span class="log-system">🦐 PVP对战结束!</span>');
+        document.getElementById('game-over-title').textContent='🏆 PVP胜利!';
+        document.getElementById('game-over-msg').textContent='你击败了对手!';
+        document.getElementById('final-round').textContent='PVP';
+        document.getElementById('btn-start').disabled=true;
+        setTimeout(()=>{
+            document.getElementById('game-over').classList.add('show','win');
+        },1000);
+        updateUI();
+        return;
+    }
+    
+    // 养虾模式5轮结束：显示成虾导出面板
     if(S.waitingForExport) {
         S.waitingForExport=false;
         S.round++;
@@ -1488,6 +1607,8 @@ function closeReward() {
         updateUI();
         return;
     }
+    
+    // 无尽模式和养虾模式继续下一轮
     S.round++;
     updateUI();
     document.getElementById('btn-start').disabled=false;
@@ -1609,6 +1730,84 @@ function confirmImport() {
     document.getElementById('import-panel').classList.remove('show');
     document.getElementById('welcome-panel').classList.remove('show');
     addLog('<span class="log-system">🦐 成虾 【'+imported.name+'】 导入成功!</span>');
+    // 显示成虾模式选择面板
+    showLobsterModePanel();
+    updateUI();
+}
+
+function showLobsterModePanel() {
+    const p=S.player;
+    const sprite=PHASE_SPRITES[p.phase]||'🦐';
+    const desc='等级: Lv.'+p.level+' | 阶别: '+PHASES[p.phase]+' | 技能: '+p.skills.length+'个';
+    document.getElementById('lobster-mode-desc').innerHTML=sprite+'<br>'+p.name+'<br><small style="color:#aaa">'+desc+'</small>';
+    document.getElementById('lobster-mode-panel').classList.add('show');
+}
+
+function closeLobsterModePanel() {
+    document.getElementById('lobster-mode-panel').classList.remove('show');
+    document.getElementById('mode-select-panel').style.display='flex';
+}
+
+function selectLobsterMode(mode) {
+    document.getElementById('lobster-mode-panel').classList.remove('show');
+    if(mode==='endless') {
+        S.lobsterMode='endless';
+        S.round=1;
+        // 成虾不成长：禁止升级、禁止偷技能、禁止掉落装备
+        S.noGrowth=true;
+        S.noSkillSteal=true;
+        S.noEquipDrop=true;
+        addLog('<span class="log-system">♾️ 进入无尽模式！怪物难度从第6轮开始...</span>');
+        document.getElementById('btn-start').disabled=false;
+    } else if(mode==='pvp') {
+        S.lobsterMode='pvp';
+        // PVP模式：显示对手导入面板
+        document.getElementById('pvp-import-panel').classList.add('show');
+        document.getElementById('pvp-import-code').value='';
+        document.getElementById('pvp-import-error').style.display='none';
+    }
+    updateUI();
+}
+
+function closePvpImportPanel() {
+    document.getElementById('pvp-import-panel').classList.remove('show');
+    document.getElementById('lobster-mode-panel').classList.add('show');
+}
+
+function confirmPvpImport() {
+    const code=document.getElementById('pvp-import-code').value.trim();
+    if(!code) return;
+    const opponent=importLobster(code);
+    if(!opponent) {
+        document.getElementById('pvp-import-error').style.display='block';
+        document.getElementById('pvp-import-error').textContent='对手代码无效，请重新输入';
+        return;
+    }
+    // 保存对手数据
+    S.pvpOpponent=JSON.parse(JSON.stringify({
+        name:opponent.name, level:opponent.level, phase:opponent.phase,
+        hp:opponent.hp, maxHp:opponent.maxHp,
+        atk:opponent.atk, def:opponent.def, spd:opponent.spd,
+        skills:opponent.skills, equipment:opponent.equipment,
+        buffs:[], shields:0, poisonDmg:0, bleedDmg:0, alive:true,
+        resurrected:false, resurrectedUsed:false,
+        stunned:false, sealed:false,
+        speedBoosted:false, defReduced:false,
+        resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0
+    }));
+    // 传递被动技能属性
+    S.pvpOpponent.skills.forEach(s=>{
+        if(s.passive){
+            if(s.id==='lifesteal') S.pvpOpponent.lifesteal=s.lifesteal;
+            if(s.id==='counter') S.pvpOpponent.counterRate=s.counterRate;
+            if(s.id==='resurrect') S.pvpOpponent.resurrectRate=s.resurrectRate;
+            if(s.id==='speedBoost'||s.id==='overclock') S.pvpOpponent.speedBoosted=true;
+        }
+    });
+    document.getElementById('pvp-import-panel').classList.remove('show');
+    S.pvpReady=true;
+    addLog('<span class="log-system">⚔️ 对手 【'+opponent.name+'】 已就位!</span>');
+    document.getElementById('btn-start').disabled=false;
     updateUI();
 }
 
@@ -1927,6 +2126,8 @@ function renderEnemySkills() {
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
