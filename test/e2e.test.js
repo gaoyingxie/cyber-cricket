@@ -71,7 +71,7 @@ async function run() {
     await test('UI-03: 阶别和回合数显示', async () => {
         const snapOut = await snap();
         // 阶别显示在状态栏，回合数显示在顶部和VS区域
-        assert(snapOut.includes('阶别') && snapOut.includes('幼虫') && snapOut.includes('第') && snapOut.includes('轮'), '阶别和回合数应显示');
+        assert(snapOut.includes('阶别') && snapOut.includes('虾苗') && snapOut.includes('第') && snapOut.includes('轮'), '阶别和回合数应显示');
     });
     
     await test('UI-04: 速度切换按钮显示', async () => {
