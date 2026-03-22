@@ -33,9 +33,9 @@ function enemyDefeated() {
         // 进化检查（Lv3→幼虾，Lv5→战斗虾）
         let evolved=false, evolvedSkill=null;
         if(S.player.level===3&&S.phase===0) {
-            S.phase=1; evolved=true;
+            S.phase=1; S.player.phase=1; evolved=true;
         } else if(S.player.level===5&&S.phase===1) {
-            S.phase=2; evolved=true;
+            S.phase=2; S.player.phase=2; evolved=true;
         }
         if(evolved) {
             calcPlayerStats();

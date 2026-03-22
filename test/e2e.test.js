@@ -178,10 +178,10 @@ async function run() {
         assert(sprite.length > 0, `玩家精灵应显示: ${sprite}`);
     });
     
-    await test('UI-22: 玩家技能按钮渲染', async () => {
+    await test('UI-22: 玩家技能按钮渲染(含被动)', async () => {
         const btns = await evalJS("document.querySelectorAll('#player-skills .skill-btn').length");
-        const actives = await evalJS("S.player.skills.filter(s=>!s.passive).length");
-        assert(btns === actives, `技能按钮数应为${actives}, 实际${btns}`);
+        const total = await evalJS("S.player.skills.length");
+        assert(btns === total, `技能按钮数应为${total}(含被动), 实际${btns}`);
     });
     
     await test('UI-23: 敌人区域显示VS', async () => {
