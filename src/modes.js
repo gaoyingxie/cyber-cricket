@@ -150,16 +150,11 @@ function importLobster(code) {
             stunned:false, sealed:false,
             speedBoosted:false, defReduced:false,
             resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0,
+            vulnerable:0, armorBroken:0, regenLeft:0,
+            dodgeRate:0, reflectRate:0, reflectDmg:0, shieldBoostRate:0, regenRate:0,
             baseHp, baseAtk, baseDef, baseSpd, hpM:1, atkM:1
         };
-        S.player.skills.forEach(s=>{
-            if(s.passive){
-                if(s.id==='lifesteal') S.player.lifesteal=s.lifesteal;
-                if(s.id==='counter') S.player.counterRate=s.counterRate;
-                if(s.id==='resurrect') S.player.resurrectRate=s.resurrectRate;
-                if(s.id==='speedBoost'||s.id==='overclock') S.player.speedBoosted=true;
-            }
-        });
+        if(typeof refreshPassiveSkills==='function') refreshPassiveSkills(S.player);
         calcPlayerStats();
         return S.player;
     } catch(e) {

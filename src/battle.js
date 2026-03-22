@@ -12,12 +12,14 @@ function startBattle() {
         opp.stunned=false;opp.sealed=false;
         opp.buffs=[];opp.reduceDmgRate=0;opp.defReduced=false;
         opp.resurrected=false;
+        opp.vulnerable=0;opp.armorBroken=0;opp.regenLeft=0;
         S.enemy=opp;
         S.player.hp=S.player.maxHp;
         S.player.poisonDmg=0;S.player.bleedDmg=0;S.player.shields=0;
         S.player.stunned=false;S.player.sealed=false;
         S.player.reduceDmgRate=0;S.player.defReduced=false;
         S.player.buffs=[];
+        S.player.vulnerable=0;S.player.armorBroken=0;S.player.regenLeft=0;
         S.playerCooldowns={};S.enemyCooldowns={};
         S.round=1;S.turn=0;
         S.inBattle=true;S.battleResult=null;
@@ -73,29 +75,16 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
     S.player.hp=S.player.maxHp;
     S.player.poisonDmg=0;S.player.bleedDmg=0;S.player.shields=0;
     S.player.stunned=false;S.player.sealed=false;
+    S.player.vulnerable=0;S.player.armorBroken=0;S.player.regenLeft=0;
     S.enemy={name,level,hp,maxHp:hp,atk,def,spd,
         skills:skills.map(s=>cloneSkill(s)),
         buffs:[],shields:0,poisonDmg:0,bleedDmg:0,alive:true,resurrected:false,
         stunned:false,sealed:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
-        speedBoosted:false,defReduced:false,lifesteal:0};
-    S.enemy.skills.forEach(s=>{
-        if(s.passive){
-            if(s.id==='lifesteal') S.enemy.lifesteal=s.lifesteal;
-            if(s.id==='counter') S.enemy.counterRate=s.counterRate;
-            if(s.id==='resurrect') S.enemy.resurrectRate=s.resurrectRate;
-            if(s.id==='speedBoost'||s.id==='overclock') S.enemy.speedBoosted=true;
-        }
-    });
+        speedBoosted:false,defReduced:false,lifesteal:0,
+        vulnerable:0,armorBroken:0,regenLeft:0};
+    refreshPassiveSkills(S.enemy);
     S.playerCooldowns={};S.enemyCooldowns={};
-    S.player.lifesteal=0;S.player.counterRate=0;S.player.resurrectRate=0;S.player.speedBoosted=false;
-    S.player.skills.forEach(s=>{
-        if(s.passive){
-            if(s.id==='lifesteal') S.player.lifesteal=s.lifesteal;
-            if(s.id==='counter') S.player.counterRate=s.counterRate;
-            if(s.id==='resurrect') S.player.resurrectRate=s.resurrectRate;
-            if(s.id==='speedBoost'||s.id==='overclock') S.player.speedBoosted=true;
-        }
-    });
+    refreshPassiveSkills(S.player);
     S.inBattle=true;S.turn=0;
     document.getElementById('btn-start').disabled=true;
     updateUI();
@@ -107,13 +96,33 @@ function selectEnemy(name,level,hp,atk,def,spd,skills) {
         addLog('<span class="log-system">⚡ 我方速度更高，先手!</span>');
         S.turn=1;
         addLog('<span class="log-turn">━━━ 第 1 回合 ━━━</span>');
-        setTimeout(executeAutoTurn,getBattleDelay());
+        setTimeout(()=>executeAutoTurn(),getBattleDelay());
     } else {
         addLog('<span class="log-system">⚡ 敌人速度更高，先手!</span>');
         S.turn=1;
         addLog('<span class="log-turn">━━━ 第 1 回合 ━━━</span>');
         setTimeout(()=>enemyTurn(),getBattleDelay());
     }
+}
+
+// 刷新被动技能加成
+function refreshPassiveSkills(entity) {
+    if(!entity) return;
+    entity.lifesteal=0;entity.counterRate=0;entity.resurrectRate=0;
+    entity.speedBoosted=false;entity.dodgeRate=0;entity.reflectRate=0;
+    entity.reflectDmg=0;entity.shieldBoostRate=0;entity.regenRate=0;
+    entity.skills.forEach(s=>{
+        if(s.passive){
+            if(s.id==='lifesteal') entity.lifesteal=s.lifesteal;
+            if(s.id==='counter') entity.counterRate=s.counterRate;
+            if(s.id==='resurrect') entity.resurrectRate=s.resurrectRate;
+            if(s.id==='speedBoost'||s.id==='overclock') entity.speedBoosted=true;
+            if(s.id==='dodge') entity.dodgeRate=s.dodgeRate||0.3;
+            if(s.id==='reflect') { entity.reflectRate=s.reflectRate||0.3; entity.reflectDmg=s.reflectDmg||0.33; }
+            if(s.id==='shield_boost') entity.shieldBoostRate=s.shieldBoostRate||0.5;
+            if(s.id==='regenerate') entity.regenRate=s.regenRate||0.03;
+        }
+    });
 }
 
 // ---------- 玩家回合 ----------
@@ -202,26 +211,57 @@ function doNormalAttack(attacker, defender, isPlayer, isSecondHit) {
         atkDmg*=2;
         addLog('<span class="log-system">💥 【必杀】暴击! 伤害×2</span>');
     }
+    // 闪避判定
+    if(defender.dodgeRate>0&&Math.random()<defender.dodgeRate) {
+        addLog('<span class="log-system">💨 【闪避】'+(isPlayer?'敌人':'你')+'躲避了攻击!</span>');
+        playAttackAnimation(isPlayer?'player-fighter':'enemy-fighter',isPlayer?'enemy-fighter':'player-fighter',false);
+        return;
+    }
+    // 护盾吸收
     if(defender.shields>0) {
         const absorb=Math.min(defender.shields,atkDmg);
         defender.shields-=absorb;atkDmg-=absorb;
         if(absorb>0) addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
     }
+    // 易伤增伤
+    if(defender.vulnerable>0) {
+        atkDmg=Math.floor(atkDmg*1.4);
+    }
+    // 防御减伤
+    let finalAtkDmg=atkDmg;
     if(defender.reduceDmgRate>0) {
         const reduced=Math.floor(atkDmg*defender.reduceDmgRate);
-        atkDmg-=reduced;
+        finalAtkDmg-=reduced;
         if(reduced>0) addLog('<span class="log-system">🛡️ 减伤效果抵消了 '+reduced+' 伤害</span>');
     }
-    defender.hp-=atkDmg;
+    if(defender.defReduced) {
+        finalAtkDmg=Math.max(1,Math.floor(finalAtkDmg*0.7));
+    } else if(defender.armorBroken>0) {
+        const def=defender.def||0;
+        finalAtkDmg=Math.max(1,Math.floor(finalAtkDmg*(1-def/(finalAtkDmg+100)*0.7)));
+    } else {
+        const def=defender.def||0;
+        finalAtkDmg=Math.max(1,Math.floor(finalAtkDmg*(1-def/(finalAtkDmg+100))));
+    }
+    defender.hp-=finalAtkDmg;
     const hitType=isSecondHit?'（连击第2次）':'';
-    addLog('<span class="log-'+(isPlayer?'player':'enemy')+'">👊 '+(isPlayer?attacker.name:'敌人')+'普通攻击'+hitType+'造成 '+atkDmg+' 伤害</span>');
-    showDamageNumber(document.getElementById(isPlayer?'enemy-fighter':'player-fighter'),atkDmg,'');
+    addLog('<span class="log-'+(isPlayer?'player':'enemy')+'">👊 '+(isPlayer?attacker.name:'敌人')+'普通攻击'+hitType+'造成 '+finalAtkDmg+' 伤害</span>');
+    showDamageNumber(document.getElementById(isPlayer?'enemy-fighter':'player-fighter'),finalAtkDmg,'');
     playAttackAnimation(isPlayer?'player-fighter':'enemy-fighter',isPlayer?'enemy-fighter':'player-fighter',false);
+    // 吸血
     if(attacker.lifesteal>0) {
-        const heal=Math.floor(atkDmg*attacker.lifesteal);
+        const heal=Math.floor(finalAtkDmg*attacker.lifesteal);
         attacker.hp=Math.min(attacker.maxHp,attacker.hp+heal);
         addLog('<span class="log-heal">💉 【吸血】 回复 '+heal+' HP</span>');
     }
+    // 反射判定
+    if(defender.reflectRate>0&&Math.random()<defender.reflectRate) {
+        const reflectDmg=Math.floor(finalAtkDmg*(defender.reflectDmg||0.33));
+        attacker.hp-=reflectDmg;
+        addLog('<span class="log-system">🪞 【反射】'+(isPlayer?'敌人':'你')+'反弹了 '+reflectDmg+' 伤害</span>');
+        showDamageNumber(document.getElementById(isPlayer?'player-fighter':'enemy-fighter'),reflectDmg,'');
+    }
+    // 连击判定
     const comboSkill=attacker.skills.find(s=>s.id==='combo'&&s.passive);
     if(comboSkill&&!isSecondHit&&defender.hp>0&&Math.random()<0.5) {
         addLog('<span class="log-system">👊 【连击】触发! 再次攻击</span>');
@@ -236,14 +276,13 @@ function processSkillEffect(skill, attacker, defender, isPlayer) {
     const isCrit=Math.random()<(skill.critRate||0);
     const critMult=isCrit?(skill.critMult||2):1;
     const karmaSkill=attacker.skills.find(s=>s.id==='karma'&&s.passive);
-    const karmaMult=karmaSkill?(Math.random()<0.8?2:0):1;
-    const karmaHeal=karmaSkill?(Math.random()<0.8?false:true):false;
+    const karmaHeal=karmaSkill?(Math.random()<0.2):false;
     for(let t=0;t<times;t++) {
         let dmg=0;
         if(skill.minDmg||skill.minDmg===0) {
             if(skill.execute) {
                 const hpPct=(defender.hp/defender.maxHp);
-                dmg=Math.max(1,Math.floor((attacker.atk||0)*(hpPct<0.5?2:0.3)));
+                dmg=Math.max(1,Math.floor((attacker.atk||0)*(hpPct<0.4?2:0.5)));
             } else {
                 dmg=Math.max(1,Math.floor((attacker.atk||0)*skill.minDmg*critMult));
             }
@@ -261,19 +300,26 @@ function processSkillEffect(skill, attacker, defender, isPlayer) {
             const hpPct=attacker.hp/attacker.maxHp;
             if(hpPct<0.5) dmg=Math.floor(dmg*(1+(0.5-hpPct)*2));
         }
+        // 偷取
         if(skill.drain) {
             const drainAmt=Math.floor((defender.hp||0)*skill.drain);
             defender.hp-=drainAmt;attacker.hp=Math.min(attacker.maxHp,(attacker.hp||0)+drainAmt);
             addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 吸取 '+drainAmt+' HP</span>');
         }
+        // 吸血
         if(skill.lifesteal) {
             const healAmt=Math.floor((dmg||0)*skill.lifesteal);
             attacker.hp=Math.min(attacker.maxHp,(attacker.hp||0)+healAmt);
             addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 吸血 '+healAmt+' HP</span>');
         }
+        // 易伤增伤
+        if(defender.vulnerable>0) dmg=Math.floor(dmg*1.4);
+        // 伤害计算
         if(skill.ignoreDef) { defender.hp-=dmg;totalDmg+=dmg; }
         else {
-            const def=defender.def||0;
+            let def=defender.def||0;
+            if(defender.defReduced) def=def*0.3;
+            else if(defender.armorBroken>0) def=def*0.7;
             const finalDmg=Math.max(1,Math.floor(dmg*(1-def/(dmg+100))));
             defender.hp-=finalDmg;totalDmg+=finalDmg;
         }
@@ -282,6 +328,7 @@ function processSkillEffect(skill, attacker, defender, isPlayer) {
     }
     if(isCrit&&totalDmg>0) addLog('<span class="log-crit">💥 暴击! 造成 '+totalDmg+' 伤害</span>');
     else if(totalDmg>0) addLog('<span class="log-damage">'+(isPlayer?'对敌':'对你')+'造成 '+totalDmg+' 伤害</span>');
+    // DOT
     if(skill.poisonDmg) {
         defender.poisonDmg=(defender.poisonDmg||0)+skill.poisonDmg;
         addLog('<span class="log-damage">'+(isPlayer?'敌':'我')+' 中了剧毒!</span>');
@@ -294,12 +341,51 @@ function processSkillEffect(skill, attacker, defender, isPlayer) {
         defender.sealed=true;
         addLog('<span class="log-system">'+(isPlayer?'敌':'我')+' 被封印了!</span>');
     }
+    // 防御减伤（给自己）
     if(skill.reduceDmg) attacker.reduceDmgRate=(attacker.reduceDmgRate||0)+skill.reduceDmg;
+    // 速度提升
     if(skill.speedBoost) { attacker.speedBoosted=true; addLog('<span class="log-system">'+(isPlayer?'我':'敌')+' 速度翻倍!</span>'); }
-    if(skill.shield) { attacker.shields=(attacker.shields||0)+skill.shield; addLog('<span class="log-system">'+(isPlayer?'我':'敌')+' 获得 '+skill.shield+' 层护盾!</span>'); }
+    // 护盾（含护盾强化被动加成）
+    if(skill.shield) {
+        let shieldAmt=skill.shield;
+        if(attacker.shieldBoostRate>0) shieldAmt=Math.floor(shieldAmt*(1+attacker.shieldBoostRate));
+        attacker.shields=(attacker.shields||0)+shieldAmt;
+        addLog('<span class="log-system">'+(isPlayer?'我':'敌')+' 获得 '+shieldAmt+' 层护盾!</span>');
+    }
+    // 反击/复活
     if(skill.counterRate) attacker.counterRate=skill.counterRate;
     if(skill.resurrectRate) attacker.resurrectRate=skill.resurrectRate;
+    // 降防
     if(skill.reduceStat) defender.defReduced=true;
+    // 破甲
+    if(skill.armorBreakRate) {
+        defender.armorBroken=(skill.armorBreakDuration||2);
+        addLog('<span class="log-system">'+(isPlayer?'敌':'我')+' 护甲被击破! 防御降低30% ('+(skill.armorBreakDuration||2)+'回合)</span>');
+    }
+    // 再生（主动）
+    if(skill.regenRate) {
+        attacker.regenLeft=(skill.regenDuration||3);
+        addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 进入再生状态! 每回合恢复8%HP ('+(skill.regenDuration||3)+'回合)</span>');
+    }
+    // 易伤
+    if(skill.vulnerabilityRate) {
+        defender.vulnerable=(skill.vulnerabilityDuration||2);
+        addLog('<span class="log-system">'+(isPlayer?'敌':'我')+' 受到易伤影响! 受伤增加40% ('+(skill.vulnerabilityDuration||2)+'回合)</span>');
+    }
+    // 即时治疗
+    if(skill.healRate) {
+        const healAmt=Math.floor(attacker.maxHp*skill.healRate);
+        attacker.hp=Math.min(attacker.maxHp,attacker.hp+healAmt);
+        addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 恢复了 '+healAmt+' HP</span>');
+    }
+    // 镜反
+    if(skill.mirrorRate) {
+        const mirrorDmg=skill.mirrorDmg||0.33;
+        if(Math.random()<skill.mirrorRate) {
+            addLog('<span class="log-system">🪞 【镜反】反弹了 '+Math.floor(totalDmg*mirrorDmg)+' 伤害</span>');
+            defender.hp-=Math.floor(totalDmg*mirrorDmg);
+        }
+    }
     if(isPlayer) playAttackAnimation('player-fighter','enemy-fighter',isCrit);
     else playAttackAnimation('enemy-fighter','player-fighter',isCrit);
     attacker.hp=Math.min(attacker.maxHp,attacker.hp);
@@ -364,7 +450,7 @@ function processEnemyQueue() {
 }
 
 function endTurn() {
-    // 防御技能效果在回合开始时重置（无论战斗是否在进行）
+    // 防御技能效果在回合开始时重置
     S.player.reduceDmgRate=0;
     if(S.enemy) S.enemy.reduceDmgRate=0;
     if(!S.inBattle) return;
@@ -372,26 +458,8 @@ function endTurn() {
     for(let id in S.playerCooldowns) { if(S.playerCooldowns[id]>0) S.playerCooldowns[id]--; }
     for(let id in S.enemyCooldowns) { if(S.enemyCooldowns[id]>0) S.enemyCooldowns[id]--; }
     // 刷新被动
-    S.player.lifesteal=0;S.player.counterRate=0;S.player.resurrectRate=0;S.player.speedBoosted=false;
-    S.player.skills.forEach(s=>{
-        if(s.passive){
-            if(s.id==='lifesteal') S.player.lifesteal=s.lifesteal;
-            if(s.id==='counter') S.player.counterRate=s.counterRate;
-            if(s.id==='resurrect') S.player.resurrectRate=s.resurrectRate;
-            if(s.id==='speedBoost'||s.id==='overclock') S.player.speedBoosted=true;
-        }
-    });
-    if(S.enemy) {
-        S.enemy.lifesteal=0;S.enemy.counterRate=0;S.enemy.resurrectRate=0;S.enemy.speedBoosted=false;
-        S.enemy.skills.forEach(s=>{
-            if(s.passive){
-                if(s.id==='lifesteal') S.enemy.lifesteal=s.lifesteal;
-                if(s.id==='counter') S.enemy.counterRate=s.counterRate;
-                if(s.id==='resurrect') S.enemy.resurrectRate=s.resurrectRate;
-                if(s.id==='speedBoost'||s.id==='overclock') S.enemy.speedBoosted=true;
-            }
-        });
-    }
+    refreshPassiveSkills(S.player);
+    if(S.enemy) refreshPassiveSkills(S.enemy);
     // DOT伤害
     if(S.player.poisonDmg>0) {
         const pDmg=Math.floor(S.player.maxHp*S.player.poisonDmg);
@@ -415,8 +483,31 @@ function endTurn() {
         S.enemy.hp-=bDmg;
         addLog('<span class="log-damage">🩸 【撕裂】敌人受到 '+bDmg+' 伤害</span>');
     }
+    // 再生（被动+主动）
+    if(S.player.regenLeft>0) {
+        const regenAmt=Math.floor(S.player.maxHp*0.08);
+        S.player.hp=Math.min(S.player.maxHp,S.player.hp+regenAmt);
+        addLog('<span class="log-heal">🌱 【再生】你的龙虾恢复了 '+regenAmt+' HP</span>');
+        S.player.regenLeft--;
+    }
+    if(S.player.regenRate>0) {
+        const regenAmt=Math.floor(S.player.maxHp*S.player.regenRate);
+        S.player.hp=Math.min(S.player.maxHp,S.player.hp+regenAmt);
+        addLog('<span class="log-heal">🌿 【再生】你的龙虾恢复了 '+regenAmt+' HP</span>');
+    }
+    if(S.enemy&&S.enemy.regenLeft>0) {
+        const regenAmt=Math.floor(S.enemy.maxHp*0.08);
+        S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp+regenAmt);
+        addLog('<span class="log-heal">🌱 【再生】敌人恢复了 '+regenAmt+' HP</span>');
+        S.enemy.regenLeft--;
+    }
+    // 状态持续时间减少
     if(S.player.defReduced&&Math.random()<0.3) S.player.defReduced=false;
     if(S.enemy&&S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
+    if(S.player.armorBroken>0) { S.player.armorBroken--; if(S.player.armorBroken===0) addLog('<span class="log-system">你的龙虾护甲恢复了</span>'); }
+    if(S.enemy&&S.enemy.armorBroken>0) { S.enemy.armorBroken--; if(S.enemy.armorBroken===0) addLog('<span class="log-system">敌人护甲恢复了</span>'); }
+    if(S.player.vulnerable>0) { S.player.vulnerable--; if(S.player.vulnerable===0) addLog('<span class="log-system">你的龙虾易伤消退了</span>'); }
+    if(S.enemy&&S.enemy.vulnerable>0) { S.enemy.vulnerable--; if(S.enemy.vulnerable===0) addLog('<span class="log-system">敌人易伤消退了</span>'); }
     S.player.buffs=[];
     if(S.enemy) S.enemy.buffs=[];
     updateUI();
