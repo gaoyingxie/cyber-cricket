@@ -8,6 +8,8 @@ function enemyDefeated() {
     // PVP模式：一局定胜负，显示结果后直接结束
     if(S.lobsterMode==='pvp') {
         addLog('<span class="log-system">🎉 PVP胜利! 恭喜你击败了对手!</span>');
+        // 播放胜利动画
+        playVictoryAnimation(document.getElementById('player-sprite'));
         document.getElementById('reward-title').textContent='🏆 PVP胜利!';
         document.getElementById('reward-evolution-container').style.display='none';
         document.getElementById('reward-skill-container').style.display='none';
@@ -25,6 +27,8 @@ function enemyDefeated() {
         calcPlayerStats();
         S.player.hp=S.player.maxHp;
         addLog('<span class="log-system">🎉 胜利! 升级到 Lv.'+S.player.level+'!</span>');
+        // 播放升级特效
+        setTimeout(()=>playLevelUpEffect(document.getElementById('player-fighter')),100);
 
         // 进化检查（Lv3→幼虾，Lv5→战斗虾）
         let evolved=false, evolvedSkill=null;
@@ -37,6 +41,8 @@ function enemyDefeated() {
             calcPlayerStats();
             S.player.hp=S.player.maxHp;
             addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'! 获得随机技能!</span>');
+            // 播放进化动画
+            setTimeout(()=>playEvolveAnimation(document.getElementById('player-sprite')),300);
             const avail=ALL_SKILLS.filter(s=>!S.player.skills.find(p=>p.id===s.id));
             if(avail.length>0) {
                 evolvedSkill=cloneSkill(avail[Math.floor(Math.random()*avail.length)]);
@@ -113,6 +119,8 @@ function playerDefeated() {
     S.inBattle=false;
     S.battleResult='lose';
     addLog('<span class="log-system">💀 败北...</span>');
+    // 播放战败动画
+    playDefeatAnimation(document.getElementById('player-sprite'));
     document.getElementById('game-over-title').textContent='游戏结束';
     
     // PVP模式和无尽模式显示不同消息

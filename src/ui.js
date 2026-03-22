@@ -17,17 +17,17 @@ function playAttackAnimation(attackerId, targetId, isCrit) {
     const atk=document.getElementById(attackerId);
     const def=document.getElementById(targetId);
     if(!atk||!def) return;
-    atk.classList.add('attacking');
+    atk.classList.add('power-attack');
     setTimeout(()=>{
-        atk.classList.remove('attacking');
-        def.classList.add('hit');
+        atk.classList.remove('power-attack');
+        def.classList.add('taking-hit');
         if(isCrit) {
             def.classList.add('crit-effect');
             document.body.classList.add('crit-flash');
             setTimeout(()=>{document.body.classList.remove('crit-flash');},300);
             setTimeout(()=>def.classList.remove('crit-effect'),500);
         }
-        setTimeout(()=>def.classList.remove('hit'),300);
+        setTimeout(()=>def.classList.remove('taking-hit'),300);
     },300);
 }
 
@@ -35,6 +35,37 @@ function playResurrectAnimation(element) {
     if(!element) return;
     element.classList.add('resurrected');
     setTimeout(()=>element.classList.remove('resurrected'),1500);
+}
+
+function playEvolveAnimation(spriteEl) {
+    if(!spriteEl) return;
+    spriteEl.classList.add('evolving');
+    setTimeout(()=>spriteEl.classList.remove('evolving'),1200);
+}
+
+function playLevelUpEffect(playerEl) {
+    if(!playerEl) return;
+    // 升级时给fighter一个光效爆发
+    playerEl.classList.add('level-up-burst');
+    // 添加升级文字
+    const textEl=document.createElement('div');
+    textEl.className='level-up-text';
+    textEl.textContent='↑ Lv Up!';
+    playerEl.appendChild(textEl);
+    setTimeout(()=>{
+        playerEl.classList.remove('level-up-burst');
+        textEl.remove();
+    },1000);
+}
+
+function playVictoryAnimation(spriteEl) {
+    if(!spriteEl) return;
+    spriteEl.classList.add('victory-dance');
+}
+
+function playDefeatAnimation(spriteEl) {
+    if(!spriteEl) return;
+    spriteEl.classList.add('defeat-fall');
 }
 
 // ---------- 技能弹窗 ----------

@@ -68,48 +68,111 @@
         .fighter-sprite { font-size: 80px; margin-bottom: 10px; transition: all 0.3s; position: relative; animation: lobsterFloat 3s ease-in-out infinite; transform-origin: center bottom; }
         
         /* ===== 进化阶段精灵样式 ===== */
+        /* 阶段0-4: 各自独特的外观、动画强度、光效 */
         .sprite-phase-0 {
-            font-size: 60px;
-            background: linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #16a34a 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 8px #4ade80);
+            font-size: 55px;
+            filter: drop-shadow(0 0 6px #4ade80);
+            animation: lobsterFloat 4s ease-in-out infinite;
         }
         .sprite-phase-1 {
-            font-size: 70px;
-            background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 50%, #0284c7 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px #38bdf8);
+            font-size: 65px;
+            filter: drop-shadow(0 0 10px #38bdf8) drop-shadow(0 0 20px #0ea5e9);
+            animation: lobsterFloat 3.5s ease-in-out infinite;
         }
         .sprite-phase-2 {
-            font-size: 75px;
-            background: linear-gradient(135deg, #fb923c 0%, #f97316 50%, #ea580c 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 12px #fb923c);
-            animation: lobsterFloat 3s ease-in-out infinite, battlePulse 1s ease-in-out infinite;
+            font-size: 72px;
+            filter: drop-shadow(0 0 12px #fb923c) drop-shadow(0 0 24px #f97316);
+            animation: lobsterFloat 3s ease-in-out infinite, battlePulse 1.5s ease-in-out infinite;
         }
         .sprite-phase-3 {
             font-size: 80px;
-            background: linear-gradient(135deg, #94a3b8 0%, #64748b 50%, #475569 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 0 15px #67e8f9) drop-shadow(0 0 30px #06b6d4);
-            animation: lobsterFloat 3s ease-in-out infinite, armorGlow 2s ease-in-out infinite;
+            animation: lobsterFloat 2.5s ease-in-out infinite, armorGlow 2s ease-in-out infinite;
         }
         .sprite-phase-4 {
             font-size: 90px;
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 0 20px #fbbf24) drop-shadow(0 0 40px #f59e0b) drop-shadow(0 0 60px #ea580c);
-            animation: ultimateFloat 2s ease-in-out infinite, ultimateGlow 1.5s ease-in-out infinite;
+            animation: ultimateFloat 1.8s ease-in-out infinite, ultimateGlow 1.5s ease-in-out infinite;
+        }
+        
+        /* 进化动画 */
+        @keyframes evolveTransform {
+            0% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+            25% { transform: scale(1.3) rotate(-10deg); filter: brightness(2) hue-rotate(30deg); }
+            50% { transform: scale(1.5) rotate(10deg); filter: brightness(3) hue-rotate(60deg); }
+            75% { transform: scale(1.3) rotate(-5deg); filter: brightness(2) hue-rotate(30deg); }
+            100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+        }
+        .evolving {
+            animation: evolveTransform 1.2s ease-in-out forwards !important;
+        }
+        
+        /* 升级特效 */
+        @keyframes levelUpBurst {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.8); }
+            50% { transform: scale(1.2); box-shadow: 0 0 30px 10px rgba(251, 191, 36, 0.4); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+        }
+        @keyframes levelUpText {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1.5); }
+        }
+        .level-up-burst {
+            animation: levelUpBurst 0.8s ease-out;
+        }
+        .level-up-text {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #fbbf24;
+            text-shadow: 0 0 10px #fbbf24, 0 0 20px #f59e0b;
+            animation: levelUpText 1s ease-out forwards;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        /* 攻击特效 */
+        @keyframes powerStrike {
+            0% { transform: translateX(0) scale(1); }
+            30% { transform: translateX(30px) scale(1.2); }
+            60% { transform: translateX(30px) scale(1.1); }
+            100% { transform: translateX(0) scale(1); }
+        }
+        @keyframes enemyHit {
+            0%, 100% { transform: translateX(0); filter: brightness(1); }
+            25% { transform: translateX(15px); filter: brightness(2) saturate(2); }
+            75% { transform: translateX(-5px); filter: brightness(1.5); }
+        }
+        .power-attack {
+            animation: powerStrike 0.4s ease-out !important;
+        }
+        .taking-hit {
+            animation: enemyHit 0.3s ease-out !important;
+        }
+        
+        /* 胜负特效 */
+        @keyframes victoryDance {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(-5deg); }
+            75% { transform: translateY(-10px) rotate(5deg); }
+        }
+        @keyframes defeatFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(20px) rotate(15deg); opacity: 0.5; }
+        }
+        .victory-dance {
+            animation: victoryDance 0.8s ease-in-out 3 !important;
+        }
+        .defeat-fall {
+            animation: defeatFall 1s ease-out forwards !important;
         }
         
         @keyframes battlePulse {
-            0%, 100% { filter: drop-shadow(0 0 12px #fb923c); }
-            50% { filter: drop-shadow(0 0 20px #fb923c) drop-shadow(0 0 30px #f97316); }
+            0%, 100% { filter: drop-shadow(0 0 12px #fb923c) drop-shadow(0 0 24px #f97316); }
+            50% { filter: drop-shadow(0 0 18px #fb923c) drop-shadow(0 0 36px #f97316) drop-shadow(0 0 50px #ea580c); }
         }
         @keyframes armorGlow {
             0%, 100% { filter: drop-shadow(0 0 15px #67e8f9) drop-shadow(0 0 30px #06b6d4); }
@@ -117,11 +180,11 @@
         }
         @keyframes ultimateFloat {
             0%, 100% { transform: translateY(0) rotate(-2deg); }
-            50% { transform: translateY(-8px) rotate(2deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
         }
         @keyframes ultimateGlow {
             0%, 100% { filter: drop-shadow(0 0 20px #fbbf24) drop-shadow(0 0 40px #f59e0b) drop-shadow(0 0 60px #ea580c); }
-            50% { filter: drop-shadow(0 0 30px #fbbf24) drop-shadow(0 0 50px #f59e0b) drop-shadow(0 0 80px #ea580c) drop-shadow(0 0 100px #dc2626); }
+            50% { filter: drop-shadow(0 0 30px #fbbf24) drop-shadow(0 0 60px #f59e0b) drop-shadow(0 0 80px #ea580c) drop-shadow(0 0 100px #dc2626); }
         }
         @keyframes lobsterFloat { 0%,100%{transform:translateY(0) rotate(0deg)} 25%{transform:translateY(-8px) rotate(2deg)} 75%{transform:translateY(-4px) rotate(-2deg)} }
         @keyframes lobsterAttack { 0%{transform:translateX(0)} 30%{transform:translateX(30px) scale(1.1)} 60%{transform:translateX(15px)} 100%{transform:translateX(0)} }
@@ -922,12 +985,14 @@
 
 
 
+
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
 const VERSION = 'v2.19';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
-const PHASE_SPRITES=['🦐','🦞','🔥','🛡️','⚡👑🦞'];
+const PHASE_SPRITES=['🦐','🦞','⚡','🔱','👑'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
 
 const EQUIP_TYPES=['atk','def','hp'];
@@ -1518,6 +1583,8 @@ function enemyDefeated() {
     // PVP模式：一局定胜负，显示结果后直接结束
     if(S.lobsterMode==='pvp') {
         addLog('<span class="log-system">🎉 PVP胜利! 恭喜你击败了对手!</span>');
+        // 播放胜利动画
+        playVictoryAnimation(document.getElementById('player-sprite'));
         document.getElementById('reward-title').textContent='🏆 PVP胜利!';
         document.getElementById('reward-evolution-container').style.display='none';
         document.getElementById('reward-skill-container').style.display='none';
@@ -1535,6 +1602,8 @@ function enemyDefeated() {
         calcPlayerStats();
         S.player.hp=S.player.maxHp;
         addLog('<span class="log-system">🎉 胜利! 升级到 Lv.'+S.player.level+'!</span>');
+        // 播放升级特效
+        setTimeout(()=>playLevelUpEffect(document.getElementById('player-fighter')),100);
 
         // 进化检查（Lv3→幼虾，Lv5→战斗虾）
         let evolved=false, evolvedSkill=null;
@@ -1547,6 +1616,8 @@ function enemyDefeated() {
             calcPlayerStats();
             S.player.hp=S.player.maxHp;
             addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'! 获得随机技能!</span>');
+            // 播放进化动画
+            setTimeout(()=>playEvolveAnimation(document.getElementById('player-sprite')),300);
             const avail=ALL_SKILLS.filter(s=>!S.player.skills.find(p=>p.id===s.id));
             if(avail.length>0) {
                 evolvedSkill=cloneSkill(avail[Math.floor(Math.random()*avail.length)]);
@@ -1623,6 +1694,8 @@ function playerDefeated() {
     S.inBattle=false;
     S.battleResult='lose';
     addLog('<span class="log-system">💀 败北...</span>');
+    // 播放战败动画
+    playDefeatAnimation(document.getElementById('player-sprite'));
     document.getElementById('game-over-title').textContent='游戏结束';
     
     // PVP模式和无尽模式显示不同消息
@@ -1989,17 +2062,17 @@ function playAttackAnimation(attackerId, targetId, isCrit) {
     const atk=document.getElementById(attackerId);
     const def=document.getElementById(targetId);
     if(!atk||!def) return;
-    atk.classList.add('attacking');
+    atk.classList.add('power-attack');
     setTimeout(()=>{
-        atk.classList.remove('attacking');
-        def.classList.add('hit');
+        atk.classList.remove('power-attack');
+        def.classList.add('taking-hit');
         if(isCrit) {
             def.classList.add('crit-effect');
             document.body.classList.add('crit-flash');
             setTimeout(()=>{document.body.classList.remove('crit-flash');},300);
             setTimeout(()=>def.classList.remove('crit-effect'),500);
         }
-        setTimeout(()=>def.classList.remove('hit'),300);
+        setTimeout(()=>def.classList.remove('taking-hit'),300);
     },300);
 }
 
@@ -2007,6 +2080,37 @@ function playResurrectAnimation(element) {
     if(!element) return;
     element.classList.add('resurrected');
     setTimeout(()=>element.classList.remove('resurrected'),1500);
+}
+
+function playEvolveAnimation(spriteEl) {
+    if(!spriteEl) return;
+    spriteEl.classList.add('evolving');
+    setTimeout(()=>spriteEl.classList.remove('evolving'),1200);
+}
+
+function playLevelUpEffect(playerEl) {
+    if(!playerEl) return;
+    // 升级时给fighter一个光效爆发
+    playerEl.classList.add('level-up-burst');
+    // 添加升级文字
+    const textEl=document.createElement('div');
+    textEl.className='level-up-text';
+    textEl.textContent='↑ Lv Up!';
+    playerEl.appendChild(textEl);
+    setTimeout(()=>{
+        playerEl.classList.remove('level-up-burst');
+        textEl.remove();
+    },1000);
+}
+
+function playVictoryAnimation(spriteEl) {
+    if(!spriteEl) return;
+    spriteEl.classList.add('victory-dance');
+}
+
+function playDefeatAnimation(spriteEl) {
+    if(!spriteEl) return;
+    spriteEl.classList.add('defeat-fall');
 }
 
 // ---------- 技能弹窗 ----------
@@ -2115,8 +2219,6 @@ function updatePlayerUI() {
         sprite.className='fighter-sprite';
         if(p.phase>0) sprite.classList.add('sprite-phase-'+p.phase);
     }
-    const phaseEl=document.getElementById('phase');
-    if(phaseEl) phaseEl.textContent=PHASES[p.phase];
 }
 
 function updateEnemyUI() {
@@ -2199,6 +2301,8 @@ function renderEnemySkills() {
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
