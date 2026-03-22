@@ -58,9 +58,9 @@ async function testConstants() {
     const g = loadGame();
     await g.wait(200);
     
-    test('CONST-01: 版本号应为v2.13', () => {
+    test('CONST-01: 版本号应为v2.19', () => {
         const v = g.get('VERSION');
-        assert(v === 'v2.13', `VERSION应为v2.13: ${v}`);
+        assert(v === 'v2.19', `VERSION应为v2.19: ${v}`);
     });
     
     test('CONST-02: 主动技能数量应为17个', () => {
@@ -348,6 +348,32 @@ async function testUI() {
     test('UI-08: renderEnemySkills函数存在', () => {
         const exists = typeof g.get('renderEnemySkills') === 'function';
         assert(exists, 'renderEnemySkills应为函数');
+    });
+    
+    // BUGFIX-2026-03-21: 阶别(phase)UI不更新问题
+    // 修复前: updatePlayerUI没有更新#phase元素
+    // 修复后: updatePlayerUI调用时会同步更新阶别显示
+    test('UI-09: updatePlayerUI会更新阶别(phase)元素', () => {
+        // 验证PHASES常量存在
+        const phases = g.get('PHASES');
+        assert(phases && phases.length === 5, 'PHASES常量应存在且有5个阶段');
+        
+        // 先初始化游戏状态（initState会创建player）
+        g.call('initState');
+        
+        // 模拟玩家进化到phase=1 (幼虾)
+        g.get('S').player.phase = 1;
+        g.call('updatePlayerUI');
+        
+        const phaseText = g.get("document.getElementById('phase').textContent");
+        assert(phaseText === '幼虾', `phase=1时应显示"幼虾": ${phaseText}`);
+        
+        // 模拟玩家进化到phase=2 (战斗虾)
+        g.get('S').player.phase = 2;
+        g.call('updatePlayerUI');
+        
+        const phaseText2 = g.get("document.getElementById('phase').textContent");
+        assert(phaseText2 === '战斗虾', `phase=2时应显示"战斗虾": ${phaseText2}`);
     });
     
     g.dom.window.close();
