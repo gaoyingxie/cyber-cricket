@@ -403,6 +403,16 @@ async function run() {
         assert(parseFloat(rate) === 0, `防御应重置: ${rate}`);
     });
     
+    await test('UI-54: 防御技能给自己减伤而不是敌人', async () => {
+        // 初始化状态：玩家使用防御技能
+        await evalJS("S.player.reduceDmgRate = 0; S.enemy.reduceDmgRate = 0;");
+        await evalJS("processSkillEffect({id:'defend',name:'防御',reduceDmg:0.6}, S.player, S.enemy, true);");
+        const playerRate = await evalJS("S.player.reduceDmgRate");
+        const enemyRate = await evalJS("S.enemy.reduceDmgRate");
+        assert(playerRate === 0.6, `玩家应获得60%减伤: ${playerRate}`);
+        assert(enemyRate === 0, `敌人不应获得减伤: ${enemyRate}`);
+    });
+    
     // ==================== 成虾模式测试 ====================
     console.log('\n📋 ENDLESS+PVP: 成虾模式(v2.16)');
     

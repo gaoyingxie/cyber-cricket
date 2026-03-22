@@ -294,7 +294,7 @@ function processSkillEffect(skill, attacker, defender, isPlayer) {
         defender.sealed=true;
         addLog('<span class="log-system">'+(isPlayer?'敌':'我')+' 被封印了!</span>');
     }
-    if(skill.reduceDmg) defender.reduceDmgRate=(defender.reduceDmgRate||0)+skill.reduceDmg;
+    if(skill.reduceDmg) attacker.reduceDmgRate=(attacker.reduceDmgRate||0)+skill.reduceDmg;
     if(skill.speedBoost) { attacker.speedBoosted=true; addLog('<span class="log-system">'+(isPlayer?'我':'敌')+' 速度翻倍!</span>'); }
     if(skill.shield) { attacker.shields=(attacker.shields||0)+skill.shield; addLog('<span class="log-system">'+(isPlayer?'我':'敌')+' 获得 '+skill.shield+' 层护盾!</span>'); }
     if(skill.counterRate) attacker.counterRate=skill.counterRate;
