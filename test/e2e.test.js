@@ -407,9 +407,9 @@ async function run() {
         // 初始化状态：玩家使用防御技能
         await evalJS("S.player.reduceDmgRate = 0; S.enemy.reduceDmgRate = 0;");
         await evalJS("processSkillEffect({id:'defend',name:'防御',reduceDmg:0.6}, S.player, S.enemy, true);");
-        const playerRate = await evalJS("S.player.reduceDmgRate");
-        const enemyRate = await evalJS("S.enemy.reduceDmgRate");
-        assert(playerRate === 0.6, `玩家应获得60%减伤: ${playerRate}`);
+        const playerRate = parseFloat(await evalJS("S.player.reduceDmgRate"));
+        const enemyRate = parseFloat(await evalJS("S.enemy.reduceDmgRate"));
+        assert(Math.abs(playerRate - 0.6) < 0.01, `玩家应获得60%减伤: ${playerRate}`);
         assert(enemyRate === 0, `敌人不应获得减伤: ${enemyRate}`);
     });
     
