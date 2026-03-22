@@ -226,7 +226,7 @@ function renderSkillButtons() {
         const btn=document.createElement('button');
         btn.className='skill-btn'+(skill.passive?' skill-passive':'');
         btn.disabled=skill.passive?(false):(cd>0||S.inBattle===false||S.isProcessing);
-        btn.innerHTML=(skill.passive?'✨ ':'')+skill.icon+' '+skill.name+(cd>0?' ('+cd+')':'');
+        btn.innerHTML=skill.icon+' '+skill.name+(cd>0?' ('+cd+')':'');
         btn.onclick=()=>{
             if(skill.passive) return;
             S.selectedSkill=skill.id;
@@ -253,7 +253,7 @@ function renderEnemySkills() {
         const btn=document.createElement('button');
         btn.className='skill-btn enemy-skill-btn'+(skill.passive?' skill-passive':'');
         btn.disabled=true;
-        btn.innerHTML=(skill.passive?'✨ ':'')+skill.icon+' '+skill.name;
+        btn.innerHTML=skill.icon+' '+skill.name;
         btn.onmouseenter=(e)=>showSkillTooltip(skill.id, e);
         btn.onmouseleave=hideSkillTooltip;
         container.appendChild(btn);
