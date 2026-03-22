@@ -440,6 +440,24 @@ async function run() {
         assert(parseInt(level) === 5, `无尽模式不升级: ${level}`);
     });
     
+    // ==================== v2.20 修复测试 ====================
+    console.log('\n📋 v2.20: 阶别更新+被动技能显示');
+    
+    await test('UI-54: updatePlayerUI函数存在', async () => {
+        const fnExists = await evalJS("typeof updatePlayerUI === 'function'");
+        assert(fnExists === 'true', 'updatePlayerUI应为函数');
+    });
+    
+    await test('UI-55: renderSkillButtons函数存在', async () => {
+        const fnExists = await evalJS("typeof renderSkillButtons === 'function'");
+        assert(fnExists === 'true', 'renderSkillButtons应为函数');
+    });
+    
+    await test('UI-56: renderEnemySkills函数存在', async () => {
+        const fnExists = await evalJS("typeof renderEnemySkills === 'function'");
+        assert(fnExists === 'true', 'renderEnemySkills应为函数');
+    });
+    
     console.log('═'.repeat(50));
     console.log(`\n📊 E2E测试结果: ${testsPassed}/${testsRun} 通过`);
     
