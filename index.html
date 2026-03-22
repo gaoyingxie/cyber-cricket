@@ -361,8 +361,7 @@
         .skill-btn.defense { border-color: #4488ff; color: #4488ff; background: linear-gradient(135deg, #1a2a3a, #0a1a2a); }
         .skill-btn.special { border-color: #ff44ff; color: #ff44ff; background: linear-gradient(135deg, #2a1a2a, #1a0a1a); }
         .enemy-skill-btn { border-color: #ff6666; background: rgba(255,102,102,0.15); color: #ff6666; text-shadow: 0 0 5px #ff6666; }
-        .skill-passive { border-color: #a855f7 !important; }
-        .enemy-skill-btn.skill-passive { border-color: #f97316 !important; }
+        .skill-passive { border-color: #a855f7 !important; border-style: dashed; }
         .battle-log {
             background: rgba(0,0,0,0.5);
             border: 1px solid #333;
@@ -789,7 +788,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v2.22 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v2.23 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">虾苗</div></div>
         </div>
@@ -997,10 +996,12 @@
 
 
 
+
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
-const VERSION = 'v2.22';
+const VERSION = 'v2.23';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
 const PHASE_SPRITES=['🦐','🦞','⚡','🔱','👑'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
@@ -2317,6 +2318,8 @@ function renderEnemySkills() {
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
