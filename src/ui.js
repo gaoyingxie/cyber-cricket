@@ -164,10 +164,12 @@ function updatePlayerUI() {
     const maxHpEl=document.getElementById('player-max-hp');
     const statsEl=document.getElementById('player-stats');
     const sprite=document.getElementById('player-sprite');
+    const phaseEl=document.getElementById('phase');
     if(hpBar) hpBar.style.width=hpPct+'%';
     if(hpEl) hpEl.textContent=Math.floor(p.hp);
     if(maxHpEl) maxHpEl.textContent=p.maxHp;
     if(statsEl) statsEl.textContent='攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
+    if(phaseEl) phaseEl.textContent=PHASES[p.phase]||'幼虫';
     if(sprite) {
         sprite.textContent=PHASE_SPRITES[p.phase]||'🦐';
         // 移除旧阶段样式，添加新阶段样式
@@ -220,13 +222,13 @@ function renderSkillButtons() {
     if(!container||!S.player) return;
     container.innerHTML='';
     S.player.skills.forEach(skill=>{
-        if(skill.passive) return;
         const cd=S.playerCooldowns[skill.id]||0;
         const btn=document.createElement('button');
-        btn.className='skill-btn';
-        btn.disabled=cd>0||S.inBattle===false||S.isProcessing;
-        btn.innerHTML=skill.icon+' '+skill.name+(cd>0?' ('+cd+')':'');
+        btn.className='skill-btn'+(skill.passive?' skill-passive':'');
+        btn.disabled=skill.passive?(false):(cd>0||S.inBattle===false||S.isProcessing);
+        btn.innerHTML=(skill.passive?'✨ ':'')+skill.icon+' '+skill.name+(cd>0?' ('+cd+')':'');
         btn.onclick=()=>{
+            if(skill.passive) return;
             S.selectedSkill=skill.id;
             btn.classList.add('selected');
             document.querySelectorAll('.skill-btn').forEach(b=>{if(b!==btn) b.classList.remove('selected');});
@@ -242,12 +244,16 @@ function renderEnemySkills() {
     const container=document.getElementById('enemy-skills');
     if(!container||!S.enemy) return;
     container.innerHTML='';
-    // 只显示主动技能（被动技能自动生效，不显示按钮）
-    S.enemy.skills.filter(s=>!s.passive).forEach(skill=>{
+    // 显示所有技能：主动+被动
+    if(S.enemy.skills.length===0) {
+        container.innerHTML='<span style="color:#666;font-size:0.8em">无技能</span>';
+        return;
+    }
+    S.enemy.skills.forEach(skill=>{
         const btn=document.createElement('button');
-        btn.className='skill-btn enemy-skill-btn';
+        btn.className='skill-btn enemy-skill-btn'+(skill.passive?' skill-passive':'');
         btn.disabled=true;
-        btn.innerHTML=skill.icon+' '+skill.name;
+        btn.innerHTML=(skill.passive?'✨ ':'')+skill.icon+' '+skill.name;
         btn.onmouseenter=(e)=>showSkillTooltip(skill.id, e);
         btn.onmouseleave=hideSkillTooltip;
         container.appendChild(btn);
