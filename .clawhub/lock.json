@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "self-improving": {
+      "version": "1.2.16",
+      "installedAt": 1773931741942
+    },
+    "proactive-agent": {
+      "version": "3.1.0",
+      "installedAt": 1773931802279
+    },
+    "agent-browser-clawdbot": {
+      "version": "0.1.0",
+      "installedAt": 1773982081195
+    },
+    "ontology": {
+      "version": "1.0.4",
+      "installedAt": 1774067583377
+    },
+    "mem0": {
+      "version": "1.0.0",
+      "installedAt": 1774073522329
+    }
+  }
+}
