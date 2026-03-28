@@ -5,7 +5,7 @@ Skills define _how_ tools work. This file is for _your_ specifics — the stuff 
 ## GitHub
 
 - **SSH Key:** `~/.ssh/id_ed25519`（已配置，GitHub 已添加）
-- **Token:** 【已清除】（已失效，仅作记录）
+- **Token:** （已失效，请用 gh auth login 重新认证）
 - **gh CLI:** `/home/node/bin/gh`（不在 PATH 中，使用时需 `export PATH="$HOME/bin:$PATH"` 或用绝对路径）
 - **Git 协议:** 全局已配置 `url.git@github.com:.insteadOf=https://github.com/`，所有 git 操作走 SSH
 - **仓库:** git@github.com:gaoyingxie/cyber-cricket.git
