@@ -1,0 +1,13 @@
+{
+  "name": "cyber-cricket",
+  "version": "1.0.0",
+  "description": "赛博斗龙虾 H5回合制战斗游戏",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "jsdom": "^29.0.1"
+  }
+}

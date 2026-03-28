@@ -1,0 +1,2475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>赛博斗龙虾</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3a 50%, #0a0a1a 100%);
+            min-height: 100vh;
+            color: #00ff88;
+            overflow-x: hidden;
+        }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        .title {
+            text-align: center;
+            font-size: 2.5em;
+            color: #00ff88;
+            text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88;
+            margin: 20px 0;
+            animation: glitch 3s infinite;
+        }
+        .version { text-align: center; color: #666; font-size: 0.9em; margin-bottom: 20px; }
+        @keyframes glitch {
+            0%, 90%, 100% { transform: translate(0); }
+            92% { transform: translate(-2px, 1px); }
+            94% { transform: translate(2px, -1px); }
+            96% { transform: translate(-1px, 2px); }
+        }
+        .status-bar {
+            display: flex;
+            justify-content: space-around;
+            background: rgba(0,255,136,0.1);
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .stat { text-align: center; min-width: 80px; }
+        .stat-label { font-size: 0.8em; color: #888; }
+        .stat-value { font-size: 1.4em; color: #00ff88; }
+
+        .arena {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            min-height: 320px;
+            position: relative;
+            overflow: hidden;
+        }
+        .arena::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,136,0.03) 2px, rgba(0,255,136,0.03) 4px);
+            pointer-events: none;
+        }
+        .fighter { text-align: center; width: 45%; position: relative; z-index: 1; transition: transform 0.2s; }
+        .fighter-sprite { font-size: 80px; margin-bottom: 10px; transition: all 0.3s; position: relative; animation: lobsterFloat 3s ease-in-out infinite; transform-origin: center bottom; }
+        
+        /* ===== 进化阶段精灵样式 ===== */
+        /* 阶段0-4: 各自独特的外观、动画强度、光效 */
+        .sprite-phase-0 {
+            font-size: 55px;
+            filter: drop-shadow(0 0 6px #4ade80);
+            animation: lobsterFloat 4s ease-in-out infinite;
+        }
+        .sprite-phase-1 {
+            font-size: 65px;
+            filter: drop-shadow(0 0 10px #38bdf8) drop-shadow(0 0 20px #0ea5e9);
+            animation: lobsterFloat 3.5s ease-in-out infinite;
+        }
+        .sprite-phase-2 {
+            font-size: 72px;
+            filter: drop-shadow(0 0 12px #fb923c) drop-shadow(0 0 24px #f97316);
+            animation: lobsterFloat 3s ease-in-out infinite, battlePulse 1.5s ease-in-out infinite;
+        }
+        .sprite-phase-3 {
+            font-size: 80px;
+            filter: drop-shadow(0 0 15px #67e8f9) drop-shadow(0 0 30px #06b6d4);
+            animation: lobsterFloat 2.5s ease-in-out infinite, armorGlow 2s ease-in-out infinite;
+        }
+        .sprite-phase-4 {
+            font-size: 90px;
+            filter: drop-shadow(0 0 20px #fbbf24) drop-shadow(0 0 40px #f59e0b) drop-shadow(0 0 60px #ea580c);
+            animation: ultimateFloat 1.8s ease-in-out infinite, ultimateGlow 1.5s ease-in-out infinite;
+        }
+        
+        /* 进化动画 */
+        @keyframes evolveTransform {
+            0% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+            25% { transform: scale(1.3) rotate(-10deg); filter: brightness(2) hue-rotate(30deg); }
+            50% { transform: scale(1.5) rotate(10deg); filter: brightness(3) hue-rotate(60deg); }
+            75% { transform: scale(1.3) rotate(-5deg); filter: brightness(2) hue-rotate(30deg); }
+            100% { transform: scale(1) rotate(0deg); filter: brightness(1); }
+        }
+        .evolving {
+            animation: evolveTransform 1.2s ease-in-out forwards !important;
+        }
+        
+        /* 升级特效 */
+        @keyframes levelUpBurst {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.8); }
+            50% { transform: scale(1.2); box-shadow: 0 0 30px 10px rgba(251, 191, 36, 0.4); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+        }
+        @keyframes levelUpText {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1.5); }
+        }
+        .level-up-burst {
+            animation: levelUpBurst 0.8s ease-out;
+        }
+        .level-up-text {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: #fbbf24;
+            text-shadow: 0 0 10px #fbbf24, 0 0 20px #f59e0b;
+            animation: levelUpText 1s ease-out forwards;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        /* 攻击特效 */
+        @keyframes powerStrike {
+            0% { transform: translateX(0) scale(1); }
+            30% { transform: translateX(30px) scale(1.2); }
+            60% { transform: translateX(30px) scale(1.1); }
+            100% { transform: translateX(0) scale(1); }
+        }
+        @keyframes enemyHit {
+            0%, 100% { transform: translateX(0); filter: brightness(1); }
+            25% { transform: translateX(15px); filter: brightness(2) saturate(2); }
+            75% { transform: translateX(-5px); filter: brightness(1.5); }
+        }
+        .power-attack {
+            animation: powerStrike 0.4s ease-out !important;
+        }
+        .taking-hit {
+            animation: enemyHit 0.3s ease-out !important;
+        }
+        
+        /* 胜负特效 */
+        @keyframes victoryDance {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-15px) rotate(-5deg); }
+            75% { transform: translateY(-10px) rotate(5deg); }
+        }
+        @keyframes defeatFall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(20px) rotate(15deg); opacity: 0.5; }
+        }
+        .victory-dance {
+            animation: victoryDance 0.8s ease-in-out 3 !important;
+        }
+        .defeat-fall {
+            animation: defeatFall 1s ease-out forwards !important;
+        }
+        
+        @keyframes battlePulse {
+            0%, 100% { filter: drop-shadow(0 0 12px #fb923c) drop-shadow(0 0 24px #f97316); }
+            50% { filter: drop-shadow(0 0 18px #fb923c) drop-shadow(0 0 36px #f97316) drop-shadow(0 0 50px #ea580c); }
+        }
+        @keyframes armorGlow {
+            0%, 100% { filter: drop-shadow(0 0 15px #67e8f9) drop-shadow(0 0 30px #06b6d4); }
+            50% { filter: drop-shadow(0 0 25px #67e8f9) drop-shadow(0 0 50px #06b6d4) drop-shadow(0 0 70px #22d3ee); }
+        }
+        @keyframes ultimateFloat {
+            0%, 100% { transform: translateY(0) rotate(-2deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        @keyframes ultimateGlow {
+            0%, 100% { filter: drop-shadow(0 0 20px #fbbf24) drop-shadow(0 0 40px #f59e0b) drop-shadow(0 0 60px #ea580c); }
+            50% { filter: drop-shadow(0 0 30px #fbbf24) drop-shadow(0 0 60px #f59e0b) drop-shadow(0 0 80px #ea580c) drop-shadow(0 0 100px #dc2626); }
+        }
+        @keyframes lobsterFloat { 0%,100%{transform:translateY(0) rotate(0deg)} 25%{transform:translateY(-8px) rotate(2deg)} 75%{transform:translateY(-4px) rotate(-2deg)} }
+        @keyframes lobsterAttack { 0%{transform:translateX(0)} 30%{transform:translateX(30px) scale(1.1)} 60%{transform:translateX(15px)} 100%{transform:translateX(0)} }
+        @keyframes lobsterHit { 0%{transform:translateX(0);filter:brightness(1)} 20%{transform:translateX(-10px);filter:brightness(2)} 40%{transform:translateX(5px)} 60%{transform:translateX(-5px);filter:brightness(1.5)} 100%{transform:translateX(0);filter:brightness(1)} }
+        @keyframes lobsterVictory { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-15px) scale(1.1)} }
+        @keyframes lobsterDeath { 0%{transform:rotate(0) scale(1);opacity:1} 50%{transform:rotate(180deg) scale(0.5);opacity:0.5} 100%{transform:rotate(360deg) scale(0);opacity:0} }
+        @keyframes lobsterGlow { 0%,100%{filter:drop-shadow(0 0 10px currentColor)} 50%{filter:drop-shadow(0 0 25px currentColor)} }
+        @keyframes lobsterCritical { 0%{transform:scale(1);filter:brightness(1)} 50%{transform:scale(1.3);filter:brightness(1.5) hue-rotate(20deg)} 100%{transform:scale(1);filter:brightness(1)} }
+        .lobster-phase-0 { color: #ff6b6b; text-shadow: 0 0 15px #ff6b6b; }
+        .lobster-phase-1 { color: #ffa500; text-shadow: 0 0 20px #ffa500; animation: lobsterFloat 2.5s ease-in-out infinite, lobsterGlow 2s ease-in-out infinite; }
+        .lobster-phase-2 { color: #00ff88; text-shadow: 0 0 25px #00ff88; animation: lobsterFloat 2s ease-in-out infinite, lobsterGlow 1.5s ease-in-out infinite; }
+        .lobster-phase-3 { color: #00ffff; text-shadow: 0 0 30px #00ffff, 0 0 60px #0088ff; animation: lobsterFloat 1.5s ease-in-out infinite, lobsterGlow 1s ease-in-out infinite; }
+        @keyframes lowHpWarning {
+            0%, 100% { filter: brightness(1) drop-shadow(0 0 10px currentColor); }
+            50% { filter: brightness(1.5) drop-shadow(0 0 25px #ff0000); }
+        }
+        .low-hp-warning { animation: lowHpWarning 0.8s ease-in-out infinite !important; }
+        .enemy-sprite { font-size: 80px; margin-bottom: 10px; transition: all 0.3s; position: relative; animation: enemyIdle 2s ease-in-out infinite, enemyGlow 1.5s ease-in-out infinite; color: #ff4444; text-shadow: 0 0 20px #ff4444; }
+        @keyframes enemyIdle { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-5px) scale(1.02)} }
+        @keyframes enemyGlow { 0%,100%{filter:drop-shadow(0 0 15px #ff4444)} 50%{filter:drop-shadow(0 0 30px #ff4444)} }
+        @keyframes enemyAttack { 0%{transform:translateX(0)} 30%{transform:translateX(-30px) scale(1.1)} 60%{transform:translateX(-15px)} 100%{transform:translateX(0)} }
+        .enemy-attacking-left { animation: enemyAttack 0.4s ease-out !important; }
+        .attacking { animation: lobsterAttack 0.4s ease-out !important; }
+        .attacking-right { animation: lobsterAttack 0.4s ease-out !important; }
+        .attacking-left { animation: lobsterAttack 0.4s ease-out !important; transform: scaleX(-1); }
+        .hit-flash { animation: lobsterHit 0.4s ease-out !important; }
+        .crit-effect { animation: lobsterCritical 0.6s ease-out !important; }
+        .victory-effect { animation: lobsterVictory 0.8s ease-in-out infinite !important; }
+        .death-effect { animation: lobsterDeath 1s ease-out forwards !important; }
+        .fighter-name { font-size: 1.2em; color: #fff; margin-bottom: 5px; }
+        .fighter-level { font-size: 0.9em; color: #aaa; margin-bottom: 10px; }
+        .hp-bar { background: #333; border-radius: 10px; height: 20px; overflow: hidden; margin-bottom: 5px; }
+        .hp-fill { height: 100%; background: linear-gradient(90deg, #ff4444, #ff6666); transition: width 0.3s; }
+        .hp-fill.green { background: linear-gradient(90deg, #00ff88, #00cc66); }
+        .hp-text { font-size: 0.85em; color: #888; }
+        .fighter-stats { font-size: 0.8em; color: #00ff88; margin-top: 5px; }
+        .buffs-display { min-height: 24px; margin-top: 6px; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+        .buff-tag { display: inline-block; font-size: 0.7em; padding: 2px 6px; border-radius: 6px; margin: 2px; }
+        .buff-poison { background: rgba(128,255,0,0.15); border: 1px solid #80ff00; color: #80ff00; }
+        .buff-shield { background: rgba(68,136,255,0.15); border: 1px solid #4488ff; color: #4488ff; }
+        .buff-stun { background: rgba(255,200,0,0.15); border: 1px solid #ffc800; color: #ffc800; }
+        .buff-seal { background: rgba(180,80,255,0.15); border: 1px solid #b450ff; color: #b450ff; }
+        .buff-speed { background: rgba(255,100,50,0.15); border: 1px solid #ff6432; color: #ff6432; }
+        .buff-defend { background: rgba(100,180,255,0.15); border: 1px solid #64b4ff; color: #64b4ff; }
+        .buff-counter { background: rgba(255,150,50,0.15); border: 1px solid #ff9632; color: #ff9632; }
+        .vs { font-size: 2em; color: #ff4444; text-shadow: 0 0 10px #ff4444; animation: pulse 1s infinite; position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 60px; }
+        .vs br { line-height: 0.5; }
+        #arena-round { font-size: 0.4em; color: #ffcc00; text-shadow: 0 0 8px #ffcc00; margin-top: 5px; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(1.1); } }
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-5px, 3px); }
+            40% { transform: translate(4px, -3px); }
+            60% { transform: translate(-3px, 4px); }
+            80% { transform: translate(3px, -2px); }
+        }
+        .screen-shake { animation: screenShake 0.2s ease-out; }
+        
+        /* 战斗特效 */
+        .damage-number {
+            position: fixed;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #ff4444;
+            text-shadow: 0 0 20px #ff0000, 4px 4px 0 #000;
+            pointer-events: none;
+            animation: damageFloat 1s ease-out forwards;
+            z-index: 1000;
+        }
+        .damage-number.crit {
+            color: #ffff00;
+            font-size: 3.5em;
+            text-shadow: 0 0 40px #ffff00, 0 0 80px #ff4400, 5px 5px 0 #000;
+            animation: critFloat 1.2s ease-out forwards;
+        }
+        @keyframes critFloat {
+            0% { transform: translateY(0) scale(0.3) rotate(-10deg); opacity: 0; }
+            15% { transform: translateY(-20px) scale(1.5) rotate(5deg); opacity: 1; }
+            30% { transform: translateY(-40px) scale(1.8) rotate(-3deg); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1); opacity: 0; }
+        }
+        .damage-number.heal {
+            color: #00ff88;
+            text-shadow: 0 0 15px #00ff00, 3px 3px 0 #000;
+            font-size: 2.2em;
+        }
+        .damage-number.poison {
+            color: #80ff00;
+            text-shadow: 0 0 15px #80ff00, 3px 3px 0 #000;
+        }
+        .damage-number.stun {
+            color: #ffc800;
+            text-shadow: 0 0 15px #ffc800, 3px 3px 0 #000;
+        }
+        .crit-flash {
+            animation: critScreenFlash 0.3s ease-out;
+        }
+        @keyframes critScreenFlash {
+            0%{filter:brightness(1)}
+            50%{filter:brightness(1.5) sepia(0.3)}
+            100%{filter:brightness(1)}
+        }
+        @keyframes damageFloat {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-60px) scale(1); opacity: 0; }
+        }
+        @keyframes attackRight {
+            0% { transform: translateX(0); }
+            30% { transform: translateX(50px) scale(1.1); }
+            60% { transform: translateX(20px); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes attackLeft {
+            0% { transform: translateX(0); }
+            30% { transform: translateX(-50px) scale(1.1); }
+            60% { transform: translateX(-20px); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes hitFlash {
+            0%, 100% { filter: brightness(1); }
+            25% { filter: brightness(2) hue-rotate(30deg); }
+            50% { filter: brightness(0.5); }
+            75% { filter: brightness(1.5); }
+        }
+        @keyframes critEffect {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.3); filter: brightness(2) hue-rotate(45deg); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+        @keyframes resurrection {
+            0% { transform: scale(0.5); opacity: 0; filter: brightness(0); }
+            50% { transform: scale(1.5); opacity: 1; filter: brightness(3) hue-rotate(120deg); }
+            100% { transform: scale(1); opacity: 1; filter: brightness(1); }
+        }
+        .attacking-right { animation: attackRight 0.4s ease-out !important; }
+        .attacking-left { animation: attackLeft 0.4s ease-out !important; }
+        .hit-flash { animation: hitFlash 0.3s ease-out !important; }
+        .crit-effect { animation: critEffect 0.5s ease-out !important; }
+        .resurrect-effect { animation: resurrection 0.8s ease-out !important; }
+        
+        .skills-section {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .skills-title { font-size: 1em; color: #00ff88; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+        .skill-btn {
+            background: linear-gradient(135deg, #1a3a2a, #0a2a1a);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85em;
+            color: #00ff88;
+            font-family: inherit;
+            text-align: left;
+            position: relative;
+        }
+        .skill-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #2a5a3a, #1a4a2a);
+            box-shadow: 0 0 10px rgba(0,255,136,0.3);
+            transform: translateY(-2px);
+        }
+        .skill-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+        .skill-btn .skill-name { font-weight: bold; display: block; }
+        .skill-btn .skill-cost { font-size: 0.75em; color: #888; }
+        .skill-btn .skill-desc { font-size: 0.7em; color: #aaa; margin-top: 3px; }
+        .skill-btn.attack { border-color: #ff6644; color: #ff6644; background: linear-gradient(135deg, #3a2a1a, #2a1a0a); }
+        .skill-btn.defense { border-color: #4488ff; color: #4488ff; background: linear-gradient(135deg, #1a2a3a, #0a1a2a); }
+        .skill-btn.special { border-color: #ff44ff; color: #ff44ff; background: linear-gradient(135deg, #2a1a2a, #1a0a1a); }
+        .enemy-skill-btn { border-color: #ff6666; background: rgba(255,102,102,0.15); color: #ff6666; text-shadow: 0 0 5px #ff6666; }
+        .skill-passive { border-color: #a855f7 !important; border-style: dashed; }
+        .battle-log {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .log-entry { font-size: 0.9em; padding: 6px 8px; border-bottom: 1px solid #222; animation: fadeIn 0.3s; line-height: 1.5; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .log-player { color: #00ff88; }
+        .log-enemy { color: #ff6644; }
+        .log-damage { color: #ff4444; }
+        .log-heal { color: #44ff44; }
+        .log-crit { color: #ffff00; text-shadow: 0 0 5px #ffff00; }
+        .log-system { color: #888; }
+        .log-turn { color: #00ccff; font-weight: bold; }
+        .btn {
+            background: linear-gradient(135deg, #00aa55, #008844);
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-size: 1.1em;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #00cc66, #00aa55);
+            box-shadow: 0 0 20px rgba(0,255,136,0.4);
+            transform: translateY(-2px);
+        }
+        .btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-danger { background: linear-gradient(135deg, #aa0000, #880000); }
+        .btn-warning { background: linear-gradient(135deg, #ff8800, #cc6600); }
+        .btn-small { padding: 8px 15px; font-size: 0.9em; }
+        .btn-row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+        
+        .auto-battle-indicator {
+            display: none;
+            background: linear-gradient(135deg, #ff6600, #ff4400);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            text-align: center;
+            animation: autoPulse 1s infinite;
+        }
+        .auto-battle-indicator.active { display: block; }
+        @keyframes autoPulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255,102,0,0.5); }
+            50% { box-shadow: 0 0 25px rgba(255,102,0,0.8); }
+        }
+        
+        .evolution-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+        .evolution-overlay.show { display: flex; }
+        .evolution-text { font-size: 2em; color: #00ff88; text-shadow: 0 0 30px #00ff88; animation: evolveText 2s; }
+        @keyframes evolveText { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        .game-over {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+        .game-over.show { display: flex; }
+        .welcome-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 1000;
+            min-width: 380px;
+            text-align: center;
+        }
+        .welcome-panel.show { display: block; }
+        .welcome-title { font-size: 1.8em; color: #00ff88; margin-bottom: 20px; text-shadow: 0 0 20px #00ff88; }
+        .welcome-content { text-align: left; margin-bottom: 15px; }
+        .welcome-content p { margin: 8px 0; font-size: 1.1em; color: #fff; }
+        .welcome-content strong { color: #ff6644; }
+        .lobster-reveal { background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,136,255,0.1)); border: 2px solid #00ff88; border-radius: 15px; padding: 20px; margin: 15px 0; text-align: center; box-shadow: 0 0 30px rgba(0,255,136,0.3); }
+        .lobster-reveal-title { font-size: 1.2em; color: #00ff88; margin-bottom: 15px; text-shadow: 0 0 10px #00ff88; }
+        .lobster-reveal-sprite { font-size: 5em; margin: 15px 0; animation: revealFloat 2s ease-in-out infinite, revealGlow 1.5s ease-in-out infinite; }
+        @keyframes revealFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-10px) scale(1.05)} }
+        @keyframes revealGlow { 0%,100%{filter:drop-shadow(0 0 20px #00ff88)} 50%{filter:drop-shadow(0 0 40px #00ff88)} }
+        .lobster-reveal-name { font-size: 1.3em; color: #fff; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .lobster-reveal-skills { font-size: 1em; color: #aaa; }
+        .mode-select-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: flex;
+            z-index: 1001;
+            min-width: 400px;
+            text-align: center;
+            flex-direction: column;
+        }
+        .mode-select-title { font-size: 1.8em; color: #00ff88; margin-bottom: 25px; text-shadow: 0 0 20px #00ff88; }
+        .mode-options { display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; }
+        .btn-large { padding: 15px 30px; font-size: 1.2em; }
+        .mode-desc { color: #aaa; font-size: 1em; margin-top: 15px; }
+        .import-panel, .export-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 1001;
+            min-width: 450px;
+            text-align: center;
+        }
+        .import-panel.show, .export-panel.show { display: block; }
+        .import-title, .export-title { font-size: 1.6em; color: #00ff88; margin-bottom: 15px; text-shadow: 0 0 15px #00ff88; }
+        .lobster-mode-panel, .pvp-import-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 1001;
+            min-width: 450px;
+            text-align: center;
+        }
+        .lobster-mode-panel.show, .pvp-import-panel.show { display: block; }
+        .lobster-mode-title, .pvp-import-title { font-size: 1.6em; color: #00ff88; margin-bottom: 15px; text-shadow: 0 0 15px #00ff88; }
+        .lobster-mode-desc, .pvp-import-desc { color: #aaa; margin-bottom: 15px; font-size: 1.1em; }
+        .lobster-mode-buttons { display: flex; gap: 15px; justify-content: center; margin: 20px 0; }
+        .btn-endless { background: linear-gradient(135deg, #1a6, #0c8) !important; border-color: #0c8 !important; }
+        .btn-pvp { background: linear-gradient(135deg, #c44, #a22) !important; border-color: #a22 !important; }
+        .lobster-mode-hint { color: #666; font-size: 0.9em; margin-top: 15px; line-height: 1.6; }
+        .import-desc, .export-desc { color: #aaa; margin-bottom: 15px; font-size: 1.1em; }
+        .import-code, .export-code {
+            width: 100%; height: 120px; background: #0a0a1e; border: 1px solid #444;
+            color: #00ff88; font-size: 0.9em; padding: 10px; border-radius: 8px;
+            resize: none; font-family: monospace;
+        }
+        .export-code { color: #ffff00; }
+        .export-hint { color: #ffa500; margin-top: 10px; font-size: 0.95em; }
+        .btn-secondary { background: #444; margin-left: 10px; }
+        .btn-secondary:hover { background: #555; }
+        @media (max-width: 600px) {
+            .mode-select-panel { min-width: 90vw; padding: 20px; }
+            .mode-select-title { font-size: 1.4em; margin-bottom: 15px; }
+            .mode-options { flex-direction: column; gap: 10px; }
+            .btn-large { padding: 12px 20px; font-size: 1em; }
+            .mode-desc { font-size: 0.85em; }
+            .import-panel, .export-panel { min-width: 90vw; padding: 15px; }
+            .import-title, .export-title { font-size: 1.2em; }
+            .import-desc, .export-desc { font-size: 0.9em; }
+            .import-code, .export-code { height: 80px; font-size: 0.8em; }
+            .export-hint { font-size: 0.8em; }
+            .reward-panel { min-width: 90vw; padding: 15px; }
+            .reward-title { font-size: 1.2em; }
+            .reward-item { font-size: 0.9em; }
+            .game-over h2 { font-size: 2em; }
+            .game-over p { font-size: 1em; }
+            .evolution-overlay { font-size: 2em; }
+        }
+        .game-over.win h2 { color: #00ff88; text-shadow: 0 0 30px #00ff88; }
+        .game-over.lose h2 { color: #ff4444; text-shadow: 0 0 30px #ff4444; }
+        .game-over p { margin: 10px 0; font-size: 1.2em; }
+        .reward-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 999;
+            min-width: 350px;
+            text-align: center;
+        }
+        .reward-panel.show { display: block; }
+        .reward-title { font-size: 1.5em; color: #00ff88; margin-bottom: 20px; }
+        .reward-item { margin: 10px 0; font-size: 1.1em; }
+        .reward-skill { background: rgba(255,68,255,0.2); border: 1px solid #ff44ff; border-radius: 8px; padding: 10px; margin: 10px 0; color: #ff44ff; }
+        .reward-equip { background: rgba(255,165,0,0.2); border: 1px solid #ffa500; border-radius: 8px; padding: 10px; margin: 10px 0; color: #ffa500; }
+        .reward-evolution { background: rgba(0,255,136,0.15); border: 2px solid #00ff88; border-radius: 10px; padding: 15px; margin: 12px 0; color: #00ff88; font-size: 1.1em; text-shadow: 0 0 10px #00ff88; animation: evolveText 0.8s ease-out; }
+        .enemy-select-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #ff6644;
+            border-radius: 15px;
+            padding: 30px;
+            display: none;
+            z-index: 999;
+            min-width: 450px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: center;
+        }
+        @media (max-width: 600px) {
+            .enemy-select-panel { min-width: 90vw; padding: 15px; }
+            .enemy-select-title { font-size: 1.2em; margin-bottom: 10px; }
+            .enemy-option { padding: 10px; font-size: 0.85em; }
+            .enemy-stats-row { font-size: 0.75em; }
+        }
+        .enemy-select-panel.show { display: block; }
+        .enemy-select-title { font-size: 1.5em; color: #ff6644; margin-bottom: 20px; }
+        .enemy-select-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .enemy-option {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #444;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .enemy-option:hover { background: rgba(255,102,68,0.2); border-color: #ff6644; }
+        .enemy-option-name { font-size: 1.1em; color: #fff; margin-bottom: 5px; }
+        .enemy-option-stats { font-size: 0.85em; color: #888; }
+        .enemy-option-skills { font-size: 0.8em; color: #00ff88; margin-top: 5px; }
+        .player-skill-display { font-size: 1.2em; color: #00ff88; margin-top: 5px; text-shadow: 0 0 5px #00ff88; }
+        .enemy-skill-display { font-size: 1.2em; color: #ff6666; margin-top: 5px; text-shadow: 0 0 5px #ff6666; }
+        .skill-item { cursor: pointer; padding: 2px 6px; border-radius: 4px; background: rgba(0,255,136,0.1); transition: background 0.2s; position: relative; display: inline-block; }
+        .skill-item:hover { background: rgba(0,255,136,0.3); }
+        .skill-item.on-cd { opacity: 0.5; }
+        .skill-item.on-cd::after { content: attr(data-cd); position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 1.2em; font-weight: bold; color: #ff4444; text-shadow: 0 0 5px #000; }
+        .skill-item.passive-skill { background: rgba(255,255,0,0.1); border: 1px dashed #ffff00; }
+        .skill-popup {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+            padding: 25px;
+            display: none;
+            z-index: 1002;
+            min-width: 300px;
+            text-align: center;
+        }
+        .skill-popup.show { display: block; }
+        .skill-popup-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1001;
+        }
+        .skill-popup-backdrop.show { display: block; }
+        @media (max-width: 600px) {
+            .skill-popup { min-width: 90vw; padding: 15px; }
+            .skill-popup-icon { font-size: 2.5em; }
+            .skill-popup-name { font-size: 1.2em; }
+            .skill-popup-type, .skill-popup-cost, .skill-popup-desc { font-size: 0.85em; }
+            .equip-panel { min-width: 95vw; max-height: 90vh; }
+            .equip-panel-title { font-size: 1.2em; }
+        }
+        .equip-panel {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 2px solid #ffa500;
+            border-radius: 15px;
+            padding: 25px;
+            display: none;
+            z-index: 1004;
+            min-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: center;
+        }
+        .equip-panel.show { display: block; }
+        .equip-panel-title { font-size: 1.5em; color: #ffa500; margin-bottom: 20px; text-shadow: 0 0 10px #ffa500; }
+        .equip-current { margin-bottom: 20px; }
+        .equip-slot-title { font-size: 1em; color: #888; margin-bottom: 10px; }
+        .equip-slots { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .equip-slot {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid #444;
+            border-radius: 10px;
+            padding: 10px 15px;
+            min-width: 90px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .equip-slot:hover { border-color: #ffa500; background: rgba(255,165,0,0.1); }
+        .equip-slot-icon { font-size: 1.5em; margin-bottom: 5px; }
+        .equip-slot-label { font-size: 0.8em; color: #888; }
+        .equip-slot-item { font-size: 0.85em; color: #fff; margin-top: 5px; min-height: 24px; }
+        .equip-slot-item.equipped { color: #ffa500; }
+        .equip-inventory { text-align: left; }
+        .equip-inv-title { font-size: 1em; color: #888; margin-bottom: 10px; }
+        .equip-inv-list { max-height: 200px; overflow-y: auto; }
+        .equip-inv-item {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .equip-inv-item:hover { border-color: #ffa500; background: rgba(255,165,0,0.1); }
+        .equip-inv-item-name { font-size: 0.9em; color: #fff; }
+        .equip-inv-item-btn { font-size: 0.8em; color: #00ff88; background: none; border: 1px solid #00ff88; border-radius: 5px; padding: 3px 8px; cursor: pointer; }
+        .equip-inv-item-btn:hover { background: rgba(0,255,136,0.2); }
+        .equip-backdrop {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1003;
+        }
+        .equip-backdrop.show { display: block; }
+        .skill-tooltip {
+            position: absolute;
+            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+            border: 1px solid #00ff88;
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 0.85em;
+            color: #fff;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 1003;
+            display: none;
+        }
+        .skill-tooltip.show { display: block; }
+        .skill-tooltip-name { color: #00ff88; font-weight: bold; margin-bottom: 5px; }
+        .skill-tooltip-desc { color: #aaa; }
+        .skill-popup-icon { font-size: 3em; margin-bottom: 10px; }
+        .skill-popup-name { font-size: 1.5em; color: #fff; margin-bottom: 10px; }
+        .skill-popup-type { font-size: 0.9em; color: #888; margin-bottom: 5px; }
+        .skill-popup-cost { font-size: 1em; color: #4488ff; margin-bottom: 10px; }
+        .skill-popup-desc { font-size: 1.1em; color: #00ff88; margin-bottom: 15px; }
+        .skill-popup-effect { font-size: 0.9em; color: #aaa; }
+        .skill-popup-close { margin-top: 15px; font-size: 0.9em; color: #666; }
+        
+        @media (max-width: 600px) and (orientation: portrait) {
+            .container { padding: 10px; }
+            .title { font-size: 1.5em; margin-bottom: 5px; }
+            .version { font-size: 0.8em; margin-bottom: 5px; }
+            .status-bar { flex-wrap: wrap; gap: 10px; padding: 8px; }
+            .stat { font-size: 0.85em; }
+            .stat-label { font-size: 0.7em; }
+            .arena { flex-direction: column; gap: 10px; padding: 10px; }
+            .fighter { padding: 10px; }
+            .fighter-sprite { font-size: 3em; }
+            .fighter-name { font-size: 0.9em; }
+            .fighter-level { font-size: 0.75em; }
+            .hp-bar { height: 10px; }
+            .hp-text { font-size: 0.75em; }
+            .fighter-stats { font-size: 0.75em; }
+            .player-skill-display { font-size: 1em; }
+            .enemy-skill-display { font-size: 1em; }
+            .vs { margin: 5px 0; font-size: 1.2em; }
+            .battle-log { max-height: 120px; padding: 8px; font-size: 0.8em; }
+            .btn-row { flex-wrap: wrap; gap: 8px; }
+            .btn { padding: 10px 15px; font-size: 0.9em; }
+            .skill-btn { padding: 6px; font-size: 0.8em; }
+            .skill-btn .skill-name { font-size: 0.85em; }
+            .skill-btn .skill-desc { font-size: 0.7em; }
+            .buff-tag { font-size: 0.7em; padding: 2px 5px; }
+        }
+        /* 横屏时和电脑一样的横向布局 */
+        @media (max-width: 600px) and (orientation: landscape) {
+            .container { padding: 5px 10px; max-width: 100%; }
+            .title { font-size: 1.2em; margin: 0; }
+            .version { font-size: 0.7em; margin: 0; }
+            .status-bar { padding: 5px 10px; gap: 15px; }
+            .stat { font-size: 0.8em; }
+            .stat-label { font-size: 0.7em; }
+            .arena { flex-direction: row; gap: 10px; padding: 5px; }
+            .fighter { padding: 5px; flex: 1; }
+            .fighter-sprite { font-size: 2.5em; margin-bottom: 3px; }
+            .fighter-name { font-size: 0.8em; }
+            .fighter-level { font-size: 0.7em; }
+            .hp-bar { height: 8px; margin: 3px 0; }
+            .hp-text { font-size: 0.7em; }
+            .fighter-stats { font-size: 0.7em; }
+            .player-skill-display { font-size: 0.9em; margin-top: 3px; }
+            .enemy-skill-display { font-size: 0.9em; margin-top: 3px; }
+            .vs { margin: 0 5px; font-size: 1em; align-self: center; }
+            .battle-log { max-height: 100px; padding: 5px; font-size: 0.75em; margin: 5px 0; }
+            .btn-row { gap: 5px; padding: 5px 0; }
+            .btn { padding: 8px 12px; font-size: 0.85em; }
+            .skill-btn { padding: 4px; font-size: 0.75em; }
+            .skill-btn .skill-name { font-size: 0.85em; }
+            .skill-btn .skill-desc { display: none; }
+            .buff-tag { font-size: 0.65em; padding: 1px 3px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
+        <div class="version">v2.25 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="status-bar">
+            <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">虾苗</div></div>
+        </div>
+        <div class="auto-battle-indicator active" id="auto-indicator"></div>
+        <div class="arena" id="arena">
+            <div class="fighter" id="player-fighter">
+                <div class="fighter-sprite sprite-phase-0" id="player-sprite">🦐</div>
+                <div class="fighter-name" id="player-name">你的龙虾</div>
+                <div class="hp-bar"><div class="hp-fill" id="player-hp-bar"></div></div>
+                <div class="hp-text"><span id="player-hp">100</span> / <span id="player-max-hp">100</span></div>
+                <div class="fighter-stats" id="player-stats">攻:10 防:5 速:8</div>
+                <div class="player-skill-display" id="player-skills"></div>
+                <div class="buffs-display" id="player-buffs"></div>
+            </div>
+            <div class="vs">VS<br><span id="arena-round">第1轮</span></div>
+            <div class="fighter" id="enemy-fighter">
+                <div class="fighter-sprite enemy-sprite" id="enemy-sprite">🦞</div>
+                <div class="fighter-name" id="enemy-name">???</div>
+                <div class="hp-bar"><div class="hp-fill" id="enemy-hp-bar"></div></div>
+                <div class="hp-text"><span id="enemy-hp">0</span> / <span id="enemy-max-hp">0</span></div>
+                <div class="fighter-stats" id="enemy-stats"></div>
+                <div class="buffs-display" id="enemy-buffs"></div>
+                <div class="enemy-skill-display" id="enemy-skills"></div>
+            </div>
+        </div>
+        <div class="battle-log" id="battle-log"></div>
+
+        <div class="btn-row">
+            <button class="btn" id="btn-start" onclick="startBattle()" disabled>🚀 开始战斗</button>
+            <button class="btn" id="btn-speed" onclick="toggleSpeed()">⏩ 1倍速</button>
+            <button class="btn btn-small btn-warning" id="btn-equip" onclick="openEquipPanel()">🎒 装备</button>
+        </div>
+ <div class="evolution-overlay" id="evolution-overlay">
+        <div class="evolution-text" id="evolution-text">🌀 进化中...</div>
+    </div>
+    <div class="reward-panel" id="reward-panel">
+        <div class="reward-title" id="reward-title">🎉 战斗胜利!</div>
+        <div class="reward-evolution" id="reward-evolution-container" style="display:none"></div>
+        <div class="reward-skill" id="reward-skill-container" style="display:none">
+            <div>偷学到技能:</div>
+            <div id="reward-skill-name"></div>
+        </div>
+        <div class="reward-equip" id="reward-equip-container" style="display:none">
+            <div>📦 掉落装备:</div>
+            <div id="reward-equip-name"></div>
+        </div>
+        <button class="btn" onclick="closeReward()">继续</button>
+    </div>
+    <div class="enemy-select-panel" id="enemy-select-panel">
+        <div class="enemy-select-title">🎯 选择对手</div>
+        <div class="enemy-select-list" id="enemy-select-list"></div>
+        <button class="btn" onclick="closeEnemySelect()">返回</button>
+    </div>
+    <div class="skill-popup-backdrop" id="skill-backdrop" onclick="hideSkillPopup()"></div>
+    <div class="equip-backdrop" id="equip-backdrop" onclick="closeEquipPanel()"></div>
+    <div class="skill-popup" id="skill-popup">
+        <div class="skill-popup-icon" id="skill-popup-icon"></div>
+        <div class="skill-popup-name" id="skill-popup-name"></div>
+        <div class="skill-popup-type" id="skill-popup-type"></div>
+        <div class="skill-popup-cost" id="skill-popup-cost"></div>
+        <div class="skill-popup-desc" id="skill-popup-desc"></div>
+        <div class="skill-popup-effect" id="skill-popup-effect"></div>
+    </div>
+    <div class="equip-panel" id="equip-panel">
+        <div class="equip-panel-title">🎒 装备管理</div>
+        <div class="equip-current">
+            <div class="equip-slot-title">当前穿戴</div>
+            <div class="equip-slots">
+                <div class="equip-slot" id="equip-slot-atk" onclick="unequipItem('atk')">
+                    <div class="equip-slot-icon">⚔️</div>
+                    <div class="equip-slot-label">攻击</div>
+                    <div class="equip-slot-item" id="equip-slot-atk-item">空</div>
+                </div>
+                <div class="equip-slot" id="equip-slot-def" onclick="unequipItem('def')">
+                    <div class="equip-slot-icon">🛡️</div>
+                    <div class="equip-slot-label">防御</div>
+                    <div class="equip-slot-item" id="equip-slot-def-item">空</div>
+                </div>
+                <div class="equip-slot" id="equip-slot-hp" onclick="unequipItem('hp')">
+                    <div class="equip-slot-icon">❤️</div>
+                    <div class="equip-slot-label">生命</div>
+                    <div class="equip-slot-item" id="equip-slot-hp-item">空</div>
+                </div>
+            </div>
+        </div>
+        <div class="equip-inventory">
+            <div class="equip-inv-title">背包 (<span id="inv-count">0</span>)</div>
+            <div class="equip-inv-list" id="equip-inv-list"></div>
+        </div>
+        <button class="btn" onclick="closeEquipPanel()">关闭</button>
+    </div>
+    <div class="skill-tooltip" id="skill-tooltip">
+        <div class="skill-tooltip-name" id="skill-tooltip-name"></div>
+        <div class="skill-tooltip-desc" id="skill-tooltip-desc"></div>
+    </div>
+    <div class="mode-select-panel" id="mode-select-panel">
+        <div class="mode-select-title">🎮 选择游戏模式</div>
+        <div class="mode-options">
+            <button class="btn btn-large" onclick="selectMode('raise')">🌱 养虾模式</button>
+            <button class="btn btn-large" onclick="selectMode('import')">🦐 成虾导入</button>
+        </div>
+        <div class="mode-desc" id="mode-desc">🌱 养虾通关可获得成虾代码</div>
+    </div>
+    <div class="welcome-panel" id="welcome-panel">
+        <div class="welcome-title">🎮 欢迎来到赛博斗龙虾!</div>
+        <div class="welcome-content">
+            <p>⏱️ 游戏共 <strong>5轮</strong> 战斗</p>
+            <p>⚔️ 每次<strong>战胜</strong>可偷取对手<strong>1个技能</strong></p>
+            <p>🌀 第2轮结束后<strong>自动进化</strong>为幼虾(Lv.3)</p>
+            <p>🌀 第4轮结束后<strong>自动进化</strong>为战斗虾(Lv.5)</p>
+            <p>📦 战斗<strong>掉落装备</strong>，可穿戴提升战力</p>
+
+        </div>
+        <div class="lobster-reveal">
+            <div class="lobster-reveal-title">🎰 这是你的随机初始小龙虾!</div>
+            <div class="lobster-reveal-sprite" id="welcome-sprite">🦐</div>
+            <div class="lobster-reveal-name" id="welcome-name">你的龙虾</div>
+            <div class="lobster-reveal-stats" id="welcome-stats"></div>
+            <div class="lobster-reveal-skills" id="welcome-skills">技能加载中...</div>
+        </div>
+        <button class="btn" onclick="closeWelcome()">开始游戏!</button>
+    </div>
+    <div class="import-panel" id="import-panel">
+        <div class="import-title">🦐 导入成虾</div>
+        <div class="import-desc">粘贴之前保存的龙虾序列化代码：</div>
+        <textarea class="import-code" id="import-code" placeholder="在此粘贴龙虾代码..."></textarea>
+        <div class="import-error" id="import-error" style="display:none;color:#ff4444;margin:10px 0;"></div>
+        <button class="btn" onclick="confirmImport()">确认导入</button>
+        <button class="btn btn-secondary" onclick="closeImportPanel()">返回</button>
+    </div>
+    <div class="export-panel" id="export-panel">
+        <div class="export-title">🎉 养虾成功!</div>
+        <div class="export-desc">你的龙虾已养成！保存以下代码以便下次导入：</div>
+        <textarea class="export-code" id="export-code" readonly></textarea>
+        <div class="export-hint">📋 请复制并保存此代码，下次可在"成虾导入"中使用</div>
+        <button class="btn" onclick="copyExportCode()">📋 复制代码</button>
+        <button class="btn" onclick="closeExportPanel()">完成</button>
+    </div>
+    <div class="lobster-mode-panel" id="lobster-mode-panel">
+        <div class="lobster-mode-title">🎮 选择挑战模式</div>
+        <div class="lobster-mode-desc" id="lobster-mode-desc">你的龙虾信息将显示在这里</div>
+        <div class="lobster-mode-buttons">
+            <button class="btn btn-endless" onclick="selectLobsterMode('endless')">♾️ 无尽模式</button>
+            <button class="btn btn-pvp" onclick="selectLobsterMode('pvp')">⚔️ PVP模式</button>
+        </div>
+        <div class="lobster-mode-hint">无尽模式: 无限轮挑战，怪物难度逐轮递增<br>PVP模式: 导入对手代码，一局定胜负</div>
+        <button class="btn btn-secondary" onclick="closeLobsterModePanel()">返回</button>
+    </div>
+    <div class="pvp-import-panel" id="pvp-import-panel">
+        <div class="pvp-import-title">⚔️ PVP模式 - 导入对手</div>
+        <div class="pvp-import-desc">请输入对手龙虾的成虾代码：</div>
+        <textarea class="import-code" id="pvp-import-code" placeholder="在此粘贴对手的龙虾代码..."></textarea>
+        <div class="import-error" id="pvp-import-error" style="display:none;color:#ff4444;margin:10px 0;"></div>
+        <button class="btn" onclick="confirmPvpImport()">确认对手</button>
+        <button class="btn btn-secondary" onclick="closePvpImportPanel()">返回</button>
+    </div>
+    <div class="game-over" id="game-over">
+        <h2 id="game-over-title">游戏结束</h2>
+        <p id="game-over-msg"></p>
+        <p id="game-over-round" style="display:none">达到回合: <span id="final-round">0</span></p>
+        <button class="btn" onclick="restartGame()" style="margin-top:20px">🔄 重新开始</button>
+    </div>
+
+<!--# sourceMappingURL=game.map -->
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+// ===== constants.js =====
+// ===== constants.js =====
+const VERSION = 'v2.25';
+const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
+const PHASE_SPRITES=['🦐','🦞','⚡','🔱','👑'];
+const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
+
+const EQUIP_TYPES=['atk','def','hp'];
+const EQUIP_NAMES={
+    atk:{name:'力量芯片',icon:'⚔️',desc:'攻击+'},
+    def:{name:'护甲碎片',icon:'🛡️',desc:'防御+'},
+    hp:{name:'生命核心',icon:'❤️',desc:'生命+'}
+};
+const EQUIP_QUALITY=['普通','精良','稀有','史诗','传说'];
+const EQUIP_QUALITY_COLOR=['#aaa','#00ff88','#4488ff','#ff44ff','#ffa500'];
+const EQUIP_QUALITY_MULT=[1,1.5,2,3,5];
+const EQUIP_BASE_VALUES={atk:3,def:2,hp:20};
+const DROP_CHANCE=0.4;
+
+const ALL_SKILLS=[
+    // ===== 主动技能 (22个) =====
+    // 纯伤害型 - 高伤害/无额外效果
+    {id:'heavy',name:'重击',desc:'[主动] CD:0 效果 造成1.5倍伤害',minDmg:1.5,icon:'💪',cd:0},
+    {id:'emp',name:'电磁脉冲',desc:'[主动] CD:0 效果 造成0.8倍伤害+40%眩晕1回合',minDmg:0.8,stunRate:0.4,icon:'⚡',cd:0},
+
+    // DOT+伤害型
+    {id:'poison',name:'剧毒',desc:'[主动] CD:0 效果 造成0.7倍伤害+敌人每回合损失8%HP',minDmg:0.7,poisonDmg:0.08,icon:'☠️',cd:0},
+    {id:'bleed',name:'撕裂',desc:'[主动] CD:0 效果 造成0.5倍伤害+敌人持续流血',minDmg:0.5,bleedDmg:0.08,icon:'🩸',cd:0},
+    {id:'virus',name:'病毒注入',desc:'[主动] CD:0 效果 造成0.5倍伤害+敌人每回合损失6%HP+降属性',minDmg:0.5,poisonDmg:0.06,reduceStat:0.15,icon:'🦠',cd:0},
+
+    // 偷取型
+    {id:'hack',name:'数据入侵',desc:'[主动] CD:0 效果 造成0.5倍伤害+偷取敌人15%当前HP',minDmg:0.5,drain:0.15,icon:'💻',cd:0},
+    {id:'drain',name:'灵魂吸取',desc:'[主动] CD:0 效果 造成0.7倍伤害+偷取敌人12%最大HP',minDmg:0.7,drain:0.12,icon:'👻',cd:0},
+
+    // 护盾/防御无视型
+    {id:'shield_break',name:'护盾击破',desc:'[主动] CD:0 效果 无视护盾+造成1.5倍伤害',minDmg:1.5,ignoreDef:true,icon:'💎',cd:0},
+
+    // 条件型
+    {id:'execute',name:'处决',desc:'[主动] CD:0 效果 敌人HP<40%时伤害×2，否则×0.5',minDmg:0,critRate:1,critMult:2,icon:'☠️',cd:0,execute:true},
+
+    // 控制型（纯控制/进攻控制）
+    {id:'confuse',name:'混乱',desc:'[主动] CD:2 效果 35%概率使敌人眩晕1回合',stunRate:0.35,icon:'🌪️',cd:2},
+    {id:'seal',name:'封印',desc:'[主动] CD:2 效果 30%概率封印敌人1回合',sealRate:0.3,icon:'🔮',cd:2},
+    {id:'freeze',name:'冰冻',desc:'[主动] CD:1 效果 造成0.5倍伤害+40%概率冻结敌人1回合',minDmg:0.5,stunRate:0.4,icon:'❄️',cd:1},
+    {id:'silence',name:'沉默',desc:'[主动] CD:2 效果 50%概率沉默敌人1回合',silenceRate:0.5,icon:'🔇',cd:2},
+    {id:'chaos_mark',name:'混乱印记',desc:'[主动] CD:2 效果 造成0.8倍伤害+35%眩晕+30%封印',minDmg:0.8,stunRate:0.35,sealRate:0.3,icon:'🔮',cd:2},
+
+    // 防御/生存型
+    {id:'defend',name:'防御',desc:'[主动] CD:1 效果 本回合受伤降低60%',reduceDmg:0.6,icon:'🛡️',cd:1},
+    {id:'shield',name:'能量护盾',desc:'[主动] CD:2 效果 获得15层护盾',shield:15,icon:'🔰',cd:2},
+    {id:'heal',name:'自我修复',desc:'[主动] CD:2 效果 恢复50%最大HP',healRate:0.5,icon:'💚',cd:2},
+    {id:'mirror',name:'镜反',desc:'[主动] CD:2 效果 50%概率反弹33%伤害',mirrorRate:0.5,mirrorDmg:0.33,icon:'🪞',cd:2},
+
+    // 新增技能
+    {id:'armor_break',name:'破甲',desc:'[主动] CD:1 效果 造成1.2倍伤害+使敌人防御降低30%持续2回合',minDmg:1.2,armorBreakRate:0.3,armorBreakDuration:2,icon:'🔪',cd:1},
+    {id:'regen',name:'再生',desc:'[主动] CD:2 效果 立即恢复20%HP+每回合恢复8%HP持续3回合',healRate:0.2,regenRate:0.08,regenDuration:3,icon:'🌱',cd:2},
+    {id:'vulnerability',name:'易伤',desc:'[主动] CD:2 效果 使敌人受到伤害增加40%持续2回合',vulnerabilityRate:0.4,vulnerabilityDuration:2,icon:'☢️',cd:2},
+
+    // ===== 被动技能 (13个) =====
+    {id:'combo',name:'连击',passive:true,desc:'[被动] 普通攻击50%概率再攻击一次',icon:'👊',cd:0},
+    {id:'crit',name:'必杀',passive:true,desc:'[被动] 普通攻击50%概率暴击造成2倍伤害',icon:'💥'},
+    {id:'lifesteal',name:'吸血',passive:true,desc:'[被动] 造成伤害的25%转为自己HP',lifesteal:0.25,icon:'🩸'},
+    {id:'counter',name:'反击',passive:true,desc:'[被动] 受到攻击时35%概率反击',counterRate:0.35,icon:'⚡'},
+    {id:'resurrect',name:'神佑',passive:true,desc:'[被动] 死亡时15%概率复活并恢复50%HP',resurrectRate:0.15,icon:'✨'},
+    {id:'armor',name:'护甲',passive:true,desc:'[被动] 受到伤害降低15%',armorRate:0.15,icon:'🛎️'},
+    {id:'thorns',name:'荆棘',passive:true,desc:'[被动] 受到攻击时40%概率反弹20%伤害',thornsRate:0.4,icon:'🌹'},
+    {id:'rage',name:'狂暴',passive:true,desc:'[被动] HP<50%时伤害×1.5',rageRate:0.5,icon:'😈'},
+    {id:'karma',name:'善恶有报',passive:true,desc:'[被动] 80%概率双倍伤害/20%概率治疗敌人',karmaRate:0.8,icon:'⚖️'},
+    {id:'anger',name:'愤怒',passive:true,desc:'[被动] HP越低伤害越高（最低+50%，最高+150%）',angerRate:0.5,icon:'😤'},
+    // 新增被动
+    {id:'dodge',name:'闪避',passive:true,desc:'[被动] 30%概率完全躲避受到的攻击',dodgeRate:0.3,icon:'💨'},
+    {id:'reflect',name:'反射',passive:true,desc:'[被动] 30%概率反弹33%受到伤害',reflectRate:0.3,reflectDmg:0.33,icon:'🪞'},
+    {id:'regenerate',name:'再生',passive:true,desc:'[被动] 每回合自动恢复3%最大HP',regenRate:0.03,icon:'🌿'},
+    {id:'shield_boost',name:'护盾强化',passive:true,desc:'[被动] 护盾效果提升50%（15层→22层）',shieldBoostRate:0.5,icon:'🔰'},
+];
+const ENEMY_NAMES=['机械龙虾','电路龙虾','芯片龙虾','程序龙虾','数据龙虾','比特龙虾','代码龙虾','网络龙虾','云端龙虾','量子龙虾','深渊机甲龙虾','泰坦机械龙虾','风暴电子龙虾','雷霆硅基龙虾','混沌编程龙虾'];
+const AUTO_BATTLE_DELAY = 750;
+
+// ===== state.js =====
+// ===== state.js =====
+// 全局游戏状态（由 initState() 初始化）
+let S = {
+    round:1, phase:0, turn:0, inBattle:false, battleResult:null,
+    player:null, enemy:null, pendingEnemySkill:null, turnOrder:null,
+    battleSpeed:1, playerCooldowns:{}, enemyCooldowns:{},
+    battleQueue:[], isProcessing:false,
+    lobsterMode:null, exported:false, waitingForExport:false,
+    // 成虾模式专属
+    noGrowth:false, noSkillSteal:false, noEquipDrop:false,
+    pvpOpponent:null, pvpReady:false
+};
+
+function initState() {
+    const oldSpeed = S.battleSpeed || 1;
+    const oldMode = S.lobsterMode;
+    const oldExported = S.exported || false;
+    S = {
+        round:1, phase:0, turn:0, inBattle:false, battleResult:null,
+        pendingEnemySkill:null, turnOrder:null,
+        battleSpeed:oldSpeed,
+        playerCooldowns:{}, enemyCooldowns:{}, battleQueue:[],
+        isProcessing:false,
+        lobsterMode:oldMode, exported:oldExported, waitingForExport:false,
+        player:(()=>{
+            const bhp=Math.floor(110+Math.random()*20);
+            const batk=Math.floor(9+Math.random()*3);
+            const bdef=Math.floor(4+Math.random()*3);
+            const bspd=Math.floor(5+Math.random()*8);
+            const cnt=Math.random()<0.9?2:3;
+            const s=[];
+            while(s.length<cnt){
+                const r=ALL_SKILLS[Math.floor(Math.random()*ALL_SKILLS.length)];
+                if(!s.find(x=>x.id===r.id)) s.push(cloneSkill(r));
+            }
+            return {
+                name:'我的龙虾', level:1, hp:bhp, maxHp:bhp, atk:batk, def:bdef, spd:bspd,
+                phase:0, skills:s, equipment:{atk:null,def:null,hp:null},
+                inventory:[], buffs:[],
+                shields:0, poisonDmg:0, bleedDmg:0, alive:true, resurrectUsed:false,
+                stunned:false, sealed:false, speedBoosted:false, defReduced:false,
+                resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0,
+                baseHp:bhp, baseAtk:batk, baseDef:bdef, baseSpd:bspd,
+                hpM:1, atkM:1
+            };
+        })()
+    };
+    // 刷新被动
+    S.player.skills.forEach(s=>{
+        if(s.passive){
+            if(s.id==='lifesteal') S.player.lifesteal=s.lifesteal;
+            if(s.id==='counter') S.player.counterRate=s.counterRate;
+            if(s.id==='resurrect') S.player.resurrectRate=s.resurrectRate;
+            if(s.id==='speedBoost'||s.id==='overclock') S.player.speedBoosted=true;
+        }
+    });
+}
+
+function cloneSkill(s) {
+    return JSON.parse(JSON.stringify(s));
+}
+
+function getPhaseMult() {
+    return PHASE_STAT_MULT[S.phase];
+}
+
+function calcPlayerStats() {
+    const p=S.player;
+    const m=getPhaseMult();
+    const lvl=p.level-1;
+    const hpM=p.hpM||1, atkM=p.atkM||1;
+    p.maxHp=Math.floor((p.baseHp+lvl*15)*m*hpM);
+    p.atk=Math.floor((p.baseAtk+lvl*2)*m*atkM);
+    p.def=Math.floor((p.baseDef+lvl*1)*m*(p.defReduced?0.9:1));
+    p.spd=Math.floor((p.baseSpd+lvl*1)*m*(p.speedBoosted?1.5:1));
+    // 装备加成
+    if(p.equipment.atk) p.atk+=getEquipValue(p.equipment.atk);
+    if(p.equipment.def) p.def+=getEquipValue(p.equipment.def);
+    if(p.equipment.hp) p.maxHp+=getEquipValue(p.equipment.hp)*5;
+    p.maxHp=Math.max(1,p.maxHp);
+    p.hp=Math.min(p.hp,p.maxHp);
+}
+
+function getBattleDelay() {
+    return Math.floor(AUTO_BATTLE_DELAY / S.battleSpeed);
+}
+
+function getEquipValue(e) {
+    return Math.floor(EQUIP_BASE_VALUES[e.type]*EQUIP_QUALITY_MULT[e.quality]*e.level);
+}
+
+function generateEquipment() {
+    const type=EQUIP_TYPES[Math.floor(Math.random()*EQUIP_TYPES.length)];
+    const quality=Math.floor(Math.random()*Math.min(3+S.round*0.3,5));
+    const level=1+Math.min(Math.floor(S.round/2),10);
+    const name=EQUIP_NAMES[type].name+' Lv.'+level;
+    return {type,quality,level,name,icon:EQUIP_NAMES[type].icon};
+}
+
+// ===== battle.js =====
+// ===== battle.js =====
+
+// ---------- 玩家行动 ----------
+function startBattle() {
+    if(S.inBattle) return;
+    
+    // PVP模式：直接使用已导入的对手
+    if(S.lobsterMode==='pvp'&&S.pvpOpponent) {
+        const opp=S.pvpOpponent;
+        opp.hp=opp.maxHp;
+        opp.poisonDmg=0;opp.bleedDmg=0;opp.shields=0;
+        opp.stunned=false;opp.sealed=false;
+        opp.buffs=[];opp.reduceDmgRate=0;opp.defReduced=false;
+        opp.resurrected=false;
+        opp.vulnerable=0;opp.armorBroken=0;opp.regenLeft=0;
+        S.enemy=opp;
+        S.player.hp=S.player.maxHp;
+        S.player.poisonDmg=0;S.player.bleedDmg=0;S.player.shields=0;
+        S.player.stunned=false;S.player.sealed=false;
+        S.player.reduceDmgRate=0;S.player.defReduced=false;
+        S.player.buffs=[];
+        S.player.vulnerable=0;S.player.armorBroken=0;S.player.regenLeft=0;
+        S.playerCooldowns={};S.enemyCooldowns={};
+        S.round=1;S.turn=0;
+        S.inBattle=true;S.battleResult=null;
+        document.getElementById('btn-start').disabled=true;
+        addLog('<span class="log-enemy">⚔️ 对战: '+S.player.name+' vs '+opp.name+'!</span>');
+        updateUI();
+        setTimeout(()=>executeAutoTurn(),500);
+        return;
+    }
+    
+    showEnemySelect();
+}
+
+function showEnemySelect() {
+    const list=document.getElementById('enemy-select-list');
+    list.innerHTML='';
+    
+    // 无尽模式难度：round 6起
+    const effectiveRound=S.lobsterMode==='endless'?S.round+5:S.round;
+    
+    for(let i=0;i<3;i++) {
+        const r=effectiveRound+(i*0.5);
+        // 难度曲线：round1 40% → round5 100%，逐轮递增，无尽模式从110%起
+        const baseMod=S.lobsterMode==='endless'?1.1:Math.min(1, 0.4+(effectiveRound-1)*0.15);
+        const m=(1+(r-1)*0.15)*baseMod;
+        // 敌人等级：敌人1/2=Lv.round，敌人3=Lv.round+1
+        const dispLvl=i<2?effectiveRound:effectiveRound+1;
+        const nameOpt=ENEMY_NAMES[Math.min(dispLvl-1,ENEMY_NAMES.length-1)]||'强化龙虾#'+dispLvl;
+        const hp=Math.floor((100+r*15)*m);
+        const atk=Math.floor((7+r*1.3)*m);
+        const def=Math.floor((3+r*0.8)*m);
+        const spd=Math.floor((5+r*0.6)*m);
+        const cnt=effectiveRound+(i===2?1:0);
+        const avail=ALL_SKILLS.filter(x=>x.id!=='resurrect'||Math.random()<0.2);
+        const skills=[...avail].sort(()=>Math.random()-0.5).slice(0,Math.min(cnt,avail.length));
+        const div=document.createElement('div');
+        div.className='enemy-option';
+        div.innerHTML='<div class="enemy-option-name">🦞 '+nameOpt+' (Lv.'+dispLvl+')</div>'+
+            '<div class="enemy-option-stats">生命:'+hp+' 攻:'+atk+' 防:'+def+' 速:'+spd+'</div>'+
+            '<div class="enemy-option-skills">技能: '+skills.map(s=>s.icon+s.name).join(' ')+'</div>';
+        div.onclick=()=>selectEnemy(nameOpt,dispLvl,hp,atk,def,spd,skills);
+        list.appendChild(div);
+    }
+    document.getElementById('enemy-select-panel').classList.add('show');
+}
+
+function closeEnemySelect() {
+    document.getElementById('enemy-select-panel').classList.remove('show');
+}
+
+function selectEnemy(name,level,hp,atk,def,spd,skills) {
+    closeEnemySelect();
+    S.player.hp=S.player.maxHp;
+    S.player.poisonDmg=0;S.player.bleedDmg=0;S.player.shields=0;
+    S.player.stunned=false;S.player.sealed=false;
+    S.player.vulnerable=0;S.player.armorBroken=0;S.player.regenLeft=0;
+    S.enemy={name,level,hp,maxHp:hp,atk,def,spd,
+        skills:skills.map(s=>cloneSkill(s)),
+        buffs:[],shields:0,poisonDmg:0,bleedDmg:0,alive:true,resurrected:false,
+        stunned:false,sealed:false,resurrectRate:0,counterRate:0,reduceDmgRate:0,
+        speedBoosted:false,defReduced:false,lifesteal:0,
+        vulnerable:0,armorBroken:0,regenLeft:0};
+    refreshPassiveSkills(S.enemy);
+    S.playerCooldowns={};S.enemyCooldowns={};
+    refreshPassiveSkills(S.player);
+    S.inBattle=true;S.turn=0;
+    document.getElementById('btn-start').disabled=true;
+    updateUI();
+    addLog('<span class="log-system">⚔️ 第 '+S.round+' 轮战斗开始!</span>');
+    addLog('<span class="log-enemy">⚔️ 遇到野生 '+S.enemy.name+' (Lv.'+S.enemy.level+')</span>');
+    addLog('<span class="log-system">📋 敌人技能: '+S.enemy.skills.map(s=>s.icon+s.name).join(' ')+'</span>');
+    // 速度高的先手
+    if(S.player.spd>=S.enemy.spd) {
+        addLog('<span class="log-system">⚡ 我方速度更高，先手!</span>');
+        S.turn=1;
+        addLog('<span class="log-turn">━━━ 第 1 回合 ━━━</span>');
+        setTimeout(()=>executeAutoTurn(),getBattleDelay());
+    } else {
+        addLog('<span class="log-system">⚡ 敌人速度更高，先手!</span>');
+        S.turn=1;
+        addLog('<span class="log-turn">━━━ 第 1 回合 ━━━</span>');
+        setTimeout(()=>enemyTurn(),getBattleDelay());
+    }
+}
+
+// 刷新被动技能加成
+function refreshPassiveSkills(entity) {
+    if(!entity) return;
+    entity.lifesteal=0;entity.counterRate=0;entity.resurrectRate=0;
+    entity.speedBoosted=false;entity.dodgeRate=0;entity.reflectRate=0;
+    entity.reflectDmg=0;entity.shieldBoostRate=0;entity.regenRate=0;
+    entity.skills.forEach(s=>{
+        if(s.passive){
+            if(s.id==='lifesteal') entity.lifesteal=s.lifesteal;
+            if(s.id==='counter') entity.counterRate=s.counterRate;
+            if(s.id==='resurrect') entity.resurrectRate=s.resurrectRate;
+            if(s.id==='speedBoost'||s.id==='overclock') entity.speedBoosted=true;
+            if(s.id==='dodge') entity.dodgeRate=s.dodgeRate||0.3;
+            if(s.id==='reflect') { entity.reflectRate=s.reflectRate||0.3; entity.reflectDmg=s.reflectDmg||0.33; }
+            if(s.id==='shield_boost') entity.shieldBoostRate=s.shieldBoostRate||0.5;
+            if(s.id==='regenerate') entity.regenRate=s.regenRate||0.03;
+        }
+    });
+}
+
+// ---------- 玩家回合 ----------
+function executeAutoTurn() {
+    if(!S.inBattle) return;
+    if(S.player.stunned) {
+        addLog('<span class="log-player">😵 被晕了，无法行动!</span>');
+        updateUI();
+        setTimeout(()=>enemyTurn(),getBattleDelay());
+        return;
+    }
+    if(S.player.sealed) {
+        addLog('<span class="log-player">🔒 被封印了，无法行动!</span>');
+        S.player.sealed=false;
+        updateUI();
+        setTimeout(()=>enemyTurn(),getBattleDelay());
+        return;
+    }
+    const availSkills=S.player.skills.filter(s=>{
+        if(s.passive) return false;
+        const cd=S.playerCooldowns[s.id]||0;
+        if(cd>0) return false;
+        return true;
+    });
+    S.battleQueue=[];
+    // 释放所有可用主动技能
+    availSkills.forEach(skill=>S.battleQueue.push({type:'skill',skill}));
+    // 技能释放完毕后进行一次普通攻击
+    S.battleQueue.push({type:'attack'});
+    S.isProcessing=true;
+    processBattleQueue();
+}
+
+function processBattleQueue() {
+    if(!S.inBattle||S.battleQueue.length===0) {
+        S.isProcessing=false;
+        if(S.enemy) S.enemy.hp=Math.max(0,S.enemy.hp);
+        S.player.hp=Math.min(S.player.maxHp,S.player.hp);
+        updateUI();
+        if(S.enemy&&S.enemy.hp<=0) { enemyDefeated(); }
+        else if(S.player.hp<=0) { playerDefeated(); }
+        else if(S.inBattle) { setTimeout(()=>enemyTurn(),getBattleDelay()); }
+        return;
+    }
+    const action=S.battleQueue.shift();
+    const delay=getBattleDelay();
+    if(action.type==='skill') {
+        const skill=action.skill;
+        if(skill.cd>0) S.playerCooldowns[skill.id]=skill.cd;
+        addLog('<span class="log-player">🎯 '+S.player.name+' 使用 【'+skill.icon+skill.name+'】</span>');
+        processSkillEffect(skill,S.player,S.enemy,true);
+        updateUI();
+        setTimeout(processBattleQueue,delay);
+    } else if(action.type==='attack') {
+        doNormalAttack(S.player,S.enemy,true,false);
+        updateUI();
+        setTimeout(processBattleQueue,delay);
+    }
+}
+
+// ---------- 普通攻击 ----------
+function doNormalAttack(attacker, defender, isPlayer, isSecondHit) {
+    let atkDmg=Math.max(1,Math.floor((attacker.atk||0)*1.0));
+    if(isSecondHit) atkDmg=Math.floor(atkDmg*0.5);
+    const karmaSkill=attacker.skills.find(s=>s.id==='karma'&&s.passive);
+    if(karmaSkill&&atkDmg>0) {
+        if(Math.random()<0.2) {
+            const healAmt=Math.floor(defender.maxHp*0.1);
+            defender.hp=Math.min(defender.maxHp,defender.hp+healAmt);
+            addLog('<span class="log-system">⚖️ 【善恶有报】触发! 治疗敌人 '+healAmt+' HP</span>');
+            playAttackAnimation(isPlayer?'player-fighter':'enemy-fighter',isPlayer?'enemy-fighter':'player-fighter',false);
+            return;
+        } else { atkDmg*=2; }
+    }
+    const angerSkill=attacker.skills.find(s=>s.id==='anger'&&s.passive);
+    if(angerSkill&&atkDmg>0) {
+        const hpPct=attacker.hp/attacker.maxHp;
+        if(hpPct<0.5) {
+            const angerBoost=1+(0.5-hpPct)*2;
+            atkDmg=Math.floor(atkDmg*angerBoost);
+            addLog('<span class="log-system">😤 【愤怒】激活! 伤害×'+angerBoost.toFixed(1)+'</span>');
+        }
+    }
+    const critSkill=attacker.skills.find(s=>s.id==='crit'&&s.passive);
+    if(critSkill&&atkDmg>0&&Math.random()<0.5) {
+        atkDmg*=2;
+        addLog('<span class="log-system">💥 【必杀】暴击! 伤害×2</span>');
+    }
+    // 闪避判定
+    if(defender.dodgeRate>0&&Math.random()<defender.dodgeRate) {
+        addLog('<span class="log-system">💨 【闪避】'+(isPlayer?'敌人':'你')+'躲避了攻击!</span>');
+        playAttackAnimation(isPlayer?'player-fighter':'enemy-fighter',isPlayer?'enemy-fighter':'player-fighter',false);
+        return;
+    }
+    // 护盾吸收
+    if(defender.shields>0) {
+        const absorb=Math.min(defender.shields,atkDmg);
+        defender.shields-=absorb;atkDmg-=absorb;
+        if(absorb>0) addLog('<span class="log-system">🛡️ 护盾吸收了 '+absorb+' 伤害</span>');
+    }
+    // 易伤增伤
+    if(defender.vulnerable>0) {
+        atkDmg=Math.floor(atkDmg*1.4);
+    }
+    // 防御减伤
+    let finalAtkDmg=atkDmg;
+    if(defender.reduceDmgRate>0) {
+        const reduced=Math.floor(atkDmg*defender.reduceDmgRate);
+        finalAtkDmg-=reduced;
+        if(reduced>0) addLog('<span class="log-system">🛡️ 减伤效果抵消了 '+reduced+' 伤害</span>');
+    }
+    if(defender.defReduced) {
+        finalAtkDmg=Math.max(1,Math.floor(finalAtkDmg*0.7));
+    } else if(defender.armorBroken>0) {
+        const def=defender.def||0;
+        finalAtkDmg=Math.max(1,Math.floor(finalAtkDmg*(1-def/(finalAtkDmg+100)*0.7)));
+    } else {
+        const def=defender.def||0;
+        finalAtkDmg=Math.max(1,Math.floor(finalAtkDmg*(1-def/(finalAtkDmg+100))));
+    }
+    defender.hp-=finalAtkDmg;
+    const hitType=isSecondHit?'（连击第2次）':'';
+    addLog('<span class="log-'+(isPlayer?'player':'enemy')+'">👊 '+(isPlayer?attacker.name:'敌人')+'普通攻击'+hitType+'造成 '+finalAtkDmg+' 伤害</span>');
+    showDamageNumber(document.getElementById(isPlayer?'enemy-fighter':'player-fighter'),finalAtkDmg,'');
+    playAttackAnimation(isPlayer?'player-fighter':'enemy-fighter',isPlayer?'enemy-fighter':'player-fighter',false);
+    // 吸血
+    if(attacker.lifesteal>0) {
+        const heal=Math.floor(finalAtkDmg*attacker.lifesteal);
+        attacker.hp=Math.min(attacker.maxHp,attacker.hp+heal);
+        addLog('<span class="log-heal">💉 【吸血】 回复 '+heal+' HP</span>');
+    }
+    // 反射判定
+    if(defender.reflectRate>0&&Math.random()<defender.reflectRate) {
+        const reflectDmg=Math.floor(finalAtkDmg*(defender.reflectDmg||0.33));
+        attacker.hp-=reflectDmg;
+        addLog('<span class="log-system">🪞 【反射】'+(isPlayer?'敌人':'你')+'反弹了 '+reflectDmg+' 伤害</span>');
+        showDamageNumber(document.getElementById(isPlayer?'player-fighter':'enemy-fighter'),reflectDmg,'');
+    }
+    // 连击判定
+    const comboSkill=attacker.skills.find(s=>s.id==='combo'&&s.passive);
+    if(comboSkill&&!isSecondHit&&defender.hp>0&&Math.random()<0.5) {
+        addLog('<span class="log-system">👊 【连击】触发! 再次攻击</span>');
+        doNormalAttack(attacker,defender,isPlayer,true);
+    }
+}
+
+// ---------- 技能效果 ----------
+function processSkillEffect(skill, attacker, defender, isPlayer) {
+    let totalDmg=0;
+    const times=skill.times||1;
+    const isCrit=Math.random()<(skill.critRate||0);
+    const critMult=isCrit?(skill.critMult||2):1;
+    const karmaSkill=attacker.skills.find(s=>s.id==='karma'&&s.passive);
+    const karmaHeal=karmaSkill?(Math.random()<0.2):false;
+    for(let t=0;t<times;t++) {
+        let dmg=0;
+        if(skill.minDmg||skill.minDmg===0) {
+            if(skill.execute) {
+                const hpPct=(defender.hp/defender.maxHp);
+                dmg=Math.max(1,Math.floor((attacker.atk||0)*(hpPct<0.4?2:0.5)));
+            } else {
+                dmg=Math.max(1,Math.floor((attacker.atk||0)*skill.minDmg*critMult));
+            }
+        }
+        if(karmaSkill&&dmg>0) {
+            if(karmaHeal) {
+                const healAmt=Math.floor(defender.maxHp*0.1);
+                defender.hp=Math.min(defender.maxHp,defender.hp+healAmt);
+                addLog('<span class="log-system">⚖️ 【善恶有报】触发! 治疗敌人 '+healAmt+' HP</span>');
+                continue;
+            } else { dmg*=2; }
+        }
+        const angerSkill=attacker.skills.find(s=>s.id==='anger'&&s.passive);
+        if(angerSkill&&dmg>0) {
+            const hpPct=attacker.hp/attacker.maxHp;
+            if(hpPct<0.5) dmg=Math.floor(dmg*(1+(0.5-hpPct)*2));
+        }
+        // 偷取
+        if(skill.drain) {
+            const drainAmt=Math.floor((defender.hp||0)*skill.drain);
+            defender.hp-=drainAmt;attacker.hp=Math.min(attacker.maxHp,(attacker.hp||0)+drainAmt);
+            addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 吸取 '+drainAmt+' HP</span>');
+        }
+        // 吸血
+        if(skill.lifesteal) {
+            const healAmt=Math.floor((dmg||0)*skill.lifesteal);
+            attacker.hp=Math.min(attacker.maxHp,(attacker.hp||0)+healAmt);
+            addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 吸血 '+healAmt+' HP</span>');
+        }
+        // 易伤增伤
+        if(defender.vulnerable>0) dmg=Math.floor(dmg*1.4);
+        // 伤害计算
+        if(skill.ignoreDef) { defender.hp-=dmg;totalDmg+=dmg; }
+        else {
+            let def=defender.def||0;
+            if(defender.defReduced) def=def*0.3;
+            else if(defender.armorBroken>0) def=def*0.7;
+            const finalDmg=Math.max(1,Math.floor(dmg*(1-def/(dmg+100))));
+            defender.hp-=finalDmg;totalDmg+=finalDmg;
+        }
+        if(isPlayer&&dmg>0) showDamageNumber(document.getElementById('enemy-fighter'),dmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
+        if(!isPlayer&&dmg>0) showDamageNumber(document.getElementById('player-fighter'),dmg+(isCrit?' 💥':''),isCrit?'crit':'damage');
+    }
+    if(isCrit&&totalDmg>0) addLog('<span class="log-crit">💥 暴击! 造成 '+totalDmg+' 伤害</span>');
+    else if(totalDmg>0) addLog('<span class="log-damage">'+(isPlayer?'对敌':'对你')+'造成 '+totalDmg+' 伤害</span>');
+    // DOT
+    if(skill.poisonDmg) {
+        defender.poisonDmg=(defender.poisonDmg||0)+skill.poisonDmg;
+        addLog('<span class="log-damage">'+(isPlayer?'敌':'我')+' 中了剧毒!</span>');
+    }
+    if(skill.stunRate&&Math.random()<skill.stunRate) {
+        defender.stunned=true;
+        addLog('<span class="log-system">'+(isPlayer?'敌':'我')+' 被晕了!</span>');
+    }
+    if(skill.sealRate&&Math.random()<skill.sealRate) {
+        defender.sealed=true;
+        addLog('<span class="log-system">'+(isPlayer?'敌':'我')+' 被封印了!</span>');
+    }
+    // 防御减伤（给自己）
+    if(skill.reduceDmg) attacker.reduceDmgRate=(attacker.reduceDmgRate||0)+skill.reduceDmg;
+    // 速度提升
+    if(skill.speedBoost) { attacker.speedBoosted=true; addLog('<span class="log-system">'+(isPlayer?'我':'敌')+' 速度翻倍!</span>'); }
+    // 护盾（含护盾强化被动加成）
+    if(skill.shield) {
+        let shieldAmt=skill.shield;
+        if(attacker.shieldBoostRate>0) shieldAmt=Math.floor(shieldAmt*(1+attacker.shieldBoostRate));
+        attacker.shields=(attacker.shields||0)+shieldAmt;
+        addLog('<span class="log-system">'+(isPlayer?'我':'敌')+' 获得 '+shieldAmt+' 层护盾!</span>');
+    }
+    // 反击/复活
+    if(skill.counterRate) attacker.counterRate=skill.counterRate;
+    if(skill.resurrectRate) attacker.resurrectRate=skill.resurrectRate;
+    // 降防
+    if(skill.reduceStat) defender.defReduced=true;
+    // 破甲
+    if(skill.armorBreakRate) {
+        defender.armorBroken=(skill.armorBreakDuration||2);
+        addLog('<span class="log-system">'+(isPlayer?'敌':'我')+' 护甲被击破! 防御降低30% ('+(skill.armorBreakDuration||2)+'回合)</span>');
+    }
+    // 再生（主动）
+    if(skill.regenRate) {
+        attacker.regenLeft=(skill.regenDuration||3);
+        addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 进入再生状态! 每回合恢复8%HP ('+(skill.regenDuration||3)+'回合)</span>');
+    }
+    // 易伤
+    if(skill.vulnerabilityRate) {
+        defender.vulnerable=(skill.vulnerabilityDuration||2);
+        addLog('<span class="log-system">'+(isPlayer?'敌':'我')+' 受到易伤影响! 受伤增加40% ('+(skill.vulnerabilityDuration||2)+'回合)</span>');
+    }
+    // 即时治疗
+    if(skill.healRate) {
+        const healAmt=Math.floor(attacker.maxHp*skill.healRate);
+        attacker.hp=Math.min(attacker.maxHp,attacker.hp+healAmt);
+        addLog('<span class="log-heal">'+(isPlayer?'我':'敌')+' 恢复了 '+healAmt+' HP</span>');
+    }
+    // 镜反
+    if(skill.mirrorRate) {
+        const mirrorDmg=skill.mirrorDmg||0.33;
+        if(Math.random()<skill.mirrorRate) {
+            addLog('<span class="log-system">🪞 【镜反】反弹了 '+Math.floor(totalDmg*mirrorDmg)+' 伤害</span>');
+            defender.hp-=Math.floor(totalDmg*mirrorDmg);
+        }
+    }
+    if(isPlayer) playAttackAnimation('player-fighter','enemy-fighter',isCrit);
+    else playAttackAnimation('enemy-fighter','player-fighter',isCrit);
+    attacker.hp=Math.min(attacker.maxHp,attacker.hp);
+    defender.hp=Math.max(0,defender.hp);
+}
+
+// ---------- 敌人回合 ----------
+function enemyTurn() {
+    if(!S.inBattle||!S.enemy) return;
+    if(S.enemy.hp<=0) { enemyDefeated(); return; }
+    if(S.enemy.stunned) {
+        addLog('<span class="log-enemy">😵 敌人被晕了，无法行动!</span>');
+        S.enemy.stunned=false;
+        updateUI();
+        setTimeout(()=>endTurn(),getBattleDelay());
+        return;
+    }
+    if(S.enemy.sealed) {
+        addLog('<span class="log-enemy">🔒 敌人被封印了，无法行动!</span>');
+        S.enemy.sealed=false;
+        updateUI();
+        setTimeout(()=>endTurn(),getBattleDelay());
+        return;
+    }
+    const availSkills=S.enemy.skills.filter(s=>{
+        if(s.passive) return false;
+        const cd=S.enemyCooldowns[s.id]||0;
+        if(cd>0) return false;
+        return true;
+    });
+    S.battleQueue=[];
+    availSkills.forEach(skill=>S.battleQueue.push({type:'skill',skill,isPlayer:false}));
+    S.battleQueue.push({type:'attack',isPlayer:false});
+    processEnemyQueue();
+}
+
+function processEnemyQueue() {
+    if(!S.inBattle||S.battleQueue.length===0) {
+        S.isProcessing=false;
+        if(S.enemy) S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp);
+        S.player.hp=Math.max(0,S.player.hp);
+        updateUI();
+        if(S.player.hp<=0) { playerDefeated(); }
+        else if(S.enemy&&S.enemy.hp<=0) { enemyDefeated(); }
+        else if(S.inBattle) { setTimeout(()=>endTurn(),getBattleDelay()); }
+        return;
+    }
+    const action=S.battleQueue.shift();
+    const delay=getBattleDelay();
+    if(action.type==='skill') {
+        const skill=action.skill;
+        if(skill.cd>0) S.enemyCooldowns[skill.id]=skill.cd;
+        addLog('<span class="log-enemy">🎯 '+S.enemy.name+' 使用 【'+skill.icon+skill.name+'】</span>');
+        processSkillEffect(skill,S.enemy,S.player,false);
+        updateUI();
+        setTimeout(processEnemyQueue,delay);
+    } else if(action.type==='attack') {
+        doNormalAttack(S.enemy,S.player,false,false);
+        updateUI();
+        setTimeout(processEnemyQueue,delay);
+    }
+}
+
+function endTurn() {
+    // 防御技能效果在回合开始时重置
+    S.player.reduceDmgRate=0;
+    if(S.enemy) S.enemy.reduceDmgRate=0;
+    if(!S.inBattle) return;
+    // CD减少
+    for(let id in S.playerCooldowns) { if(S.playerCooldowns[id]>0) S.playerCooldowns[id]--; }
+    for(let id in S.enemyCooldowns) { if(S.enemyCooldowns[id]>0) S.enemyCooldowns[id]--; }
+    // 刷新被动
+    refreshPassiveSkills(S.player);
+    if(S.enemy) refreshPassiveSkills(S.enemy);
+    // DOT伤害
+    if(S.player.poisonDmg>0) {
+        const pDmg=Math.floor(S.player.maxHp*S.player.poisonDmg);
+        S.player.hp-=pDmg;
+        addLog('<span class="log-damage">🔥 【中毒】你的龙虾受到 '+pDmg+' 伤害</span>');
+        showDamageNumber(document.getElementById('player-fighter'),pDmg,'poison');
+    }
+    if(S.enemy&&S.enemy.poisonDmg>0) {
+        const eDmg=Math.floor(S.enemy.maxHp*S.enemy.poisonDmg);
+        S.enemy.hp-=eDmg;
+        addLog('<span class="log-damage">🔥 【中毒】敌人受到 '+eDmg+' 伤害</span>');
+    }
+    if(S.player.bleedDmg>0) {
+        const bDmg=Math.floor(S.player.maxHp*S.player.bleedDmg);
+        S.player.hp-=bDmg;
+        addLog('<span class="log-damage">🩸 【撕裂】你的龙虾受到 '+bDmg+' 伤害</span>');
+        showDamageNumber(document.getElementById('player-fighter'),bDmg,'poison');
+    }
+    if(S.enemy&&S.enemy.bleedDmg>0) {
+        const bDmg=Math.floor(S.enemy.maxHp*S.enemy.bleedDmg);
+        S.enemy.hp-=bDmg;
+        addLog('<span class="log-damage">🩸 【撕裂】敌人受到 '+bDmg+' 伤害</span>');
+    }
+    // 再生（被动+主动）
+    if(S.player.regenLeft>0) {
+        const regenAmt=Math.floor(S.player.maxHp*0.08);
+        S.player.hp=Math.min(S.player.maxHp,S.player.hp+regenAmt);
+        addLog('<span class="log-heal">🌱 【再生】你的龙虾恢复了 '+regenAmt+' HP</span>');
+        S.player.regenLeft--;
+    }
+    if(S.player.regenRate>0) {
+        const regenAmt=Math.floor(S.player.maxHp*S.player.regenRate);
+        S.player.hp=Math.min(S.player.maxHp,S.player.hp+regenAmt);
+        addLog('<span class="log-heal">🌿 【再生】你的龙虾恢复了 '+regenAmt+' HP</span>');
+    }
+    if(S.enemy&&S.enemy.regenLeft>0) {
+        const regenAmt=Math.floor(S.enemy.maxHp*0.08);
+        S.enemy.hp=Math.min(S.enemy.maxHp,S.enemy.hp+regenAmt);
+        addLog('<span class="log-heal">🌱 【再生】敌人恢复了 '+regenAmt+' HP</span>');
+        S.enemy.regenLeft--;
+    }
+    // 状态持续时间减少
+    if(S.player.defReduced&&Math.random()<0.3) S.player.defReduced=false;
+    if(S.enemy&&S.enemy.defReduced&&Math.random()<0.3) S.enemy.defReduced=false;
+    if(S.player.armorBroken>0) { S.player.armorBroken--; if(S.player.armorBroken===0) addLog('<span class="log-system">你的龙虾护甲恢复了</span>'); }
+    if(S.enemy&&S.enemy.armorBroken>0) { S.enemy.armorBroken--; if(S.enemy.armorBroken===0) addLog('<span class="log-system">敌人护甲恢复了</span>'); }
+    if(S.player.vulnerable>0) { S.player.vulnerable--; if(S.player.vulnerable===0) addLog('<span class="log-system">你的龙虾易伤消退了</span>'); }
+    if(S.enemy&&S.enemy.vulnerable>0) { S.enemy.vulnerable--; if(S.enemy.vulnerable===0) addLog('<span class="log-system">敌人易伤消退了</span>'); }
+    S.player.buffs=[];
+    if(S.enemy) S.enemy.buffs=[];
+    updateUI();
+    if(S.player.hp<=0) { playerDefeated(); return; }
+    if(S.enemy&&S.enemy.hp<=0) { enemyDefeated(); return; }
+    addLog('<span class="log-turn">━━━ 第 '+(S.turn+1)+' 回合 ━━━</span>');
+    S.turn++;
+    S.player.stunned=false;S.player.sealed=false;
+    setTimeout(executeAutoTurn,getBattleDelay());
+}
+
+// ===== reward.js =====
+// ===== reward.js =====
+
+function enemyDefeated() {
+    if(S.inBattle===false) return; // 防止重复调用
+    S.inBattle=false;
+    S.battleResult='win';
+
+    // PVP模式：一局定胜负，显示结果后直接结束
+    if(S.lobsterMode==='pvp') {
+        addLog('<span class="log-system">🎉 PVP胜利! 恭喜你击败了对手!</span>');
+        // 播放胜利动画
+        playVictoryAnimation(document.getElementById('player-sprite'));
+        document.getElementById('reward-title').textContent='🏆 PVP胜利!';
+        document.getElementById('reward-evolution-container').style.display='none';
+        document.getElementById('reward-skill-container').style.display='none';
+        document.getElementById('reward-equip-container').style.display='none';
+        document.getElementById('reward-panel').classList.add('show');
+        document.getElementById('btn-start').disabled=true;
+        S.waitingForExport=true; // 复用这个flag让closeReward处理结束
+        updateUI();
+        return;
+    }
+
+    // 升级（无尽模式不升级）
+    if(!S.noGrowth) {
+        S.player.level++;
+        calcPlayerStats();
+        S.player.hp=S.player.maxHp;
+        addLog('<span class="log-system">🎉 胜利! 升级到 Lv.'+S.player.level+'!</span>');
+        // 播放升级特效
+        setTimeout(()=>playLevelUpEffect(document.getElementById('player-fighter')),100);
+
+        // 进化检查（Lv3→幼虾，Lv5→战斗虾）
+        let evolved=false, evolvedSkill=null;
+        if(S.player.level===3&&S.phase===0) {
+            S.phase=1; S.player.phase=1; evolved=true;
+        } else if(S.player.level===5&&S.phase===1) {
+            S.phase=2; S.player.phase=2; evolved=true;
+        }
+        if(evolved) {
+            calcPlayerStats();
+            S.player.hp=S.player.maxHp;
+            addLog('<span class="log-player">🌀 进化为 '+PHASES[S.phase]+'! 获得随机技能!</span>');
+            // 播放进化动画
+            setTimeout(()=>playEvolveAnimation(document.getElementById('player-sprite')),300);
+            const avail=ALL_SKILLS.filter(s=>!S.player.skills.find(p=>p.id===s.id));
+            if(avail.length>0) {
+                evolvedSkill=cloneSkill(avail[Math.floor(Math.random()*avail.length)]);
+                S.player.skills.push(evolvedSkill);
+                addLog('<span class="log-player">🌟 进化奖励: 获得 【'+evolvedSkill.icon+evolvedSkill.name+'】!</span>');
+            }
+        }
+        if(evolved) {
+            let evoText='🌀 进化为 <strong>'+PHASES[S.phase]+'</strong>！';
+            if(evolvedSkill) evoText+='<br>🌟 领悟 '+evolvedSkill.icon+evolvedSkill.name;
+            document.getElementById('reward-evolution-container').innerHTML=evoText;
+            document.getElementById('reward-evolution-container').style.display='block';
+            document.getElementById('reward-title').textContent='🎉 进化成功!';
+        } else {
+            document.getElementById('reward-evolution-container').style.display='none';
+            document.getElementById('reward-title').textContent='🎉 战斗胜利!';
+        }
+    } else {
+        // 无尽模式不成长
+        S.player.hp=S.player.maxHp;
+        addLog('<span class="log-system">🎉 无尽模式第 '+S.round+' 轮胜利!</span>');
+        document.getElementById('reward-evolution-container').style.display='none';
+        document.getElementById('reward-title').textContent='🎉 继续挑战!';
+    }
+
+    // 偷学敌人技能（无尽/PVP模式不偷学）
+    if(!S.noSkillSteal&&S.enemy&&S.enemy.skills.length>0) {
+        const enemySkillIdx=Math.floor(Math.random()*S.enemy.skills.length);
+        const newSkill=cloneSkill(S.enemy.skills[enemySkillIdx]);
+        if(!S.player.skills.find(s=>s.id===newSkill.id)) {
+            S.player.skills.push(newSkill);
+            addLog('<span class="log-player">🌟 偷学到新技能: '+newSkill.icon+newSkill.name+'</span>');
+            document.getElementById('reward-skill-name').textContent=newSkill.icon+newSkill.name;
+            document.getElementById('reward-skill-container').style.display='block';
+        } else {
+            document.getElementById('reward-skill-container').style.display='none';
+        }
+    } else {
+        document.getElementById('reward-skill-container').style.display='none';
+    }
+
+    // 装备掉落（无尽/PVP模式不掉落，第5轮不掉落保证及时导出）
+    if(!S.noEquipDrop&&S.round<5&&Math.random()<DROP_CHANCE) {
+        const dropEquip=generateEquipment();
+        S.player.inventory.push(dropEquip);
+        addLog('<span class="log-system">📦 获得掉落装备: '+dropEquip.icon+dropEquip.name+' ['+EQUIP_QUALITY[dropEquip.quality]+']</span>');
+        document.getElementById('reward-equip-container').style.display='block';
+        document.getElementById('reward-equip-name').innerHTML=dropEquip.icon+dropEquip.name+' ['+EQUIP_QUALITY[dropEquip.quality]+'] +'+getEquipValue(dropEquip)+EQUIP_NAMES[dropEquip.type].desc;
+    } else {
+        document.getElementById('reward-equip-container').style.display='none';
+    }
+
+    document.getElementById('reward-panel').classList.add('show');
+    document.getElementById('btn-start').disabled=false;
+
+    // 养虾模式5轮结束：等待导出
+    // 无尽模式永远不导出
+    // 如果刚掉落装备，先让玩家有机会穿戴，下次关闭才导出
+    if(S.lobsterMode==='raise'&&S.round>=5&&!S.exported) {
+        S.waitingForExport=true;
+    }
+    updateUI();
+}
+
+function playerDefeated() {
+    if(S.player.resurrectRate>0&&!S.player.resurrectUsed&&Math.random()<S.player.resurrectRate) {
+        S.player.hp=Math.floor(S.player.maxHp*0.5);
+        S.player.resurrectUsed=true;
+        playResurrectAnimation(document.getElementById('player-fighter'));
+        addLog('<span class="log-player">✨ 神佑发动! 复活并恢复 50% HP!</span>');
+        updateUI();
+        return;
+    }
+    S.inBattle=false;
+    S.battleResult='lose';
+    addLog('<span class="log-system">💀 败北...</span>');
+    // 播放战败动画
+    playDefeatAnimation(document.getElementById('player-sprite'));
+    document.getElementById('game-over-title').textContent='游戏结束';
+    
+    // PVP模式和无尽模式显示不同消息
+    const roundEl=document.getElementById('game-over-round');
+    if(S.lobsterMode==='pvp') {
+        document.getElementById('game-over-msg').textContent='你输掉了PVP对战...';
+        if(roundEl) roundEl.style.display='none';
+    } else if(S.lobsterMode==='endless') {
+        document.getElementById('game-over-msg').textContent='无尽模式第 '+S.round+' 轮挑战失败...';
+        document.getElementById('final-round').textContent=S.round;
+        if(roundEl) roundEl.style.display='block';
+    } else {
+        document.getElementById('game-over-msg').textContent='你的龙虾在第 '+S.round+' 轮倒下了...';
+        document.getElementById('final-round').textContent=S.round;
+        if(roundEl) roundEl.style.display='block';
+    }
+    document.getElementById('btn-start').disabled=true;
+    setTimeout(()=>{
+        document.getElementById('game-over').classList.add('show','lose');
+    },2000);
+}
+
+function closeReward() {
+    document.getElementById('reward-panel').classList.remove('show');
+    
+    // PVP模式：胜利后直接结束，不继续
+    if(S.lobsterMode==='pvp'&&S.battleResult==='win') {
+        S.waitingForExport=false;
+        addLog('<span class="log-system">🦐 PVP对战结束!</span>');
+        document.getElementById('game-over-title').textContent='🏆 PVP胜利!';
+        document.getElementById('game-over-msg').textContent='你击败了对手!';
+        const roundEl=document.getElementById('game-over-round');
+        if(roundEl) roundEl.style.display='none';
+        document.getElementById('btn-start').disabled=true;
+        setTimeout(()=>{
+            document.getElementById('game-over').classList.add('show','win');
+        },1000);
+        updateUI();
+        return;
+    }
+    
+    // 养虾模式5轮结束：显示成虾导出面板
+    if(S.waitingForExport) {
+        S.waitingForExport=false;
+        S.round++;
+        S.exported=true;
+        showExportPanel();
+        updateUI();
+        return;
+    }
+    
+    // 无尽模式和养虾模式继续下一轮
+    S.round++;
+    updateUI();
+    document.getElementById('btn-start').disabled=false;
+    if(S.player&&S.player.inventory&&S.player.inventory.length>0) {
+        addLog('<span class="log-system">📦 背包有 '+S.player.inventory.length+' 件装备，请点击"装备"穿戴！</span>');
+    }
+}
+
+// ---------- 装备系统 ----------
+function openEquipPanel() {
+    updateEquipSlots();
+    updateInventoryList();
+    document.getElementById('equip-panel').classList.add('show');
+    document.getElementById('equip-backdrop').classList.add('show');
+}
+function closeEquipPanel() {
+    document.getElementById('equip-panel').classList.remove('show');
+    document.getElementById('equip-backdrop').classList.remove('show');
+}
+function updateEquipSlots() {
+    ['atk','def','hp'].forEach(type=>{
+        const el=document.getElementById('equip-slot-'+type);
+        const e=S.player.equipment[type];
+        if(e) {
+            el.innerHTML=e.icon+' '+e.name+'<br><small>+'+getEquipValue(e)+'</small>';
+            el.style.borderColor=EQUIP_QUALITY_COLOR[e.quality];
+            el.style.color=EQUIP_QUALITY_COLOR[e.quality];
+        } else {
+            el.innerHTML='<small>空</small>';
+            el.style.borderColor='#444';
+            el.style.color='#888';
+        }
+    });
+}
+function updateInventoryList() {
+    const list=document.getElementById('equip-inv-list');
+    if(!list) return;
+    if(S.player.inventory.length===0) {
+        list.innerHTML='<div style="color:#888;text-align:center;padding:20px">背包空空</div>';
+        return;
+    }
+    list.innerHTML=S.player.inventory.map((e,i)=>
+        '<div class="equip-item" onclick="equipItem('+i+')" style="cursor:pointer;border-left:3px solid '+EQUIP_QUALITY_COLOR[e.quality]+'">'
+        +e.icon+' '+e.name+' +'+getEquipValue(e)+'<br><small style="color:#888">'+EQUIP_NAMES[e.type].desc+'</small></div>'
+    ).join('');
+}
+function equipItem(invIndex) {
+    const e=S.player.inventory[invIndex];
+    if(S.player.equipment[e.type]) {
+        S.player.inventory.push(S.player.equipment[e.type]);
+    }
+    S.player.equipment[e.type]=e;
+    S.player.inventory.splice(invIndex,1);
+    calcPlayerStats();
+    updateEquipSlots();
+    updateInventoryList();
+    updateUI();
+    addLog('<span class="log-system">'+e.icon+' 装备 '+e.name+'!</span>');
+}
+function unequipItem(type) {
+    const e=S.player.equipment[type];
+    if(!e) return;
+    S.player.inventory.push(e);
+    S.player.equipment[type]=null;
+    calcPlayerStats();
+    updateEquipSlots();
+    updateInventoryList();
+    updateUI();
+    addLog('<span class="log-system">'+e.icon+' 卸下 '+e.name+'</span>');
+}
+
+// ===== modes.js =====
+// ===== modes.js =====
+
+// ---------- 模式选择 ----------
+function selectMode(mode) {
+    document.getElementById('mode-select-panel').style.display='none';
+    if(mode==='raise') {
+        S.lobsterMode='raise';
+        initState();
+        showWelcomeLobster();
+        document.getElementById('welcome-panel').classList.add('show');
+        document.getElementById('btn-start').disabled=false;
+    } else if(mode==='import') {
+        S.lobsterMode='import';
+        initState();
+        document.getElementById('import-panel').classList.add('show');
+        document.getElementById('import-code').value='';
+        document.getElementById('import-error').style.display='none';
+        document.getElementById('btn-start').disabled=false;
+    }
+    updateUI();
+}
+
+function restartGame() {
+    document.getElementById('game-over').classList.remove('show','lose','win');
+    document.getElementById('battle-log').innerHTML='';
+    initState();
+    showWelcomeLobster();
+    document.getElementById('btn-start').disabled=false;
+    document.getElementById('welcome-panel').classList.add('show');
+    updateUI();
+}
+
+function closeWelcome() {
+    document.getElementById('welcome-panel').classList.remove('show');
+    document.getElementById('btn-start').disabled=false;
+}
+
+// ---------- 成虾导入/导出 ----------
+function confirmImport() {
+    const code=document.getElementById('import-code').value.trim();
+    if(!code) return;
+    const imported=importLobster(code);
+    if(!imported) {
+        document.getElementById('import-error').style.display='block';
+        return;
+    }
+    document.getElementById('import-panel').classList.remove('show');
+    document.getElementById('welcome-panel').classList.remove('show');
+    addLog('<span class="log-system">🦐 成虾 【'+imported.name+'】 导入成功!</span>');
+    // 显示成虾模式选择面板
+    showLobsterModePanel();
+    updateUI();
+}
+
+function showLobsterModePanel() {
+    const p=S.player;
+    const sprite=PHASE_SPRITES[p.phase]||'🦐';
+    const desc='等级: Lv.'+p.level+' | 阶别: '+PHASES[p.phase]+' | 技能: '+p.skills.length+'个';
+    document.getElementById('lobster-mode-desc').innerHTML=sprite+'<br>'+p.name+'<br><small style="color:#aaa">'+desc+'</small>';
+    document.getElementById('lobster-mode-panel').classList.add('show');
+}
+
+function closeLobsterModePanel() {
+    document.getElementById('lobster-mode-panel').classList.remove('show');
+    document.getElementById('mode-select-panel').style.display='flex';
+}
+
+function selectLobsterMode(mode) {
+    document.getElementById('lobster-mode-panel').classList.remove('show');
+    if(mode==='endless') {
+        S.lobsterMode='endless';
+        S.round=1;
+        // 成虾不成长：禁止升级、禁止偷技能、禁止掉落装备
+        S.noGrowth=true;
+        S.noSkillSteal=true;
+        S.noEquipDrop=true;
+        addLog('<span class="log-system">♾️ 进入无尽模式！怪物难度从第6轮开始...</span>');
+        document.getElementById('btn-start').disabled=false;
+    } else if(mode==='pvp') {
+        S.lobsterMode='pvp';
+        // PVP模式：显示对手导入面板
+        document.getElementById('pvp-import-panel').classList.add('show');
+        document.getElementById('pvp-import-code').value='';
+        document.getElementById('pvp-import-error').style.display='none';
+    }
+    updateUI();
+}
+
+function closePvpImportPanel() {
+    document.getElementById('pvp-import-panel').classList.remove('show');
+    document.getElementById('lobster-mode-panel').classList.add('show');
+}
+
+function confirmPvpImport() {
+    const code=document.getElementById('pvp-import-code').value.trim();
+    if(!code) return;
+    const opponent=importLobster(code);
+    if(!opponent) {
+        document.getElementById('pvp-import-error').style.display='block';
+        document.getElementById('pvp-import-error').textContent='对手代码无效，请重新输入';
+        return;
+    }
+    // 保存对手数据
+    S.pvpOpponent=JSON.parse(JSON.stringify({
+        name:opponent.name, level:opponent.level, phase:opponent.phase,
+        hp:opponent.hp, maxHp:opponent.maxHp,
+        atk:opponent.atk, def:opponent.def, spd:opponent.spd,
+        skills:opponent.skills, equipment:opponent.equipment,
+        buffs:[], shields:0, poisonDmg:0, bleedDmg:0, alive:true,
+        resurrected:false, resurrectedUsed:false,
+        stunned:false, sealed:false,
+        speedBoosted:false, defReduced:false,
+        resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0
+    }));
+    // 传递被动技能属性
+    S.pvpOpponent.skills.forEach(s=>{
+        if(s.passive){
+            if(s.id==='lifesteal') S.pvpOpponent.lifesteal=s.lifesteal;
+            if(s.id==='counter') S.pvpOpponent.counterRate=s.counterRate;
+            if(s.id==='resurrect') S.pvpOpponent.resurrectRate=s.resurrectRate;
+            if(s.id==='speedBoost'||s.id==='overclock') S.pvpOpponent.speedBoosted=true;
+        }
+    });
+    document.getElementById('pvp-import-panel').classList.remove('show');
+    S.pvpReady=true;
+    addLog('<span class="log-system">⚔️ 对手 【'+opponent.name+'】 已就位!</span>');
+    document.getElementById('btn-start').disabled=false;
+    updateUI();
+}
+
+function importLobster(code) {
+    try {
+        const decoded=new TextDecoder().decode(new Uint8Array(atob(code).split('').map(c=>c.charCodeAt(0))));
+        const data=JSON.parse(decoded);
+        if(!data.skills||!data.level||data.phase===undefined) return null;
+        const baseHp=(data.maxHp||100)-(data.level-1)*15;
+        const baseAtk=(data.atk||10)-(data.level-1)*2;
+        const baseDef=(data.def||4)-(data.level-1)*1;
+        const baseSpd=(data.spd||6)-(data.level-1)*1;
+        S.player={
+            name:data.name||'龙虾',
+            level:data.level, phase:data.phase,
+            hp:data.hp||data.maxHp, maxHp:data.maxHp||100,
+            atk:data.atk||10, def:data.def||4, spd:data.spd||6,
+            skills:(data.skills||[]).map(s=>cloneSkill(s)),
+            equipment:data.equipment||{atk:null,def:null,hp:null},
+            inventory:data.inventory||[],
+            buffs:[], shields:0, poisonDmg:0, bleedDmg:0, alive:true,
+            resurrected:false, resurrectedUsed:false,
+            stunned:false, sealed:false,
+            speedBoosted:false, defReduced:false,
+            resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0,
+            vulnerable:0, armorBroken:0, regenLeft:0,
+            dodgeRate:0, reflectRate:0, reflectDmg:0, shieldBoostRate:0, regenRate:0,
+            baseHp, baseAtk, baseDef, baseSpd, hpM:1, atkM:1
+        };
+        if(typeof refreshPassiveSkills==='function') refreshPassiveSkills(S.player);
+        calcPlayerStats();
+        return S.player;
+    } catch(e) {
+        return null;
+    }
+}
+
+function exportLobster() {
+    const data={
+        name:S.player.name, level:S.player.level,
+        hp:S.player.hp, maxHp:S.player.maxHp,
+        atk:S.player.atk, def:S.player.def, spd:S.player.spd,
+        phase:S.phase,
+        skills:S.player.skills, equipment:S.player.equipment,
+        inventory:S.player.inventory,
+        baseHp:S.player.baseHp, baseAtk:S.player.baseAtk,
+        baseDef:S.player.baseDef, baseSpd:S.player.baseSpd
+    };
+    const bytes=new TextEncoder().encode(JSON.stringify(data));
+    let binary='';
+    for(let i=0;i<bytes.length;i++) binary+=String.fromCharCode(bytes[i]);
+    return btoa(binary);
+}
+
+function closeImportPanel() {
+    document.getElementById('import-panel').classList.remove('show');
+    document.getElementById('mode-select-panel').style.display='flex';
+}
+function closeExportPanel() {
+    document.getElementById('export-panel').classList.remove('show');
+    document.getElementById('btn-start').disabled=true;
+    addLog('<span class="log-system">🦐 养虾完成！请复制成虾代码保存，或重新开始新游戏。</span>');
+}
+function showExportPanel() {
+    const code=exportLobster();
+    document.getElementById('export-code').value=code;
+    document.getElementById('reward-panel').style.display='none';
+    document.getElementById('export-panel').classList.add('show');
+}
+function copyExportCode() {
+    const code=document.getElementById('export-code').value;
+    navigator.clipboard.writeText(code).then(()=>{
+        addLog('<span class="log-system">📋 成虾代码已复制到剪贴板!</span>');
+    }).catch(()=>{
+        document.getElementById('export-code').select();
+        document.execCommand('copy');
+        addLog('<span class="log-system">📋 成虾代码已复制到剪贴板!</span>');
+    });
+}
+function showWelcomeLobster() {
+    if(!S.player||!S.player.skills) return;
+    const p=S.player;
+    const sprite=PHASE_SPRITES[p.phase]||'🦐';
+    const stats='生命:'+p.maxHp+' 攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
+    document.getElementById('welcome-sprite').textContent=sprite;
+    document.getElementById('welcome-name').textContent=p.name+' (Lv.'+p.level+') '+PHASES[p.phase];
+    document.getElementById('welcome-stats').textContent=stats;
+    document.getElementById('welcome-skills').textContent='技能: '+p.skills.map(s=>s.icon+s.name).join(' ');
+}
+
+// ===== ui.js =====
+// ===== ui.js =====
+
+// ---------- 动画 ----------
+function showDamageNumber(element, value, type) {
+    if(!element) return;
+    const div=document.createElement('div');
+    div.className='damage-number'+(type?' '+type:'');
+    div.textContent=value;
+    const rect=element.getBoundingClientRect();
+    div.style.left=(rect.left+rect.width/2-10+Math.random()*20)+'px';
+    div.style.top=(rect.top+10)+'px';
+    document.body.appendChild(div);
+    setTimeout(()=>div.remove(),1200);
+}
+
+function playAttackAnimation(attackerId, targetId, isCrit) {
+    const atk=document.getElementById(attackerId);
+    const def=document.getElementById(targetId);
+    if(!atk||!def) return;
+    atk.classList.add('power-attack');
+    setTimeout(()=>{
+        atk.classList.remove('power-attack');
+        def.classList.add('taking-hit');
+        if(isCrit) {
+            def.classList.add('crit-effect');
+            document.body.classList.add('crit-flash');
+            setTimeout(()=>{document.body.classList.remove('crit-flash');},300);
+            setTimeout(()=>def.classList.remove('crit-effect'),500);
+        }
+        setTimeout(()=>def.classList.remove('taking-hit'),300);
+    },300);
+}
+
+function playResurrectAnimation(element) {
+    if(!element) return;
+    element.classList.add('resurrected');
+    setTimeout(()=>element.classList.remove('resurrected'),1500);
+}
+
+function playEvolveAnimation(spriteEl) {
+    if(!spriteEl) return;
+    spriteEl.classList.add('evolving');
+    setTimeout(()=>spriteEl.classList.remove('evolving'),1200);
+}
+
+function playLevelUpEffect(playerEl) {
+    if(!playerEl) return;
+    // 升级时给fighter一个光效爆发
+    playerEl.classList.add('level-up-burst');
+    // 添加升级文字
+    const textEl=document.createElement('div');
+    textEl.className='level-up-text';
+    textEl.textContent='↑ Lv Up!';
+    playerEl.appendChild(textEl);
+    setTimeout(()=>{
+        playerEl.classList.remove('level-up-burst');
+        textEl.remove();
+    },1000);
+}
+
+function playVictoryAnimation(spriteEl) {
+    if(!spriteEl) return;
+    spriteEl.classList.add('victory-dance');
+}
+
+function playDefeatAnimation(spriteEl) {
+    if(!spriteEl) return;
+    spriteEl.classList.add('defeat-fall');
+}
+
+// ---------- 技能弹窗 ----------
+function showSkillPopup(skillId) {
+    const skill=ALL_SKILLS.find(s=>s.id===skillId);
+    if(!skill) return;
+    const popup=document.getElementById('skill-popup');
+    const backdrop=document.getElementById('skill-backdrop');
+    if(!popup||!backdrop) return;
+    popup.innerHTML=
+        '<div class="skill-popup-icon">'+skill.icon+'</div>'+
+        '<div class="skill-popup-name">'+skill.name+'</div>'+
+        '<div class="skill-popup-desc">'+skill.desc+'</div>';
+    backdrop.classList.add('show');
+    popup.classList.add('show');
+}
+function hideSkillPopup() {
+    const backdrop=document.getElementById('skill-backdrop');
+    const popup=document.getElementById('skill-popup');
+    if(backdrop) backdrop.classList.remove('show');
+    if(popup) popup.classList.remove('show');
+}
+
+// ---------- 技能提示 ----------
+let skillTooltipTimer=null;
+function showSkillTooltip(skillId, event) {
+    const skill=ALL_SKILLS.find(s=>s.id===skillId);
+    if(!skill) return;
+    const tip=document.getElementById('skill-tooltip');
+    if(!tip) return;
+    tip.innerHTML='<b>'+skill.icon+' '+skill.name+'</b><br>'+skill.desc;
+    tip.style.display='block';
+    positionTooltip(tip, event);
+}
+function hideSkillTooltip() {
+    const tip=document.getElementById('skill-tooltip');
+    if(tip) tip.style.display='none';
+}
+function positionTooltip(tip, event) {
+    const x=event.clientX||0, y=event.clientY||0;
+    tip.style.left=(x+15)+'px';
+    tip.style.top=(y+15)+'px';
+}
+
+// ---------- 速度控制 ----------
+function toggleSpeed() {
+    const speeds=[1,2,3];
+    const idx=speeds.indexOf(S.battleSpeed);
+    S.battleSpeed=speeds[(idx+1)%speeds.length];
+    updateSpeedButton();
+    updateAutoIndicator();
+}
+function updateSpeedButton() {
+    const btn=document.getElementById('btn-speed');
+    if(btn) btn.textContent='⏩ '+S.battleSpeed+'x';
+}
+function updateAutoIndicator() {
+    const indicator=document.getElementById('auto-indicator');
+    if(indicator) indicator.style.display=S.autoMode?'inline':'none';
+}
+
+// ---------- 日志 ----------
+function addLog(msg) {
+    const log=document.getElementById('battle-log');
+    if(!log) return;
+    const div=document.createElement('div');
+    div.innerHTML=msg;
+    log.appendChild(div);
+    log.scrollTop=log.scrollHeight;
+    // 限制日志条数
+    while(log.children.length>50) log.removeChild(log.firstChild);
+}
+
+// ---------- 主UI刷新 ----------
+function updateUI() {
+    if(!S.player) return;
+    updatePlayerUI();
+    if(S.enemy) updateEnemyUI();
+    updateBuffsDisplay('player', S.player);
+    if(S.enemy) updateBuffsDisplay('enemy', S.enemy);
+    updateEvolveButton();
+    renderSkillButtons();
+    if(S.enemy) renderEnemySkills();
+    const roundEl=document.getElementById('round-num');
+    if(roundEl) roundEl.textContent=S.round;
+    const arenaRoundEl=document.getElementById('arena-round');
+    if(arenaRoundEl) arenaRoundEl.textContent='第'+S.round+'轮';
+}
+
+function updatePlayerUI() {
+    const p=S.player;
+    if(!p) return;
+    const hpPct=Math.max(0,Math.min(100,(p.hp/p.maxHp)*100));
+    const hpBar=document.getElementById('player-hp-bar');
+    const hpEl=document.getElementById('player-hp');
+    const maxHpEl=document.getElementById('player-max-hp');
+    const statsEl=document.getElementById('player-stats');
+    const sprite=document.getElementById('player-sprite');
+    const phaseEl=document.getElementById('phase');
+    if(hpBar) hpBar.style.width=hpPct+'%';
+    if(hpEl) hpEl.textContent=Math.floor(p.hp);
+    if(maxHpEl) maxHpEl.textContent=p.maxHp;
+    if(statsEl) statsEl.textContent='攻:'+p.atk+' 防:'+p.def+' 速:'+p.spd;
+    if(phaseEl) phaseEl.textContent=PHASES[p.phase]||'幼虫';
+    if(sprite) {
+        sprite.textContent=PHASE_SPRITES[p.phase]||'🦐';
+        // 移除旧阶段样式，添加新阶段样式
+        sprite.className='fighter-sprite';
+        if(p.phase>0) sprite.classList.add('sprite-phase-'+p.phase);
+    }
+}
+
+function updateEnemyUI() {
+    const e=S.enemy;
+    if(!e) return;
+    const hpPct=Math.max(0,Math.min(100,(e.hp/e.maxHp)*100));
+    const hpBar=document.getElementById('enemy-hp-bar');
+    const hpEl=document.getElementById('enemy-hp');
+    const maxHpEl=document.getElementById('enemy-max-hp');
+    const statsEl=document.getElementById('enemy-stats');
+    const sprite=document.getElementById('enemy-sprite');
+    const nameEl=document.getElementById('enemy-name');
+    if(hpBar) hpBar.style.width=hpPct+'%';
+    if(hpEl) hpEl.textContent=Math.floor(e.hp);
+    if(maxHpEl) maxHpEl.textContent=e.maxHp;
+    if(statsEl) statsEl.textContent='攻:'+e.atk+' 防:'+e.def+' 速:'+e.spd;
+    if(sprite) sprite.textContent='🦞';
+    if(nameEl) nameEl.textContent=e.name;
+}
+
+function updateBuffsDisplay(id, entity) {
+    const container=document.getElementById(id+'-buffs');
+    if(!container) return;
+    const buffs=[];
+    if(entity.poisonDmg>0) buffs.push('<span class="buff-poison">毒:'+Math.floor(entity.poisonDmg*100)+'%</span>');
+    if(entity.bleedDmg>0) buffs.push('<span class="buff-bleed">血:'+Math.floor(entity.bleedDmg*100)+'%</span>');
+    if(entity.shields>0) buffs.push('<span class="buff-shield">护:'+entity.shields+'层</span>');
+    if(entity.stunned) buffs.push('<span class="buff-stun">晕</span>');
+    if(entity.sealed) buffs.push('<span class="buff-seal">封</span>');
+    if(entity.speedBoosted) buffs.push('<span class="buff-speed">加速</span>');
+    if(entity.defReduced) buffs.push('<span class="buff-def">降防</span>');
+    if(entity.reduceDmgRate>0) buffs.push('<span class="buff-defend">减伤:'+Math.floor(entity.reduceDmgRate*100)+'%</span>');
+    if(entity.counterRate>0) buffs.push('<span class="buff-counter">反击:'+Math.floor(entity.counterRate*100)+'%</span>');
+    container.innerHTML=buffs.join(' ');
+}
+
+function updateEvolveButton() {
+    // 进化提示由 reward panel 的 reward-evolution-container 显示，不需要额外按钮
+}
+
+// ---------- 技能按钮渲染 ----------
+function renderSkillButtons() {
+    const container=document.getElementById('player-skills');
+    if(!container||!S.player) return;
+    container.innerHTML='';
+    S.player.skills.forEach(skill=>{
+        const cd=S.playerCooldowns[skill.id]||0;
+        const btn=document.createElement('button');
+        btn.className='skill-btn'+(skill.passive?' skill-passive':'');
+        btn.disabled=skill.passive?(false):(cd>0||S.inBattle===false||S.isProcessing);
+        btn.innerHTML=skill.icon+' '+skill.name+(cd>0?' ('+cd+')':'');
+        btn.onclick=()=>{
+            if(skill.passive) return;
+            S.selectedSkill=skill.id;
+            btn.classList.add('selected');
+            document.querySelectorAll('.skill-btn').forEach(b=>{if(b!==btn) b.classList.remove('selected');});
+        };
+        btn.onmouseenter=(e)=>showSkillTooltip(skill.id, e);
+        btn.onmouseleave=hideSkillTooltip;
+        btn.ondblclick=()=>showSkillPopup(skill.id);
+        container.appendChild(btn);
+    });
+}
+
+function renderEnemySkills() {
+    const container=document.getElementById('enemy-skills');
+    if(!container||!S.enemy) return;
+    container.innerHTML='';
+    // 显示所有技能：主动+被动
+    if(S.enemy.skills.length===0) {
+        container.innerHTML='<span style="color:#666;font-size:0.8em">无技能</span>';
+        return;
+    }
+    S.enemy.skills.forEach(skill=>{
+        const btn=document.createElement('button');
+        btn.className='skill-btn enemy-skill-btn'+(skill.passive?' skill-passive':'');
+        btn.disabled=true;
+        btn.innerHTML=skill.icon+' '+skill.name;
+        btn.onmouseenter=(e)=>showSkillTooltip(skill.id, e);
+        btn.onmouseleave=hideSkillTooltip;
+        container.appendChild(btn);
+    });
+}
+</script>
+</body>
+</html>
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
+<!--# sourceMappingURL=game.map -->
