@@ -1,0 +1,572 @@
+/* ============================================================
+   style.css — 凡人修仙传·人界篇 H5 样式
+   水墨古风主题
+   ============================================================ */
+
+:root {
+  --bg-dark: #1a1a2e;
+  --bg-panel: #16213e;
+  --accent-gold: #d4a017;
+  --accent-green: #4ade80;
+  --accent-blue: #60a5fa;
+  --text-primary: #e8d5b7;
+  --text-secondary: #a89984;
+  --border-gold: #8b6914;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 背景渐变 */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at 50% 0%, #2a2a4e 0%, #1a1a2e 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ============================================================ */
+/* 顶部资源栏                                                    */
+/* ============================================================ */
+
+#topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: linear-gradient(180deg, #1f1f3a 0%, #16213e 100%);
+  border-bottom: 1px solid var(--border-gold);
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.realm-badge {
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.resource-item { margin-left: 12px; }
+.resource-item span { color: var(--accent-gold); font-weight: bold; }
+
+/* ============================================================ */
+/* 主容器                                                        */
+/* ============================================================ */
+
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 80px;
+}
+
+/* ============================================================ */
+/* 主角展示区                                                    */
+/* ============================================================ */
+
+#player-section {
+  text-align: center;
+  padding: 20px 16px;
+  background: linear-gradient(180deg, #1f1f3a 0%, transparent 100%);
+}
+
+#player-avatar {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 10px;
+  background: linear-gradient(135deg, #374151, #1f2937);
+  border: 3px solid var(--accent-gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+}
+
+#player-name {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--accent-gold);
+}
+
+#player-level {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+#player-stats {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 12px;
+}
+
+.stat-bar { text-align: center; }
+
+.stat-bar-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.stat-bar-track {
+  width: 80px;
+  height: 8px;
+  background: #2a2a4e;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 3px;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.hp-fill { background: linear-gradient(90deg, #dc2626, #ef4444); }
+.mp-fill { background: linear-gradient(90deg, #2563eb, #3b82f6); }
+
+/* ============================================================ */
+/* 挂机修炼区                                                    */
+/* ============================================================ */
+
+#cultivation-section {
+  margin: 12px 16px;
+  padding: 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: 12px;
+}
+
+.section-title {
+  font-size: 14px;
+  color: var(--accent-gold);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-title::before { content: '◈'; }
+
+/* 离线收益 */
+#offline-earnings {
+  background: #2a2a4e;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  display: none;
+}
+
+#offline-earnings.show { display: block; }
+
+.oe-title {
+  font-size: 12px;
+  color: var(--accent-gold);
+  margin-bottom: 6px;
+}
+
+.oe-items {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.oe-btn {
+  margin-top: 8px;
+  background: var(--accent-gold);
+  color: #000;
+  border: none;
+  padding: 6px 20px;
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: bold;
+}
+
+.oe-btn:hover { opacity: 0.85; }
+
+/* 进度条 */
+#cultivation-progress-wrap { margin-bottom: 12px; }
+
+#cultivation-location {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.loc-name { color: var(--accent-green); }
+.loc-eff { color: var(--accent-blue); font-size: 12px; }
+
+#progress-track {
+  height: 20px;
+  background: #2a2a4e;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #16a34a, #4ade80);
+  border-radius: 10px;
+  transition: width 1s linear;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  min-width: 30px;
+}
+
+#progress-text {
+  font-size: 11px;
+  color: #fff;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+#earnings-preview {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ep-item { display: flex; gap: 4px; }
+.ep-val { color: var(--accent-gold); }
+
+/* ============================================================ */
+/* 通用按钮                                                      */
+/* ============================================================ */
+
+.btn {
+  background: linear-gradient(135deg, #d4a017, #b8860b);
+  color: #000;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  font-weight: bold;
+}
+
+.btn:hover { opacity: 0.85; }
+.btn:active { opacity: 0.7; }
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  background: #555;
+  color: #999;
+}
+
+.btn-secondary {
+  background: #2a2a4e;
+  color: var(--text-primary);
+  border: 1px solid var(--border-gold);
+}
+
+.btn-small { padding: 5px 12px; font-size: 12px; }
+
+/* ============================================================ */
+/* 导航栏                                                        */
+/* ============================================================ */
+
+#nav-section {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(0deg, #16213e 0%, #1f1f3a 100%);
+  border-top: 1px solid var(--border-gold);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0;
+  max-width: 480px;
+  margin: 0 auto;
+  z-index: 100;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  text-align: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.2s;
+  padding: 4px 0;
+}
+
+.nav-btn.active { color: var(--accent-gold); }
+.nav-btn:hover { color: var(--text-primary); }
+.nav-icon { font-size: 22px; display: block; }
+
+/* ============================================================ */
+/* 功能面板                                                      */
+/* ============================================================ */
+
+.panel {
+  display: none;
+  padding: 16px;
+  min-height: calc(100vh - 160px);
+}
+
+.panel.active { display: block; }
+
+/* ============================================================ */
+/* 洞府面板                                                      */
+/* ============================================================ */
+
+.cave-level-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.cave-level-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.cave-name {
+  font-size: 16px;
+  color: var(--accent-gold);
+  font-weight: bold;
+}
+
+.cave-eff {
+  font-size: 13px;
+  color: var(--accent-green);
+}
+
+.cave-upgrade-btn { margin-top: 8px; width: 100%; }
+.cave-upgrade-req {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.cave-buildings { margin-top: 16px; }
+
+.cave-building-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2a2a4e;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.bld-name { font-size: 13px; }
+.bld-desc { font-size: 11px; color: var(--text-secondary); }
+.bld-status { font-size: 11px; color: var(--accent-green); margin-top: 2px; }
+
+/* ============================================================ */
+/* 修炼地点面板                                                  */
+/* ============================================================ */
+
+.location-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.location-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.loc-info .loc-name { font-size: 14px; }
+.loc-info .loc-meta { font-size: 12px; color: var(--text-secondary); margin-top: 3px; }
+.loc-info .loc-eff { color: var(--accent-green); font-size: 12px; }
+.loc-info .loc-locked { color: #ef4444; font-size: 11px; margin-top: 2px; }
+.loc-btn { min-width: 70px; text-align: center; }
+
+/* ============================================================ */
+/* 背包面板                                                      */
+/* ============================================================ */
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.inv-item {
+  background: #2a2a4e;
+  border-radius: 8px;
+  padding: 8px 4px;
+  text-align: center;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.inv-item:hover { border-color: var(--accent-gold); }
+.inv-item.selected { border-color: var(--accent-gold); background: #3a3a5e; }
+
+.item-icon { font-size: 24px; }
+.item-count { font-size: 10px; color: var(--accent-gold); margin-top: 2px; }
+.item-name {
+  font-size: 9px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================ */
+/* 设置面板                                                      */
+/* ============================================================ */
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.settings-item {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-gold);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.si-label { font-size: 14px; }
+.si-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+/* ============================================================ */
+/* 弹窗                                                          */
+/* ============================================================ */
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal-overlay.show { display: flex; }
+
+.modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--accent-gold);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 360px;
+  width: 100%;
+  text-align: center;
+}
+
+.modal-title {
+  font-size: 16px;
+  color: var(--accent-gold);
+  margin-bottom: 12px;
+}
+
+.modal-body {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.modal-btns {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-btns .btn { flex: 1; }
+
+/* ============================================================ */
+/* Toast提示                                                     */
+/* ============================================================ */
+
+#toast {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #d4a017;
+  color: #000;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: bold;
+  z-index: 300;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+#toast.show { opacity: 1; }
+
+/* ============================================================ */
+/* 动画                                                          */
+/* ============================================================ */
+
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212,160,23,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(212,160,23,0); }
+}
+
+.pulse { animation: pulse-gold 1.5s infinite; }
+
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.slide-up { animation: slide-up 0.3s ease-out; }
+
+/* ============================================================ */
+/* 响应式                                                        */
+/* ============================================================ */
+
+@media (max-width: 360px) {
+  .inventory-grid { grid-template-columns: repeat(4, 1fr); }
+  #player-stats { gap: 12px; }
+  .stat-bar-track { width: 60px; }
+}

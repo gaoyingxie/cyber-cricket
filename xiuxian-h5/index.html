@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>凡人修仙传·人界篇</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- 顶部资源栏 -->
+<div id="topbar">
+  <span class="realm-badge" id="realm-badge">炼气初期</span>
+  <div style="display:flex;align-items:center;">
+    <span class="resource-item">💎 <span id="res-stone">0</span></span>
+    <span class="resource-item">🌿 <span id="res-herb">0</span></span>
+    <span class="resource-item">⚗️ <span id="res-elixir">0</span></span>
+  </div>
+</div>
+
+<!-- 主应用 -->
+<div id="app">
+
+  <!-- 主角展示区 -->
+  <div id="player-section">
+    <div id="player-avatar">🧑</div>
+    <div id="player-name">韩立</div>
+    <div id="player-level">炼气 1层</div>
+    <div id="player-stats">
+      <div class="stat-bar">
+        <div class="stat-bar-label">气血 <span id="hp-text">100/100</span></div>
+        <div class="stat-bar-track">
+          <div class="stat-bar-fill hp-fill" id="hp-bar" style="width:100%"></div>
+        </div>
+      </div>
+      <div class="stat-bar">
+        <div class="stat-bar-label">灵力 <span id="mp-text">50/50</span></div>
+        <div class="stat-bar-track">
+          <div class="stat-bar-fill mp-fill" id="mp-bar" style="width:100%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 挂机修炼区 -->
+  <div id="cultivation-section">
+    <div class="section-title">挂机修炼</div>
+
+    <!-- 离线收益弹窗 -->
+    <div id="offline-earnings">
+      <div class="oe-title">📦 离线收益</div>
+      <div class="oe-items" id="oe-items"></div>
+      <button class="oe-btn" onclick="CULTIVATION.collectOffline()">收取离线收益</button>
+    </div>
+
+    <!-- 修炼进度 -->
+    <div id="cultivation-progress-wrap">
+      <div id="cultivation-location">
+        <span>修炼地点：<span class="loc-name" id="cur-loc-name">洞府</span></span>
+        <span class="loc-eff" id="cur-loc-eff">效率：1.0x</span>
+      </div>
+      <div id="progress-track">
+        <div id="progress-fill" style="width:0%">
+          <span id="progress-text">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 收益预览 -->
+    <div id="earnings-preview"></div>
+  </div>
+
+  <!-- 功能面板（按需渲染） -->
+  <div id="panel-cave"   class="panel"></div>
+  <div id="panel-locations" class="panel"></div>
+  <div id="panel-inventory" class="panel"></div>
+  <div id="panel-settings"  class="panel"></div>
+
+</div>
+
+<!-- 底部导航 -->
+<nav id="nav-section">
+  <button class="nav-btn active" data-tab="home" onclick="UI.switchTab('home')">
+    <span class="nav-icon">🏠</span>首页
+  </button>
+  <button class="nav-btn" data-tab="cave" onclick="UI.switchTab('cave')">
+    <span class="nav-icon">🏯</span>洞府
+  </button>
+  <button class="nav-btn" data-tab="locations" onclick="UI.switchTab('locations')">
+    <span class="nav-icon">⛰️</span>修炼
+  </button>
+  <button class="nav-btn" data-tab="inventory" onclick="UI.switchTab('inventory')">
+    <span class="nav-icon">🎒</span>背包
+  </button>
+  <button class="nav-btn" data-tab="settings" onclick="UI.switchTab('settings')">
+    <span class="nav-icon">⚙️</span>设置
+  </button>
+</nav>
+
+<!-- 弹窗 -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">提示</div>
+    <div class="modal-body"  id="modal-body"></div>
+    <div class="modal-btns"  id="modal-btns"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- JS模块（按依赖顺序） -->
+<script src="js/constants.js"></script>
+<script src="js/state.js"></script>
+<script src="js/cultivation.js"></script>
+<script src="js/cave.js"></script>
+<script src="js/locations.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
