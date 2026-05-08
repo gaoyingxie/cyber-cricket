@@ -1,20 +1,8 @@
 // ===== constants.js =====
-const VERSION = 'v2.25';
+const VERSION = 'v2.26';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
 const PHASE_SPRITES=['🦐','🦞','⚡','🔱','👑'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
-
-const EQUIP_TYPES=['atk','def','hp'];
-const EQUIP_NAMES={
-    atk:{name:'力量芯片',icon:'⚔️',desc:'攻击+'},
-    def:{name:'护甲碎片',icon:'🛡️',desc:'防御+'},
-    hp:{name:'生命核心',icon:'❤️',desc:'生命+'}
-};
-const EQUIP_QUALITY=['普通','精良','稀有','史诗','传说'];
-const EQUIP_QUALITY_COLOR=['#aaa','#00ff88','#4488ff','#ff44ff','#ffa500'];
-const EQUIP_QUALITY_MULT=[1,1.5,2,3,5];
-const EQUIP_BASE_VALUES={atk:3,def:2,hp:20};
-const DROP_CHANCE=0.4;
 
 const ALL_SKILLS=[
     // ===== 主动技能 (22个) =====

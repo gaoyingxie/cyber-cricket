@@ -13,7 +13,6 @@ function enemyDefeated() {
         document.getElementById('reward-title').textContent='🏆 PVP胜利!';
         document.getElementById('reward-evolution-container').style.display='none';
         document.getElementById('reward-skill-container').style.display='none';
-        document.getElementById('reward-equip-container').style.display='none';
         document.getElementById('reward-panel').classList.add('show');
         document.getElementById('btn-start').disabled=true;
         S.waitingForExport=true; // 复用这个flag让closeReward处理结束
@@ -84,23 +83,11 @@ function enemyDefeated() {
         document.getElementById('reward-skill-container').style.display='none';
     }
 
-    // 装备掉落（无尽/PVP模式不掉落，第5轮不掉落保证及时导出）
-    if(!S.noEquipDrop&&S.round<5&&Math.random()<DROP_CHANCE) {
-        const dropEquip=generateEquipment();
-        S.player.inventory.push(dropEquip);
-        addLog('<span class="log-system">📦 获得掉落装备: '+dropEquip.icon+dropEquip.name+' ['+EQUIP_QUALITY[dropEquip.quality]+']</span>');
-        document.getElementById('reward-equip-container').style.display='block';
-        document.getElementById('reward-equip-name').innerHTML=dropEquip.icon+dropEquip.name+' ['+EQUIP_QUALITY[dropEquip.quality]+'] +'+getEquipValue(dropEquip)+EQUIP_NAMES[dropEquip.type].desc;
-    } else {
-        document.getElementById('reward-equip-container').style.display='none';
-    }
-
     document.getElementById('reward-panel').classList.add('show');
     document.getElementById('btn-start').disabled=false;
 
     // 养虾模式5轮结束：等待导出
     // 无尽模式永远不导出
-    // 如果刚掉落装备，先让玩家有机会穿戴，下次关闭才导出
     if(S.lobsterMode==='raise'&&S.round>=5&&!S.exported) {
         S.waitingForExport=true;
     }
@@ -176,70 +163,4 @@ function closeReward() {
     S.round++;
     updateUI();
     document.getElementById('btn-start').disabled=false;
-    if(S.player&&S.player.inventory&&S.player.inventory.length>0) {
-        addLog('<span class="log-system">📦 背包有 '+S.player.inventory.length+' 件装备，请点击"装备"穿戴！</span>');
-    }
-}
-
-// ---------- 装备系统 ----------
-function openEquipPanel() {
-    updateEquipSlots();
-    updateInventoryList();
-    document.getElementById('equip-panel').classList.add('show');
-    document.getElementById('equip-backdrop').classList.add('show');
-}
-function closeEquipPanel() {
-    document.getElementById('equip-panel').classList.remove('show');
-    document.getElementById('equip-backdrop').classList.remove('show');
-}
-function updateEquipSlots() {
-    ['atk','def','hp'].forEach(type=>{
-        const el=document.getElementById('equip-slot-'+type);
-        const e=S.player.equipment[type];
-        if(e) {
-            el.innerHTML=e.icon+' '+e.name+'<br><small>+'+getEquipValue(e)+'</small>';
-            el.style.borderColor=EQUIP_QUALITY_COLOR[e.quality];
-            el.style.color=EQUIP_QUALITY_COLOR[e.quality];
-        } else {
-            el.innerHTML='<small>空</small>';
-            el.style.borderColor='#444';
-            el.style.color='#888';
-        }
-    });
-}
-function updateInventoryList() {
-    const list=document.getElementById('equip-inv-list');
-    if(!list) return;
-    if(S.player.inventory.length===0) {
-        list.innerHTML='<div style="color:#888;text-align:center;padding:20px">背包空空</div>';
-        return;
-    }
-    list.innerHTML=S.player.inventory.map((e,i)=>
-        '<div class="equip-item" onclick="equipItem('+i+')" style="cursor:pointer;border-left:3px solid '+EQUIP_QUALITY_COLOR[e.quality]+'">'
-        +e.icon+' '+e.name+' +'+getEquipValue(e)+'<br><small style="color:#888">'+EQUIP_NAMES[e.type].desc+'</small></div>'
-    ).join('');
-}
-function equipItem(invIndex) {
-    const e=S.player.inventory[invIndex];
-    if(S.player.equipment[e.type]) {
-        S.player.inventory.push(S.player.equipment[e.type]);
-    }
-    S.player.equipment[e.type]=e;
-    S.player.inventory.splice(invIndex,1);
-    calcPlayerStats();
-    updateEquipSlots();
-    updateInventoryList();
-    updateUI();
-    addLog('<span class="log-system">'+e.icon+' 装备 '+e.name+'!</span>');
-}
-function unequipItem(type) {
-    const e=S.player.equipment[type];
-    if(!e) return;
-    S.player.inventory.push(e);
-    S.player.equipment[type]=null;
-    calcPlayerStats();
-    updateEquipSlots();
-    updateInventoryList();
-    updateUI();
-    addLog('<span class="log-system">'+e.icon+' 卸下 '+e.name+'</span>');
 }

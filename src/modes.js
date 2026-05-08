@@ -70,10 +70,9 @@ function selectLobsterMode(mode) {
     if(mode==='endless') {
         S.lobsterMode='endless';
         S.round=1;
-        // 成虾不成长：禁止升级、禁止偷技能、禁止掉落装备
+        // 成虾不成长：禁止升级、禁止偷技能
         S.noGrowth=true;
         S.noSkillSteal=true;
-        S.noEquipDrop=true;
         addLog('<span class="log-system">♾️ 进入无尽模式！怪物难度从第6轮开始...</span>');
         document.getElementById('btn-start').disabled=false;
     } else if(mode==='pvp') {
@@ -94,7 +93,7 @@ function closePvpImportPanel() {
 function confirmPvpImport() {
     const code=document.getElementById('pvp-import-code').value.trim();
     if(!code) return;
-    const opponent=importLobster(code);
+    const opponent=parseLobsterCode(code);
     if(!opponent) {
         document.getElementById('pvp-import-error').style.display='block';
         document.getElementById('pvp-import-error').textContent='对手代码无效，请重新输入';
@@ -105,7 +104,7 @@ function confirmPvpImport() {
         name:opponent.name, level:opponent.level, phase:opponent.phase,
         hp:opponent.hp, maxHp:opponent.maxHp,
         atk:opponent.atk, def:opponent.def, spd:opponent.spd,
-        skills:opponent.skills, equipment:opponent.equipment,
+        skills:opponent.skills,
         buffs:[], shields:0, poisonDmg:0, bleedDmg:0, alive:true,
         resurrected:false, resurrectedUsed:false,
         stunned:false, sealed:false,
@@ -130,32 +129,10 @@ function confirmPvpImport() {
 
 function importLobster(code) {
     try {
-        const decoded=new TextDecoder().decode(new Uint8Array(atob(code).split('').map(c=>c.charCodeAt(0))));
-        const data=JSON.parse(decoded);
-        if(!data.skills||!data.level||data.phase===undefined) return null;
-        const baseHp=(data.maxHp||100)-(data.level-1)*15;
-        const baseAtk=(data.atk||10)-(data.level-1)*2;
-        const baseDef=(data.def||4)-(data.level-1)*1;
-        const baseSpd=(data.spd||6)-(data.level-1)*1;
-        S.player={
-            name:data.name||'龙虾',
-            level:data.level, phase:data.phase,
-            hp:data.hp||data.maxHp, maxHp:data.maxHp||100,
-            atk:data.atk||10, def:data.def||4, spd:data.spd||6,
-            skills:(data.skills||[]).map(s=>cloneSkill(s)),
-            equipment:data.equipment||{atk:null,def:null,hp:null},
-            inventory:data.inventory||[],
-            buffs:[], shields:0, poisonDmg:0, bleedDmg:0, alive:true,
-            resurrected:false, resurrectedUsed:false,
-            stunned:false, sealed:false,
-            speedBoosted:false, defReduced:false,
-            resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0,
-            vulnerable:0, armorBroken:0, regenLeft:0,
-            dodgeRate:0, reflectRate:0, reflectDmg:0, shieldBoostRate:0, regenRate:0,
-            baseHp, baseAtk, baseDef, baseSpd, hpM:1, atkM:1
-        };
-        if(typeof refreshPassiveSkills==='function') refreshPassiveSkills(S.player);
-        calcPlayerStats();
+        const lobster=parseLobsterCode(code);
+        if(!lobster) return null;
+        S.player=lobster;
+        S.phase=lobster.phase;
         return S.player;
     } catch(e) {
         return null;
@@ -163,20 +140,48 @@ function importLobster(code) {
 }
 
 function exportLobster() {
-    const data={
-        name:S.player.name, level:S.player.level,
-        hp:S.player.hp, maxHp:S.player.maxHp,
-        atk:S.player.atk, def:S.player.def, spd:S.player.spd,
-        phase:S.phase,
-        skills:S.player.skills, equipment:S.player.equipment,
-        inventory:S.player.inventory,
-        baseHp:S.player.baseHp, baseAtk:S.player.baseAtk,
-        baseDef:S.player.baseDef, baseSpd:S.player.baseSpd
-    };
+    const p=S.player;
+    const data=[
+        1, p.name, p.level, p.phase, Math.floor(p.hp),
+        p.baseHp, p.baseAtk, p.baseDef, p.baseSpd,
+        p.skills.map(s=>ALL_SKILLS.findIndex(x=>x.id===s.id)).filter(i=>i>=0)
+    ];
     const bytes=new TextEncoder().encode(JSON.stringify(data));
     let binary='';
     for(let i=0;i<bytes.length;i++) binary+=String.fromCharCode(bytes[i]);
-    return btoa(binary);
+    return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+function parseLobsterCode(code) {
+    const data=JSON.parse(decodeLobsterCode(code));
+    if(!Array.isArray(data)||data[0]!==1||!Array.isArray(data[9])) return null;
+    const skills=data[9].map(i=>ALL_SKILLS[i]).filter(Boolean).map(cloneSkill);
+    if(!data[2]||data[3]===undefined||skills.length===0) return null;
+    const lobster={
+        name:data[1]||'龙虾',
+        level:data[2], phase:data[3],
+        hp:data[4]||1, maxHp:1, atk:1, def:1, spd:1,
+        skills,
+        buffs:[], shields:0, poisonDmg:0, bleedDmg:0, alive:true,
+        resurrected:false, resurrectedUsed:false,
+        stunned:false, sealed:false,
+        speedBoosted:false, defReduced:false,
+        resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0,
+        vulnerable:0, armorBroken:0, regenLeft:0,
+        dodgeRate:0, reflectRate:0, reflectDmg:0, shieldBoostRate:0, regenRate:0,
+        baseHp:data[5]||100, baseAtk:data[6]||10,
+        baseDef:data[7]||4, baseSpd:data[8]||6,
+        hpM:1, atkM:1
+    };
+    if(typeof refreshPassiveSkills==='function') refreshPassiveSkills(lobster);
+    calcEntityStats(lobster);
+    return lobster;
+}
+
+function decodeLobsterCode(code) {
+    const clean=code.replace(/\s/g,'').replace(/-/g,'+').replace(/_/g,'/');
+    const padded=clean+'='.repeat((4-clean.length%4)%4);
+    return new TextDecoder().decode(new Uint8Array(atob(padded).split('').map(c=>c.charCodeAt(0))));
 }
 
 function closeImportPanel() {

@@ -79,11 +79,6 @@ async function run() {
         assert(snapOut.includes('倍速'), '速度按钮应显示');
     });
     
-    await test('UI-05: 装备按钮显示', async () => {
-        const snapOut = await snap();
-        assert(snapOut.includes('装备'), '装备按钮应显示');
-    });
-    
     // ==================== 模式选择 ====================
     console.log('\n📋 UI-2: 模式选择');
     
@@ -435,10 +430,8 @@ async function run() {
         await sleep(500);
         const noGrowth = await evalJS("S.noGrowth");
         const noSkill = await evalJS("S.noSkillSteal");
-        const noEquip = await evalJS("S.noEquipDrop");
         assert(noGrowth !== undefined, `noGrowth应为boolean: ${noGrowth} (${typeof noGrowth})`);
         assert(noSkill !== undefined, `noSkillSteal应为boolean: ${noSkill}`);
-        assert(noEquip !== undefined, `noEquipDrop应为boolean: ${noEquip}`);
     });
     
     await test('PVP-05: 无尽模式战斗胜利后不升级', async () => {

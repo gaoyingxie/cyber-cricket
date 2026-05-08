@@ -58,19 +58,19 @@ async function testConstants() {
     const g = loadGame();
     await g.wait(200);
     
-    test('CONST-01: 版本号应为v2.19', () => {
+    test('CONST-01: 版本号应为v2.26', () => {
         const v = g.get('VERSION');
-        assert(v === 'v2.19', `VERSION应为v2.19: ${v}`);
+        assert(v === 'v2.26', `VERSION应为v2.26: ${v}`);
     });
     
-    test('CONST-02: 主动技能数量应为17个', () => {
+    test('CONST-02: 主动技能数量应为21个', () => {
         const active = g.get('ALL_SKILLS').filter(s => !s.passive);
-        assert(active.length === 17, `主动技能应为17个: ${active.length}`);
+        assert(active.length === 21, `主动技能应为21个: ${active.length}`);
     });
     
-    test('CONST-03: 被动技能数量应为10个', () => {
+    test('CONST-03: 被动技能数量应为14个', () => {
         const passive = g.get('ALL_SKILLS').filter(s => s.passive);
-        assert(passive.length === 10, `被动技能应为10个: ${passive.length}`);
+        assert(passive.length === 14, `被动技能应为14个: ${passive.length}`);
     });
     
     test('CONST-04: 进化阶段应有5个', () => {
@@ -81,20 +81,6 @@ async function testConstants() {
     test('CONST-05: 敌人类型应有15种', () => {
         const names = g.get('ENEMY_NAMES');
         assert(names.length === 15, `敌人类型应为15种: ${names.length}`);
-    });
-    
-    test('CONST-06: 装备掉落率应为40%', () => {
-        assert(g.get('DROP_CHANCE') === 0.4, `DROP_CHANCE应为0.4`);
-    });
-    
-    test('CONST-07: 装备品质应有5种', () => {
-        const colors = g.get('EQUIP_QUALITY_COLOR');
-        assert(colors.length === 5, `品质颜色应为5种: ${colors.length}`);
-    });
-    
-    test('CONST-08: 速度切换应有3档', () => {
-        const speeds = g.get('BATTLE_SPEEDS');
-        assert(speeds.length === 3, `速度档位应为3: ${speeds.length}`);
     });
     
     g.dom.window.close();
@@ -275,34 +261,6 @@ async function testInit() {
 }
 
 // ============================================================
-// 装备系统测试
-// ============================================================
-async function testEquip() {
-    console.log('\n📦 EQUIP - 装备系统');
-    const g = loadGame();
-    await g.wait(200);
-    
-    test('EQUIP-01: 装备数值计算正确', () => {
-        // 装备价值 = 基础值 × 品质系数 × 等级
-        // ATK基础3, 精良(1.5), Lv3 = 3*2*3 = 18
-        const value = g.call('getEquipValue', { type: 'atk', quality: 2, level: 3 });
-        assert(value === 18, `装备价值应为18: ${value}`);
-    });
-    
-    test('EQUIP-02: 装备品质颜色配置正确', () => {
-        const colors = g.get('EQUIP_QUALITY_COLOR');
-        assert(colors[0] === '#aaa', '普通#aaa');
-        assert(colors[4] === '#ffa500', '传说#ffa500');
-    });
-    
-    test('EQUIP-03: 装备掉落率40%', () => {
-        assert(g.get('DROP_CHANCE') === 0.4, '掉落率应为0.4');
-    });
-    
-    g.dom.window.close();
-}
-
-// ============================================================
 // UI渲染测试
 // ============================================================
 async function testUI() {
@@ -387,19 +345,18 @@ async function testExport() {
     const g = loadGame();
     await g.wait(200);
     
-    test('EXPORT-01: 导出生成Base64代码', () => {
+    test('EXPORT-01: 导出生成短成虾代码', () => {
         g.call('selectMode', 'raise');
         const code = g.call('exportLobster');
-        assert(code && code.length > 100, `导出代码应>100字符: ${code.length}`);
-        assert(/^[A-Za-z0-9+/=]+$/.test(code), '应为有效Base64');
+        assert(code && code.length < 140, `导出代码应足够短: ${code.length}`);
+        assert(/^[A-Za-z0-9_-]+$/.test(code), '应为URL安全Base64');
     });
     
-    test('EXPORT-02: 导出代码可解析', () => {
+    test('EXPORT-02: 导出代码可导入', () => {
         g.call('selectMode', 'raise');
         const code = g.call('exportLobster');
-        const decoded = Buffer.from(code, 'base64').toString('utf8');
-        const data = JSON.parse(decoded);
-        assert(data.player && data.player.level === 1, '应包含玩家数据');
+        const imported = g.call('importLobster', code);
+        assert(imported && imported.level === 1, '应可还原玩家数据');
     });
     
     g.dom.window.close();
@@ -465,7 +422,6 @@ async function runTests() {
     await testSkills();
     await testPassives();
     await testInit();
-    await testEquip();
     await testUI();
     await testExport();
     await testBattle();

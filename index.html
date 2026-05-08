@@ -569,7 +569,6 @@
         .reward-title { font-size: 1.5em; color: #00ff88; margin-bottom: 20px; }
         .reward-item { margin: 10px 0; font-size: 1.1em; }
         .reward-skill { background: rgba(255,68,255,0.2); border: 1px solid #ff44ff; border-radius: 8px; padding: 10px; margin: 10px 0; color: #ff44ff; }
-        .reward-equip { background: rgba(255,165,0,0.2); border: 1px solid #ffa500; border-radius: 8px; padding: 10px; margin: 10px 0; color: #ffa500; }
         .reward-evolution { background: rgba(0,255,136,0.15); border: 2px solid #00ff88; border-radius: 10px; padding: 15px; margin: 12px 0; color: #00ff88; font-size: 1.1em; text-shadow: 0 0 10px #00ff88; animation: evolveText 0.8s ease-out; }
         .enemy-select-panel {
             position: fixed;
@@ -642,70 +641,7 @@
             .skill-popup-icon { font-size: 2.5em; }
             .skill-popup-name { font-size: 1.2em; }
             .skill-popup-type, .skill-popup-cost, .skill-popup-desc { font-size: 0.85em; }
-            .equip-panel { min-width: 95vw; max-height: 90vh; }
-            .equip-panel-title { font-size: 1.2em; }
         }
-        .equip-panel {
-            position: fixed;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
-            border: 2px solid #ffa500;
-            border-radius: 15px;
-            padding: 25px;
-            display: none;
-            z-index: 1004;
-            min-width: 400px;
-            max-height: 80vh;
-            overflow-y: auto;
-            text-align: center;
-        }
-        .equip-panel.show { display: block; }
-        .equip-panel-title { font-size: 1.5em; color: #ffa500; margin-bottom: 20px; text-shadow: 0 0 10px #ffa500; }
-        .equip-current { margin-bottom: 20px; }
-        .equip-slot-title { font-size: 1em; color: #888; margin-bottom: 10px; }
-        .equip-slots { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
-        .equip-slot {
-            background: rgba(0,0,0,0.3);
-            border: 2px solid #444;
-            border-radius: 10px;
-            padding: 10px 15px;
-            min-width: 90px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .equip-slot:hover { border-color: #ffa500; background: rgba(255,165,0,0.1); }
-        .equip-slot-icon { font-size: 1.5em; margin-bottom: 5px; }
-        .equip-slot-label { font-size: 0.8em; color: #888; }
-        .equip-slot-item { font-size: 0.85em; color: #fff; margin-top: 5px; min-height: 24px; }
-        .equip-slot-item.equipped { color: #ffa500; }
-        .equip-inventory { text-align: left; }
-        .equip-inv-title { font-size: 1em; color: #888; margin-bottom: 10px; }
-        .equip-inv-list { max-height: 200px; overflow-y: auto; }
-        .equip-inv-item {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 8px 12px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .equip-inv-item:hover { border-color: #ffa500; background: rgba(255,165,0,0.1); }
-        .equip-inv-item-name { font-size: 0.9em; color: #fff; }
-        .equip-inv-item-btn { font-size: 0.8em; color: #00ff88; background: none; border: 1px solid #00ff88; border-radius: 5px; padding: 3px 8px; cursor: pointer; }
-        .equip-inv-item-btn:hover { background: rgba(0,255,136,0.2); }
-        .equip-backdrop {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            z-index: 1003;
-        }
-        .equip-backdrop.show { display: block; }
         .skill-tooltip {
             position: absolute;
             background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
@@ -788,7 +724,7 @@
 <body>
     <div class="container">
         <h1 class="title">⚡ 赛博斗龙虾 ⚡</h1>
-        <div class="version">v2.25 | 第 <span id="round-num">1</span> 轮</div>
+        <div class="version">v2.26 | 第 <span id="round-num">1</span> 轮</div>
         <div class="status-bar">
             <div class="stat"><div class="stat-label">阶别</div><div class="stat-value" id="phase">虾苗</div></div>
         </div>
@@ -819,7 +755,6 @@
         <div class="btn-row">
             <button class="btn" id="btn-start" onclick="startBattle()" disabled>🚀 开始战斗</button>
             <button class="btn" id="btn-speed" onclick="toggleSpeed()">⏩ 1倍速</button>
-            <button class="btn btn-small btn-warning" id="btn-equip" onclick="openEquipPanel()">🎒 装备</button>
         </div>
  <div class="evolution-overlay" id="evolution-overlay">
         <div class="evolution-text" id="evolution-text">🌀 进化中...</div>
@@ -831,10 +766,6 @@
             <div>偷学到技能:</div>
             <div id="reward-skill-name"></div>
         </div>
-        <div class="reward-equip" id="reward-equip-container" style="display:none">
-            <div>📦 掉落装备:</div>
-            <div id="reward-equip-name"></div>
-        </div>
         <button class="btn" onclick="closeReward()">继续</button>
     </div>
     <div class="enemy-select-panel" id="enemy-select-panel">
@@ -843,7 +774,6 @@
         <button class="btn" onclick="closeEnemySelect()">返回</button>
     </div>
     <div class="skill-popup-backdrop" id="skill-backdrop" onclick="hideSkillPopup()"></div>
-    <div class="equip-backdrop" id="equip-backdrop" onclick="closeEquipPanel()"></div>
     <div class="skill-popup" id="skill-popup">
         <div class="skill-popup-icon" id="skill-popup-icon"></div>
         <div class="skill-popup-name" id="skill-popup-name"></div>
@@ -851,34 +781,6 @@
         <div class="skill-popup-cost" id="skill-popup-cost"></div>
         <div class="skill-popup-desc" id="skill-popup-desc"></div>
         <div class="skill-popup-effect" id="skill-popup-effect"></div>
-    </div>
-    <div class="equip-panel" id="equip-panel">
-        <div class="equip-panel-title">🎒 装备管理</div>
-        <div class="equip-current">
-            <div class="equip-slot-title">当前穿戴</div>
-            <div class="equip-slots">
-                <div class="equip-slot" id="equip-slot-atk" onclick="unequipItem('atk')">
-                    <div class="equip-slot-icon">⚔️</div>
-                    <div class="equip-slot-label">攻击</div>
-                    <div class="equip-slot-item" id="equip-slot-atk-item">空</div>
-                </div>
-                <div class="equip-slot" id="equip-slot-def" onclick="unequipItem('def')">
-                    <div class="equip-slot-icon">🛡️</div>
-                    <div class="equip-slot-label">防御</div>
-                    <div class="equip-slot-item" id="equip-slot-def-item">空</div>
-                </div>
-                <div class="equip-slot" id="equip-slot-hp" onclick="unequipItem('hp')">
-                    <div class="equip-slot-icon">❤️</div>
-                    <div class="equip-slot-label">生命</div>
-                    <div class="equip-slot-item" id="equip-slot-hp-item">空</div>
-                </div>
-            </div>
-        </div>
-        <div class="equip-inventory">
-            <div class="equip-inv-title">背包 (<span id="inv-count">0</span>)</div>
-            <div class="equip-inv-list" id="equip-inv-list"></div>
-        </div>
-        <button class="btn" onclick="closeEquipPanel()">关闭</button>
     </div>
     <div class="skill-tooltip" id="skill-tooltip">
         <div class="skill-tooltip-name" id="skill-tooltip-name"></div>
@@ -899,7 +801,7 @@
             <p>⚔️ 每次<strong>战胜</strong>可偷取对手<strong>1个技能</strong></p>
             <p>🌀 第2轮结束后<strong>自动进化</strong>为幼虾(Lv.3)</p>
             <p>🌀 第4轮结束后<strong>自动进化</strong>为战斗虾(Lv.5)</p>
-            <p>📦 战斗<strong>掉落装备</strong>，可穿戴提升战力</p>
+            <p>🌟 胜利、进化与技能组合会决定最终成虾强度</p>
 
         </div>
         <div class="lobster-reveal">
@@ -913,7 +815,7 @@
     </div>
     <div class="import-panel" id="import-panel">
         <div class="import-title">🦐 导入成虾</div>
-        <div class="import-desc">粘贴之前保存的龙虾序列化代码：</div>
+        <div class="import-desc">粘贴之前保存的成虾代码：</div>
         <textarea class="import-code" id="import-code" placeholder="在此粘贴龙虾代码..."></textarea>
         <div class="import-error" id="import-error" style="display:none;color:#ff4444;margin:10px 0;"></div>
         <button class="btn" onclick="confirmImport()">确认导入</button>
@@ -998,25 +900,14 @@
 
 
 
+
 <script>
 // ===== constants.js =====
 // ===== constants.js =====
-const VERSION = 'v2.25';
+const VERSION = 'v2.26';
 const PHASES=['虾苗','幼虾','战斗虾','铁甲虾','究极虾'];
 const PHASE_SPRITES=['🦐','🦞','⚡','🔱','👑'];
 const PHASE_STAT_MULT=[1,1.15,1.3,1.6,2.0];
-
-const EQUIP_TYPES=['atk','def','hp'];
-const EQUIP_NAMES={
-    atk:{name:'力量芯片',icon:'⚔️',desc:'攻击+'},
-    def:{name:'护甲碎片',icon:'🛡️',desc:'防御+'},
-    hp:{name:'生命核心',icon:'❤️',desc:'生命+'}
-};
-const EQUIP_QUALITY=['普通','精良','稀有','史诗','传说'];
-const EQUIP_QUALITY_COLOR=['#aaa','#00ff88','#4488ff','#ff44ff','#ffa500'];
-const EQUIP_QUALITY_MULT=[1,1.5,2,3,5];
-const EQUIP_BASE_VALUES={atk:3,def:2,hp:20};
-const DROP_CHANCE=0.4;
 
 const ALL_SKILLS=[
     // ===== 主动技能 (22个) =====
@@ -1087,7 +978,7 @@ let S = {
     battleQueue:[], isProcessing:false,
     lobsterMode:null, exported:false, waitingForExport:false,
     // 成虾模式专属
-    noGrowth:false, noSkillSteal:false, noEquipDrop:false,
+    noGrowth:false, noSkillSteal:false,
     pvpOpponent:null, pvpReady:false
 };
 
@@ -1115,8 +1006,7 @@ function initState() {
             }
             return {
                 name:'我的龙虾', level:1, hp:bhp, maxHp:bhp, atk:batk, def:bdef, spd:bspd,
-                phase:0, skills:s, equipment:{atk:null,def:null,hp:null},
-                inventory:[], buffs:[],
+                phase:0, skills:s, buffs:[],
                 shields:0, poisonDmg:0, bleedDmg:0, alive:true, resurrectUsed:false,
                 stunned:false, sealed:false, speedBoosted:false, defReduced:false,
                 resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0,
@@ -1144,38 +1034,26 @@ function getPhaseMult() {
     return PHASE_STAT_MULT[S.phase];
 }
 
-function calcPlayerStats() {
-    const p=S.player;
-    const m=getPhaseMult();
+function calcEntityStats(p) {
+    const m=PHASE_STAT_MULT[p.phase]||getPhaseMult();
     const lvl=p.level-1;
     const hpM=p.hpM||1, atkM=p.atkM||1;
     p.maxHp=Math.floor((p.baseHp+lvl*15)*m*hpM);
     p.atk=Math.floor((p.baseAtk+lvl*2)*m*atkM);
     p.def=Math.floor((p.baseDef+lvl*1)*m*(p.defReduced?0.9:1));
     p.spd=Math.floor((p.baseSpd+lvl*1)*m*(p.speedBoosted?1.5:1));
-    // 装备加成
-    if(p.equipment.atk) p.atk+=getEquipValue(p.equipment.atk);
-    if(p.equipment.def) p.def+=getEquipValue(p.equipment.def);
-    if(p.equipment.hp) p.maxHp+=getEquipValue(p.equipment.hp)*5;
     p.maxHp=Math.max(1,p.maxHp);
     p.hp=Math.min(p.hp,p.maxHp);
+}
+
+function calcPlayerStats() {
+    calcEntityStats(S.player);
 }
 
 function getBattleDelay() {
     return Math.floor(AUTO_BATTLE_DELAY / S.battleSpeed);
 }
 
-function getEquipValue(e) {
-    return Math.floor(EQUIP_BASE_VALUES[e.type]*EQUIP_QUALITY_MULT[e.quality]*e.level);
-}
-
-function generateEquipment() {
-    const type=EQUIP_TYPES[Math.floor(Math.random()*EQUIP_TYPES.length)];
-    const quality=Math.floor(Math.random()*Math.min(3+S.round*0.3,5));
-    const level=1+Math.min(Math.floor(S.round/2),10);
-    const name=EQUIP_NAMES[type].name+' Lv.'+level;
-    return {type,quality,level,name,icon:EQUIP_NAMES[type].icon};
-}
 
 // ===== battle.js =====
 // ===== battle.js =====
@@ -1715,7 +1593,6 @@ function enemyDefeated() {
         document.getElementById('reward-title').textContent='🏆 PVP胜利!';
         document.getElementById('reward-evolution-container').style.display='none';
         document.getElementById('reward-skill-container').style.display='none';
-        document.getElementById('reward-equip-container').style.display='none';
         document.getElementById('reward-panel').classList.add('show');
         document.getElementById('btn-start').disabled=true;
         S.waitingForExport=true; // 复用这个flag让closeReward处理结束
@@ -1786,23 +1663,11 @@ function enemyDefeated() {
         document.getElementById('reward-skill-container').style.display='none';
     }
 
-    // 装备掉落（无尽/PVP模式不掉落，第5轮不掉落保证及时导出）
-    if(!S.noEquipDrop&&S.round<5&&Math.random()<DROP_CHANCE) {
-        const dropEquip=generateEquipment();
-        S.player.inventory.push(dropEquip);
-        addLog('<span class="log-system">📦 获得掉落装备: '+dropEquip.icon+dropEquip.name+' ['+EQUIP_QUALITY[dropEquip.quality]+']</span>');
-        document.getElementById('reward-equip-container').style.display='block';
-        document.getElementById('reward-equip-name').innerHTML=dropEquip.icon+dropEquip.name+' ['+EQUIP_QUALITY[dropEquip.quality]+'] +'+getEquipValue(dropEquip)+EQUIP_NAMES[dropEquip.type].desc;
-    } else {
-        document.getElementById('reward-equip-container').style.display='none';
-    }
-
     document.getElementById('reward-panel').classList.add('show');
     document.getElementById('btn-start').disabled=false;
 
     // 养虾模式5轮结束：等待导出
     // 无尽模式永远不导出
-    // 如果刚掉落装备，先让玩家有机会穿戴，下次关闭才导出
     if(S.lobsterMode==='raise'&&S.round>=5&&!S.exported) {
         S.waitingForExport=true;
     }
@@ -1878,72 +1743,6 @@ function closeReward() {
     S.round++;
     updateUI();
     document.getElementById('btn-start').disabled=false;
-    if(S.player&&S.player.inventory&&S.player.inventory.length>0) {
-        addLog('<span class="log-system">📦 背包有 '+S.player.inventory.length+' 件装备，请点击"装备"穿戴！</span>');
-    }
-}
-
-// ---------- 装备系统 ----------
-function openEquipPanel() {
-    updateEquipSlots();
-    updateInventoryList();
-    document.getElementById('equip-panel').classList.add('show');
-    document.getElementById('equip-backdrop').classList.add('show');
-}
-function closeEquipPanel() {
-    document.getElementById('equip-panel').classList.remove('show');
-    document.getElementById('equip-backdrop').classList.remove('show');
-}
-function updateEquipSlots() {
-    ['atk','def','hp'].forEach(type=>{
-        const el=document.getElementById('equip-slot-'+type);
-        const e=S.player.equipment[type];
-        if(e) {
-            el.innerHTML=e.icon+' '+e.name+'<br><small>+'+getEquipValue(e)+'</small>';
-            el.style.borderColor=EQUIP_QUALITY_COLOR[e.quality];
-            el.style.color=EQUIP_QUALITY_COLOR[e.quality];
-        } else {
-            el.innerHTML='<small>空</small>';
-            el.style.borderColor='#444';
-            el.style.color='#888';
-        }
-    });
-}
-function updateInventoryList() {
-    const list=document.getElementById('equip-inv-list');
-    if(!list) return;
-    if(S.player.inventory.length===0) {
-        list.innerHTML='<div style="color:#888;text-align:center;padding:20px">背包空空</div>';
-        return;
-    }
-    list.innerHTML=S.player.inventory.map((e,i)=>
-        '<div class="equip-item" onclick="equipItem('+i+')" style="cursor:pointer;border-left:3px solid '+EQUIP_QUALITY_COLOR[e.quality]+'">'
-        +e.icon+' '+e.name+' +'+getEquipValue(e)+'<br><small style="color:#888">'+EQUIP_NAMES[e.type].desc+'</small></div>'
-    ).join('');
-}
-function equipItem(invIndex) {
-    const e=S.player.inventory[invIndex];
-    if(S.player.equipment[e.type]) {
-        S.player.inventory.push(S.player.equipment[e.type]);
-    }
-    S.player.equipment[e.type]=e;
-    S.player.inventory.splice(invIndex,1);
-    calcPlayerStats();
-    updateEquipSlots();
-    updateInventoryList();
-    updateUI();
-    addLog('<span class="log-system">'+e.icon+' 装备 '+e.name+'!</span>');
-}
-function unequipItem(type) {
-    const e=S.player.equipment[type];
-    if(!e) return;
-    S.player.inventory.push(e);
-    S.player.equipment[type]=null;
-    calcPlayerStats();
-    updateEquipSlots();
-    updateInventoryList();
-    updateUI();
-    addLog('<span class="log-system">'+e.icon+' 卸下 '+e.name+'</span>');
 }
 
 // ===== modes.js =====
@@ -2019,10 +1818,9 @@ function selectLobsterMode(mode) {
     if(mode==='endless') {
         S.lobsterMode='endless';
         S.round=1;
-        // 成虾不成长：禁止升级、禁止偷技能、禁止掉落装备
+        // 成虾不成长：禁止升级、禁止偷技能
         S.noGrowth=true;
         S.noSkillSteal=true;
-        S.noEquipDrop=true;
         addLog('<span class="log-system">♾️ 进入无尽模式！怪物难度从第6轮开始...</span>');
         document.getElementById('btn-start').disabled=false;
     } else if(mode==='pvp') {
@@ -2043,7 +1841,7 @@ function closePvpImportPanel() {
 function confirmPvpImport() {
     const code=document.getElementById('pvp-import-code').value.trim();
     if(!code) return;
-    const opponent=importLobster(code);
+    const opponent=parseLobsterCode(code);
     if(!opponent) {
         document.getElementById('pvp-import-error').style.display='block';
         document.getElementById('pvp-import-error').textContent='对手代码无效，请重新输入';
@@ -2054,7 +1852,7 @@ function confirmPvpImport() {
         name:opponent.name, level:opponent.level, phase:opponent.phase,
         hp:opponent.hp, maxHp:opponent.maxHp,
         atk:opponent.atk, def:opponent.def, spd:opponent.spd,
-        skills:opponent.skills, equipment:opponent.equipment,
+        skills:opponent.skills,
         buffs:[], shields:0, poisonDmg:0, bleedDmg:0, alive:true,
         resurrected:false, resurrectedUsed:false,
         stunned:false, sealed:false,
@@ -2079,32 +1877,10 @@ function confirmPvpImport() {
 
 function importLobster(code) {
     try {
-        const decoded=new TextDecoder().decode(new Uint8Array(atob(code).split('').map(c=>c.charCodeAt(0))));
-        const data=JSON.parse(decoded);
-        if(!data.skills||!data.level||data.phase===undefined) return null;
-        const baseHp=(data.maxHp||100)-(data.level-1)*15;
-        const baseAtk=(data.atk||10)-(data.level-1)*2;
-        const baseDef=(data.def||4)-(data.level-1)*1;
-        const baseSpd=(data.spd||6)-(data.level-1)*1;
-        S.player={
-            name:data.name||'龙虾',
-            level:data.level, phase:data.phase,
-            hp:data.hp||data.maxHp, maxHp:data.maxHp||100,
-            atk:data.atk||10, def:data.def||4, spd:data.spd||6,
-            skills:(data.skills||[]).map(s=>cloneSkill(s)),
-            equipment:data.equipment||{atk:null,def:null,hp:null},
-            inventory:data.inventory||[],
-            buffs:[], shields:0, poisonDmg:0, bleedDmg:0, alive:true,
-            resurrected:false, resurrectedUsed:false,
-            stunned:false, sealed:false,
-            speedBoosted:false, defReduced:false,
-            resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0,
-            vulnerable:0, armorBroken:0, regenLeft:0,
-            dodgeRate:0, reflectRate:0, reflectDmg:0, shieldBoostRate:0, regenRate:0,
-            baseHp, baseAtk, baseDef, baseSpd, hpM:1, atkM:1
-        };
-        if(typeof refreshPassiveSkills==='function') refreshPassiveSkills(S.player);
-        calcPlayerStats();
+        const lobster=parseLobsterCode(code);
+        if(!lobster) return null;
+        S.player=lobster;
+        S.phase=lobster.phase;
         return S.player;
     } catch(e) {
         return null;
@@ -2112,20 +1888,48 @@ function importLobster(code) {
 }
 
 function exportLobster() {
-    const data={
-        name:S.player.name, level:S.player.level,
-        hp:S.player.hp, maxHp:S.player.maxHp,
-        atk:S.player.atk, def:S.player.def, spd:S.player.spd,
-        phase:S.phase,
-        skills:S.player.skills, equipment:S.player.equipment,
-        inventory:S.player.inventory,
-        baseHp:S.player.baseHp, baseAtk:S.player.baseAtk,
-        baseDef:S.player.baseDef, baseSpd:S.player.baseSpd
-    };
+    const p=S.player;
+    const data=[
+        1, p.name, p.level, p.phase, Math.floor(p.hp),
+        p.baseHp, p.baseAtk, p.baseDef, p.baseSpd,
+        p.skills.map(s=>ALL_SKILLS.findIndex(x=>x.id===s.id)).filter(i=>i>=0)
+    ];
     const bytes=new TextEncoder().encode(JSON.stringify(data));
     let binary='';
     for(let i=0;i<bytes.length;i++) binary+=String.fromCharCode(bytes[i]);
-    return btoa(binary);
+    return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+function parseLobsterCode(code) {
+    const data=JSON.parse(decodeLobsterCode(code));
+    if(!Array.isArray(data)||data[0]!==1||!Array.isArray(data[9])) return null;
+    const skills=data[9].map(i=>ALL_SKILLS[i]).filter(Boolean).map(cloneSkill);
+    if(!data[2]||data[3]===undefined||skills.length===0) return null;
+    const lobster={
+        name:data[1]||'龙虾',
+        level:data[2], phase:data[3],
+        hp:data[4]||1, maxHp:1, atk:1, def:1, spd:1,
+        skills,
+        buffs:[], shields:0, poisonDmg:0, bleedDmg:0, alive:true,
+        resurrected:false, resurrectedUsed:false,
+        stunned:false, sealed:false,
+        speedBoosted:false, defReduced:false,
+        resurrectRate:0, counterRate:0, reduceDmgRate:0, lifesteal:0,
+        vulnerable:0, armorBroken:0, regenLeft:0,
+        dodgeRate:0, reflectRate:0, reflectDmg:0, shieldBoostRate:0, regenRate:0,
+        baseHp:data[5]||100, baseAtk:data[6]||10,
+        baseDef:data[7]||4, baseSpd:data[8]||6,
+        hpM:1, atkM:1
+    };
+    if(typeof refreshPassiveSkills==='function') refreshPassiveSkills(lobster);
+    calcEntityStats(lobster);
+    return lobster;
+}
+
+function decodeLobsterCode(code) {
+    const clean=code.replace(/\s/g,'').replace(/-/g,'+').replace(/_/g,'/');
+    const padded=clean+'='.repeat((4-clean.length%4)%4);
+    return new TextDecoder().decode(new Uint8Array(atob(padded).split('').map(c=>c.charCodeAt(0))));
 }
 
 function closeImportPanel() {
@@ -2429,6 +2233,7 @@ function renderEnemySkills() {
 </script>
 </body>
 </html>
+<!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
 <!--# sourceMappingURL=game.map -->
